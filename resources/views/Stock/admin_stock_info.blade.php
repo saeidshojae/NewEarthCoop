@@ -1,0 +1,27 @@
+@extends('layouts.admin')
+@section('title', 'مدیریت سهام استارتاپ')
+@section('content')
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">اطلاعات پایه سهام</h4>
+            <div>
+                <a href="{{ route('admin.stock.create') }}" class="btn btn-success">ویرایش اطلاعات سهام</a>
+                <a href="{{ route('admin.auction.create') }}" class="btn btn-warning ms-2">ایجاد حراج جدید</a>
+            </div>
+        </div>
+        <div class="card-body">
+            @if($stock)
+                <ul class="list-group list-group-flush mb-3">
+                    <li class="list-group-item">ارزش پایه استارتاپ: <strong>{{ number_format($stock->startup_valuation) }} تومان</strong></li>
+                    <li class="list-group-item">تعداد کل سهام: <strong>{{ number_format($stock->total_shares) }}</strong></li>
+                    <li class="list-group-item">ارزش پایه هر سهم: <strong>{{ number_format($stock->base_share_price) }} تومان</strong></li>
+                    <li class="list-group-item">توضیحات: <span>{{ $stock->info }}</span></li>
+                </ul>
+            @else
+                <div class="alert alert-warning">هنوز اطلاعات سهام ثبت نشده است.</div>
+            @endif
+        </div>
+    </div>
+</div>
+@endsection
