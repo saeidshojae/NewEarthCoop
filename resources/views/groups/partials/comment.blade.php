@@ -1,267 +1,121 @@
-<style>
-  .chat-body {
-    display: flex !important;
-    align-items: center;
-  }
+@php
+  $isMine = $item->user_id == auth()->id();
+  $sender = $item->user;
+  $initials = $sender ? Str::upper(Str::substr($sender->first_name ?? '', 0, 1) . Str::substr($sender->last_name ?? '', 0, 1)) : '؟';
+  $senderName = $sender ? trim(($sender->first_name ?? '') . ' ' . ($sender->last_name ?? '')) : 'حساب حذف شده';
+@endphp
 
-  .message-bubble {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-    gap: 10px;
-  }
-  
-  .other{
-      position: relative;
-  }
-    
-  .you{
-      position: relative;
-      padding-left: 1.5rem !important;
-  }
-  
-  .message-bubble button{
-      right: 0 !important;
-      top: 0 !important;
-            left: 0 !important;
-  }
-
-  /* دکمه سه‌نقطه */
-  .options-btn {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    font-size: 18px;
-    color: #555;
-  }
-  
-  .options-btn i{
-      position: absolute !important;
-    left: .5rem !important;
-    top: .5rem !important;
-  }
-
-  /* منوی بازشونده */
-  .options-menu {
-    display: none;
-    position: absolute;
-    right: 25px; /* کنار دکمه سه‌نقطه */
-    top: 50%;
-    transform: translateY(-50%);
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 6px 18px rgba(0,0,0,.12);
-    z-index: 100;
-    min-width: 160px;
-    direction: rtl; /* فارسی */
-  }
-
-  .options-menu ul {
-    list-style: none;
-    padding: 6px 0;
-    margin: 0;
-  }
-
-  .options-menu li {
-    padding: 10px 12px;
-    cursor: pointer;
-    font-size: 14px;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .options-menu li:hover { background-color: #f7f7f7; }
-  .options-menu li.is-static { cursor: default; }
-  .options-menu li.is-static:hover { background: transparent; }
-
-  .count-badge {
-    margin-right: auto; /* اعداد برن سمت چپ */
-    font-size: 12px;
-    opacity: .8;
-  }
-  
-  
-</style>
-
-<div class="message-bubble {{ $item->user_id == auth()->id() ? 'you' : 'other' }}"
+<div class="comment-item {{ $isMine ? 'you' : 'other' }}"
      id="msg-{{ $item->id }}"
      data-update-url="{{ route('comments.update', $item->id) }}"
      data-delete-url="{{ route('comments.destroy', $item->id) }}"
      data-message-text="{{ trim(strip_tags($item->message)) }}"
->
-  <div class="text-react" style="flex: 1;">
-    @if ($item->user_id != auth()->id())
-      <b><a style='color: blue' href='{{ route('profile.member.show', $item->user->id) }}'>{{ $item->user->first_name . ' ' . $item->user->last_name }}</a></b>
+     data-report-url="{{ route('messages.report', $item->id) }}">
+  
+  <!-- Avatar -->
+  @if(!$isMine && $sender)
+    <a href="{{ route('profile.member.show', $item->user_id) }}" class="comment-item__avatar-link">
+      <div class="comment-item__avatar">
+        @if($sender->avatar)
+          <img src="{{ asset('images/users/avatars/' . $sender->avatar) }}" alt="{{ $senderName }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">
+        @else
+          <span>{{ $initials }}</span>
+        @endif
+      </div>
+    </a>
+  @else
+    <div class="comment-item__avatar" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+      <span>{{ $isMine ? 'شما' : ($initials ?: '؟') }}</span>
+    </div>
     @endif
 
-    @if ($item->parent)
-      <a class="replay-box" href="#msg-{{ $item->parent_id }}">
-        <b>{{ $item->parent->user->first_name . ' ' . $item->parent->user->last_name }}</b>
+  <!-- Content -->
+  <div class="comment-item__content">
+    <!-- Header -->
+    <div class="comment-item__header">
+      <div class="comment-item__author">
+        @if($isMine)
+          <span>شما</span>
+        @elseif($sender)
+          <a href="{{ route('profile.member.show', $item->user_id) }}">{{ $senderName }}</a>
+        @else
+          <span style="color: #9ca3af;">حساب حذف شده</span>
+        @endif
+      </div>
+      
+      <div class="comment-item__menu">
+        <button type="button" class="comment-item__menu-btn" onclick="openGlobalMenu(event, {{ $item->id }})" aria-label="گزینه‌ها">
+          <i class="fas fa-ellipsis-v"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Reply Preview -->
+    @if($item->parent)
+      <div class="comment-item__reply">
+        <div class="comment-item__reply-author">
+          @if($item->parent->user)
+            {{ $item->parent->user->first_name }} {{ $item->parent->user->last_name }}
+          @else
+            حساب حذف شده
+          @endif
+        </div>
+        <div class="comment-item__reply-text">
         @php
     $text = $item->parent->message;
-
-    // regex برای پیدا کردن لینک
     $textWithLinks = preg_replace_callback(
         '/(https?:\/\/[^\s]+)/',
         function($matches) {
-            $url = e($matches[0]); // لینک رو امن میکنیم
-            return '<a href="'.$url.'" target="_blank" style="color: blue; text-decoration: underline;">'.$url.'</a>';
+                $url = e($matches[0]);
+                return '<a href="'.$url.'" target="_blank" style="color: #3b82f6; text-decoration: underline;">'.$url.'</a>';
         },
         $text
     );
 @endphp
-
-<p>{!! $textWithLinks !!}</p>
-
-      </a>
+          {!! Str::limit($textWithLinks, 100) !!}
+        </div>
+      </div>
     @endif
 
+    <!-- Comment Text -->
+    <div class="comment-item__text">
     @php
     $text = $item->message;
-
-    // regex برای پیدا کردن لینک
     $textWithLinks = preg_replace_callback(
         '/(https?:\/\/[^\s]+)/',
         function($matches) {
-            $url = e($matches[0]); // لینک رو امن میکنیم
-            return '<a href="'.$url.'" target="_blank" style="color: blue; text-decoration: underline;">'.$url.'</a>';
+            $url = e($matches[0]);
+            return '<a href="'.$url.'" target="_blank" style="color: #3b82f6; text-decoration: underline;">'.$url.'</a>';
         },
         $text
     );
 @endphp
+      {!! $textWithLinks !!}
+    </div>
 
-<p>{!! $textWithLinks !!}</p>
-
-       <button class="options-btn" onclick="openGlobalMenu(event, {{ $item->id }})" aria-label="گزینه‌ها">
-  <i class="fa-solid fa-ellipsis-vertical"></i>
+    <!-- Footer -->
+    <div class="comment-item__footer">
+      <span class="comment-item__time">
+        <i class="far fa-clock"></i>
+        {{ verta($item->created_at)->format('Y/m/d H:i') }}
+      </span>
+      
+      <div class="comment-item__reactions">
+        <button type="button" 
+                class="comment-reaction-btn like-btn" 
+                id="like-btn-{{ $item->id }}"
+                onclick="reactToComment('like', {{ $item->id }})">
+          <i class="fas fa-thumbs-up"></i>
+          <span id="like-count-{{ $item->id }}">{{ $item->likes->count() }}</span>
+        </button>
+        <button type="button" 
+                class="comment-reaction-btn dislike-btn" 
+                id="dislike-btn-{{ $item->id }}"
+                onclick="reactToComment('dislike', {{ $item->id }})">
+          <i class="fas fa-thumbs-down"></i>
+          <span id="dislike-count-{{ $item->id }}">{{ $item->dislikes->count() }}</span>
 </button>
   </div>
-
-  <div @if($item->user_id != auth()->user()->id) style="    top: 0;
-    right: 0; position: absolute;" @else style="position: absolute;     top: 0;
-    left: -1rem;" @endif>
-
-
-
-    <div class="options-menu" id="options-menu-{{ $item->id }}"
-         @if($item->user_id != auth()->user()->id) style="left: 0;" @else style="right: 0; top: 0;" @endif>
-      <ul>
-        <li onclick="replyToSelectedComment({{ $item->id }})">
-          <i class="fa-solid fa-reply"></i> ریپلای
-        </li>
-
-        <li onclick="reactToComment('like', {{ $item->id }})">
-          <i class="fas fa-thumbs-up"></i> لایک
-          <span class="count-badge" id="like-count-{{ $item->id }}">{{ $item->likes->count() }}</span>
-        </li>
-
-        <li onclick="reactToComment('dislike', {{ $item->id }})">
-          <i class="fas fa-thumbs-down"></i> دیسلایک
-          <span class="count-badge" id="dislike-count-{{ $item->id }}">{{ $item->dislikes->count() }}</span>
-        </li>
-
-
-        <li class="is-static" title="زمان ارسال">
-          <i class="fa-regular fa-clock"></i>
-          <span>تاریخ ارسال: {{ verta($item->created_at)->format('Y-m-d H:i') }}</span>
-        </li>
-
-        @if ($item->user_id == auth()->id())
-          <li onclick="editComment({{ $item->id }})">
-            <i class="fa-solid fa-pen-to-square"></i> ویرایش
-          </li>
-          <li onclick="deleteComment({{ $item->id }})" style="color:#d33;">
-            <i class="fa-solid fa-trash"></i> حذف
-          </li>
-        @endif
-      </ul>
     </div>
   </div>
 </div>
-
-<script>
-  function toggleOptionsMenu(id) {
-    document.querySelectorAll('.options-menu').forEach(menu => {
-      if (menu.id !== `options-menu-${id}`) menu.style.display = 'none';
-    });
-    const menu = document.getElementById(`options-menu-${id}`);
-    menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-  }
-
-  document.addEventListener('click', function (event) {
-    if (!event.target.closest('.options-btn') && !event.target.closest('.options-menu')) {
-      document.querySelectorAll('.options-menu').forEach(menu => menu.style.display = 'none');
-    }
-  });
-
-  function getCsrfToken() {
-    const el = document.querySelector('meta[name="csrf-token"]');
-    return el ? el.getAttribute('content') : '';
-  }
-
-  async function editComment(id) {
-    const bubble = document.getElementById(`msg-${id}`);
-    const updateUrl = bubble.getAttribute('data-update-url');
-    const currentText = bubble.getAttribute('data-message-text') || '';
-
-    const newText = prompt('متن جدید نظر را وارد کنید:', currentText);
-    if (newText === null) return; // کاربر لغو کرد
-    if (newText.trim() === '') { alert('متن نمی‌تواند خالی باشد.'); return; }
-
-    try {
-      const res = await fetch(updateUrl, {
-        method: 'POST',
-        headers: {
-          'X-CSRF-TOKEN': getCsrfToken(),
-          'Accept': 'application/json',
-          'X-HTTP-Method-Override': 'PUT',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ message: newText })
-      });
-
-      if (!res.ok) throw new Error('خطا در ویرایش نظر');
-      // در صورت نیاز، پاسخ JSON سرور را بخوان
-      // const data = await res.json();
-
-      // به‌روزرسانی UI
-      const content = bubble.querySelector('.comment-name');
-      if (content) content.textContent = newText; // اگر متن شما HTML است، به‌جای textContent از innerHTML استفاده کن (با احتیاط امنیتی)
-      bubble.setAttribute('data-message-text', newText);
-      document.getElementById(`options-menu-${id}`).style.display = 'none';
-    } catch (e) {
-      console.error(e);
-      alert('ویرایش انجام نشد.');
-    }
-  }
-
-  async function deleteComment(id) {
-    if (!confirm('آیا از حذف این نظر مطمئن هستید؟')) return; 
-
-    const bubble = document.getElementById(`msg-${id}`);
-    const deleteUrl = bubble.getAttribute('data-delete-url');
-
-    try {
-      const res = await fetch(deleteUrl, {
-        method: 'POST',
-        headers: {
-          'X-CSRF-TOKEN': getCsrfToken(),
-          'Accept': 'application/json',
-          'X-HTTP-Method-Override': 'DELETE'
-        }
-      });
-
-      if (!res.ok) throw new Error('خطا در حذف نظر');
-
-      // حذف از DOM
-      bubble.remove();
-    } catch (e) {
-      console.error(e);
-      alert('حذف انجام نشد.');
-    }
-  }
-</script>

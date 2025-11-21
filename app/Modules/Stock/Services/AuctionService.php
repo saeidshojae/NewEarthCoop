@@ -7,6 +7,7 @@ use App\Modules\Stock\Models\Wallet;
 use App\Modules\Stock\Models\Holding;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class AuctionService
 {
@@ -60,6 +61,38 @@ class AuctionService
                 'quantity' => $quantity,
                 'status' => 'active',
             ]);
+
+            // Reputation: bid placed
+            try {
+                $reputation = app(\App\Services\ReputationService::class);
+                $user = \App\Models\User::find($userId);
+                if ($user) {
+                    $reputation->applyAction($user, 'bid_placed', ['auction_id' => $auction->id, 'bid_id' => $bid->id], $bid->id, 'stock.bid');
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Reputation bid_placed failed: ' . $e->getMessage());
+            }
+            
+            // ارسال اعلان به ادمین‌ها در صورت پیشنهاد جدید
+            try {
+                $notificationService = app(\App\Services\NotificationService::class);
+                $admins = \App\Models\User::where('is_admin', true)->orWhereHas('roles', function($q) {
+                    $q->whereIn('slug', ['super-admin', 'stock-manager']);
+                })->get();
+                
+                if ($admins->count() > 0) {
+                    $notificationService->notifyMany(
+                        $admins,
+                        'پیشنهاد جدید ثبت شد',
+                        "پیشنهاد جدید در حراج #{$auction->id} با قیمت " . number_format($price) . " تومان ثبت شد.",
+                        route('admin.auction.show', $auction),
+                        'info',
+                        ['auction_id' => $auction->id, 'bid_id' => $bid->id]
+                    );
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Failed to send bid notification: ' . $e->getMessage());
+            }
             
             return $bid;
         });
@@ -68,6 +101,17 @@ class AuctionService
     public function closeAuction(Auction $auction): array
     {
         return DB::transaction(function () use ($auction) {
+            // اگر settlement_mode = manual باشد، فقط وضعیت را به settling تغییر می‌دهیم
+            if ($auction->settlement_mode === 'manual') {
+                $auction->update(['status' => 'settling']);
+                return [
+                    'winners' => [],
+                    'total_settled' => 0,
+                    'requires_manual_approval' => true,
+                ];
+            }
+            
+            // تسویه خودکار
             $auction->update(['status' => 'settling']);
             
             $results = [];
@@ -90,12 +134,63 @@ class AuctionService
         });
     }
     
+    // تسویه دستی حراج (توسط ادمین)
+    public function manualSettleAuction(Auction $auction): array
+    {
+        if ($auction->status !== 'settling') {
+            throw new \Exception('فقط حراج‌های در حال تسویه قابل تایید هستند');
+        }
+        
+        return DB::transaction(function () use ($auction) {
+            $results = [];
+            
+            switch ($auction->type) {
+                case 'single_winner':
+                    $results = $this->settleSingleWinner($auction);
+                    break;
+                case 'uniform_price':
+                    $results = $this->settleUniformPrice($auction);
+                    break;
+                case 'pay_as_bid':
+                    $results = $this->settlePayAsBid($auction);
+                    break;
+            }
+            
+            $auction->update(['status' => 'settled']);
+            
+            return $results;
+        });
+    }
+    
     protected function settleSingleWinner(Auction $auction): array
     {
-        $winningBid = $auction->activeBids()
-            ->orderBy('price', 'desc')
-            ->orderBy('created_at', 'asc')
-            ->first();
+        // Lock stock row to prevent concurrent settlements from overselling
+        $stock = \App\Modules\Stock\Models\Stock::where('id', $auction->stock_id)->lockForUpdate()->first();
+
+        // determine which price column exists to avoid SQL errors on older schemas
+        try {
+            $priceColumn = Schema::hasColumn('bids', 'price') ? 'price' : (Schema::hasColumn('bids', 'bid_price') ? 'bid_price' : null);
+        } catch (\Exception $e) {
+            $priceColumn = null;
+        }
+
+        if ($priceColumn) {
+            $winningBid = $auction->activeBids()
+                ->orderByDesc($priceColumn)
+                ->orderBy('created_at', 'asc')
+                ->first();
+        } else {
+            // fallback to in-memory collection ordering to be resilient to schema differences
+            $winningBid = $auction->bids->where('status', 'active')
+                ->sort(function($a, $b) {
+                    $priceA = $a->price ?? 0;
+                    $priceB = $b->price ?? 0;
+                    if ($priceA == $priceB) {
+                        return strtotime($a->created_at) <=> strtotime($b->created_at);
+                    }
+                    return $priceB <=> $priceA;
+                })->values()->first();
+        }
         
         if (!$winningBid) {
             return ['winners' => [], 'total_settled' => 0];
@@ -110,8 +205,27 @@ class AuctionService
         
         $this->releaseOtherBids($auction, $winningBid->id);
         
-        // Settle winning bid
-        $this->settleWinningBid($winningBid);
+        // Determine allocation respecting stock available_shares
+        $alloc = min($winningBid->quantity, $stock->available_shares);
+        if ($alloc <= 0) {
+            // no shares left, mark as lost and release funds
+            $winningBid->update(['status' => 'lost']);
+            $this->walletService->release(
+                $this->walletService->getOrCreateWallet($winningBid->user_id),
+                $winningBid->total_value,
+                "Bid not filled - auction #{$auction->id}",
+                $winningBid
+            );
+            return ['winners' => [], 'total_settled' => 0];
+        }
+
+        // Settle winning portion
+        if ($alloc < $winningBid->quantity) {
+            // partial allocation
+            $this->settlePartialBid($winningBid, $alloc, $winningBid->price);
+        } else {
+            $this->settleWinningBid($winningBid);
+        }
         
         return [
             'winners' => [$winningBid],
@@ -121,10 +235,28 @@ class AuctionService
     
     protected function settleUniformPrice(Auction $auction): array
     {
-        $bids = $auction->activeBids()
-            ->orderBy('price', 'desc')
-            ->orderBy('created_at', 'asc')
-            ->get();
+        // Lock stock row to prevent concurrent settlements
+        $stock = \App\Modules\Stock\Models\Stock::where('id', $auction->stock_id)->lockForUpdate()->first();
+
+        // fetch bids ordered by price desc / created_at asc, with fallback to collection sort
+        try {
+            $priceColumn = Schema::hasColumn('bids', 'price') ? 'price' : (Schema::hasColumn('bids', 'bid_price') ? 'bid_price' : null);
+        } catch (\Exception $e) {
+            $priceColumn = null;
+        }
+
+        if ($priceColumn) {
+            $bids = $auction->activeBids()->orderByDesc($priceColumn)->orderBy('created_at', 'asc')->get();
+        } else {
+            $bids = $auction->bids->where('status', 'active')->sort(function($a, $b) {
+                $priceA = $a->price ?? 0;
+                $priceB = $b->price ?? 0;
+                if ($priceA == $priceB) {
+                    return strtotime($a->created_at) <=> strtotime($b->created_at);
+                }
+                return $priceB <=> $priceA;
+            })->values();
+        }
         
         $winners = [];
         $remainingShares = $auction->shares_count;
@@ -142,7 +274,8 @@ class AuctionService
                 continue;
             }
             
-            $allocatedShares = min($bid->quantity, $remainingShares);
+            // ensure we don't allocate more than stock available_shares
+            $allocatedShares = min($bid->quantity, $remainingShares, $stock->available_shares);
             $remainingShares -= $allocatedShares;
             
             if ($allocatedShares > 0) {
@@ -150,8 +283,10 @@ class AuctionService
                 $winners[] = $bid;
                 $clearingPrice = $bid->price;
                 
-                // Settle partial allocation
+                // Settle partial allocation (this will decrement stock available_shares)
                 $this->settlePartialBid($bid, $allocatedShares, $clearingPrice);
+                // refresh stock available_shares in memory
+                $stock->refresh();
             }
         }
         
@@ -164,10 +299,27 @@ class AuctionService
     
     protected function settlePayAsBid(Auction $auction): array
     {
-        $bids = $auction->activeBids()
-            ->orderBy('price', 'desc')
-            ->orderBy('created_at', 'asc')
-            ->get();
+        // Lock stock row to prevent concurrent settlements
+        $stock = \App\Modules\Stock\Models\Stock::where('id', $auction->stock_id)->lockForUpdate()->first();
+
+        try {
+            $priceColumn = Schema::hasColumn('bids', 'price') ? 'price' : (Schema::hasColumn('bids', 'bid_price') ? 'bid_price' : null);
+        } catch (\Exception $e) {
+            $priceColumn = null;
+        }
+
+        if ($priceColumn) {
+            $bids = $auction->activeBids()->orderByDesc($priceColumn)->orderBy('created_at', 'asc')->get();
+        } else {
+            $bids = $auction->bids->where('status', 'active')->sort(function($a, $b) {
+                $priceA = $a->price ?? 0;
+                $priceB = $b->price ?? 0;
+                if ($priceA == $priceB) {
+                    return strtotime($a->created_at) <=> strtotime($b->created_at);
+                }
+                return $priceB <=> $priceA;
+            })->values();
+        }
         
         $winners = [];
         $remainingShares = $auction->shares_count;
@@ -184,7 +336,7 @@ class AuctionService
                 continue;
             }
             
-            $allocatedShares = min($bid->quantity, $remainingShares);
+            $allocatedShares = min($bid->quantity, $remainingShares, $stock->available_shares);
             $remainingShares -= $allocatedShares;
             
             if ($allocatedShares > 0) {
@@ -193,6 +345,7 @@ class AuctionService
                 
                 // Settle at bid price
                 $this->settlePartialBid($bid, $allocatedShares, $bid->price);
+                $stock->refresh();
             }
         }
         
@@ -212,6 +365,34 @@ class AuctionService
         
         // Transfer shares
         $this->holdingService->settlement($holding, $bid->quantity, "Auction win", $bid);
+        
+        // Record stock transaction and update stock availability
+        \App\Modules\Stock\Models\StockTransaction::create([
+            'user_id' => $bid->user_id,
+            'auction_id' => $bid->auction_id,
+            'shares_count' => $bid->quantity,
+            'price' => $bid->price,
+            'type' => 'buy',
+            'info' => 'Settlement - single winner',
+        ]);
+
+        $stock = $bid->auction->stock;
+        if ($stock) {
+            $stock->decrement('available_shares', $bid->quantity);
+            $stock->recalculateMarketData();
+        }
+
+        // Reputation: bid won and successful settlement
+        try {
+            $reputation = app(\App\Services\ReputationService::class);
+            $user = \App\Models\User::find($bid->user_id);
+            if ($user) {
+                $reputation->applyAction($user, 'bid_won', ['auction_id' => $bid->auction_id, 'bid_id' => $bid->id], $bid->id, 'stock.bid');
+                $reputation->applyAction($user, 'successful_settlement', ['auction_id' => $bid->auction_id, 'bid_id' => $bid->id, 'shares' => $bid->quantity], $bid->id, 'stock.settlement');
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Reputation settlement notifications failed: ' . $e->getMessage());
+        }
     }
     
     protected function settlePartialBid(Bid $bid, int $allocatedShares, float $price): void
@@ -232,6 +413,35 @@ class AuctionService
         
         // Transfer allocated shares
         $this->holdingService->settlement($holding, $allocatedShares, "Auction win", $bid);
+
+        // Record partial stock transaction and update stock availability
+        \App\Modules\Stock\Models\StockTransaction::create([
+            'user_id' => $bid->user_id,
+            'auction_id' => $bid->auction_id,
+            'shares_count' => $allocatedShares,
+            'price' => $price,
+            'type' => 'buy',
+            'info' => 'Partial settlement',
+        ]);
+
+        $stock = $bid->auction->stock;
+        if ($stock) {
+            $stock->decrement('available_shares', $allocatedShares);
+            $stock->recalculateMarketData();
+        }
+
+        // Reputation: partial settlement -> award bid_won and successful_settlement for allocated portion
+        try {
+            $reputation = app(\App\Services\ReputationService::class);
+            $user = \App\Models\User::find($bid->user_id);
+            if ($user) {
+                // award bid_won once (even for partial) and a settlement reward
+                $reputation->applyAction($user, 'bid_won', ['auction_id' => $bid->auction_id, 'bid_id' => $bid->id, 'allocated_shares' => $allocatedShares], $bid->id, 'stock.bid');
+                $reputation->applyAction($user, 'successful_settlement', ['auction_id' => $bid->auction_id, 'bid_id' => $bid->id, 'shares' => $allocatedShares], $bid->id, 'stock.settlement');
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Reputation partial settlement failed: ' . $e->getMessage());
+        }
     }
     
     protected function releaseOtherBids(Auction $auction, int $excludeBidId): void

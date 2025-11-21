@@ -1,461 +1,644 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>مرحله ۳ - اطلاعات مکانی</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <!-- Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <style>
+        :root {
+            --color-earth-green: #10b981;
+            --color-ocean-blue: #3b82f6;
+            --color-digital-gold: #f59e0b;
+            --color-pure-white: #ffffff;
+            --color-gentle-black: #1e293b;
+            --color-dark-green: #047857;
+            --color-dark-blue: #1d4ed8;
+        }
+        
+        * { font-family: 'Vazirmatn', 'Poppins', sans-serif; }
+        
+        body { background-color: #e2e8f0; }
+        
+        @keyframes bounce-custom {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        .animate-bounce-custom { animation: bounce-custom 3s infinite ease-in-out; }
+        
+        .form-card-gradient {
+            background: linear-gradient(145deg, var(--color-pure-white) 0%, #f0f4f7 100%);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+            border-radius: 18px;
+            position: relative;
+            border: 1px solid rgba(220, 220, 220, 0.3);
+        }
+        
+        .form-card-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, var(--color-earth-green), var(--color-ocean-blue), var(--color-digital-gold));
+        }
+        
+        /* Select2 Custom Styles */
+        .select2-container--default .select2-selection--single {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            height: 3rem;
+            padding: 0.5rem 1rem;
+        }
+        
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 2rem;
+            color: var(--color-gentle-black);
+        }
+        
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 3rem;
+        }
+        
+        .select2-container {
+            width: 100% !important;
+        }
+        
+        /* Location Path */
+        .location-path {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            color: white;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .location-path span {
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+        
+        .location-path span:hover:not(.last) {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .location-path span.last {
+            cursor: default;
+            font-weight: 700;
+        }
+        
+        /* Level Container Animation */
+        .level-container {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-@section('head-tag')
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<style>
-    .location-container {
-        direction: rtl;
-        max-width: 800px;
-        margin: 0;
-    }
-    .select2-selection__rendered{
-    background-color: #6bb48945;
-  }
-    .location-path {
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin: 1rem 0;
-        border: 1px solid #dee2e6;
-    }
-
-    .location-path span {
-        display: inline-block;
-        margin: 0 0.5rem;
-        color: #0d6efd;
-        cursor: pointer;
-    }
-
-    .location-path span:hover {
-        text-decoration: underline;
-    }
-
-    .location-select {
-        margin-bottom: 1rem;
-    }
-
-    .select2-container {
-        width: 100% !important;
-    }
-
-    .alert {
-        margin-bottom: 1rem;
-    }
-
-    .form-label {
-        font-weight: 500;
-        margin-bottom: 0.5rem;
-    }
-
-    .btn-submit {
-        padding: 0.5rem 2rem;
-        font-size: 1.1rem;
-    }
-    .main-section{
+        .level-input-group {
             display: flex;
-    align-items: center;
-    justify-content: center;
-    }
-    .disabled-btn {
-    pointer-events: none;
-    opacity: 0.6;
-}
+            flex-direction: column;
+            gap: 0.75rem;
+            align-items: stretch;
+        }
 
-.location-path span.last {
-  pointer-events: none;
-  color: #212529;
-  font-weight: bold;
-  cursor: default;
-}
+        @media (min-width: 640px) {
+            .level-input-group {
+                flex-direction: row;
+                align-items: center;
+            }
+        }
 
+        .create-location-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            padding: 0.65rem 1.5rem;
+            background: linear-gradient(135deg, var(--color-earth-green), var(--color-dark-green));
+            color: white;
+            box-shadow: 0 10px 22px rgba(16, 185, 129, 0.35);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
 
-</style>
-@endsection
+        .create-location-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 26px rgba(16, 185, 129, 0.45);
+        }
 
-@section('content')
-<div class="location-container" >
-    <div class="card">
-        <div class="card-header text-center bg-primary text-white fs-5">
-            مرحله سوم: انتخاب مکان
+        .create-location-btn i {
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body class="font-vazirmatn leading-relaxed flex items-center justify-center min-h-screen p-4">
+
+    <div class="form-card-gradient w-full max-w-3xl mx-auto p-6 sm:p-8 md:p-10">
+        <!-- Logo -->
+        <div class="flex items-center justify-center space-x-3 rtl:space-x-reverse mb-8">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="animate-bounce-custom">
+                <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" fill="#10b981" opacity="0.8"/>
+                <path d="M12 2C10.5 4 8 6 8 9C8 12 12 14 12 14C12 14 16 12 16 9C16 6 13.5 4 12 2ZM12 14C12 14 10 16 10 18C10 20 12 22 12 22" fill="#047857"/>
+            </svg>
+            <span class="text-3xl sm:text-4xl font-extrabold text-gentle-black" style="color: var(--color-gentle-black);">EarthCoop</span>
         </div>
         
-        <div class="card-body">
-            @if(session('error'))
-                <div class="alert alert-danger">
-                    {{ session('error') }}
+        <!-- Step Indicator -->
+        <div class="text-center mb-8">
+            <div class="flex items-center justify-center flex-wrap gap-2 sm:gap-4 mb-4">
+                <div class="flex items-center opacity-50">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-white bg-gray-400">
+                        <i class="fas fa-check text-xs sm:text-base"></i>
+                    </div>
+                    <span class="mr-2 text-gray-500 text-sm sm:text-base">هویتی</span>
                 </div>
-            @endif
-
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i>
-                لطفاً مکان خود را با دقت انتخاب نمایید. از این اطلاعات برای گروه‌بندی مکانی شما استفاده می‌شود.
-                وارد کردن اطلاعات تا سطح محله الزامی است.
+                <div class="w-6 sm:w-8 h-1 bg-gray-300"></div>
+                <div class="flex items-center opacity-50">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-white bg-gray-400">
+                        <i class="fas fa-check text-xs sm:text-base"></i>
+                    </div>
+                    <span class="mr-2 text-gray-500 text-sm sm:text-base">صنفی</span>
+                </div>
+                <div class="w-6 sm:w-8 h-1 bg-gray-300"></div>
+                <div class="flex items-center">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-white" style="background-color: var(--color-ocean-blue);">۳</div>
+                    <span class="mr-2 font-bold text-sm sm:text-base" style="color: var(--color-ocean-blue);">مکانی</span>
+                </div>
             </div>
-
-            <form action="{{ route('register.step3.process') }}" method="POST">
+        </div>
+        
+        <!-- Form -->
+        <div class="text-right">
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gentle-black mb-4" style="color: var(--color-gentle-black);">
+                مرحله ۳: اطلاعات مکانی
+            </h2>
+            <p class="text-gray-600 mb-6 text-sm sm:text-base">
+                لطفا مکان خود را با دقت انتخاب نمایید. از این اطلاعات برای گروه‌بندی مکانی شما استفاده می‌شود.
+                <span class="text-red-600 font-bold">وارد کردن اطلاعات تا سطح محله الزامی است.</span>
+            </p>
+            
+            @if ($errors->any())
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+                <ul class="list-disc list-inside">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+            
+            @if(session('error'))
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+                {{ session('error') }}
+            </div>
+            @endif
+            
+            <!-- Location Path Display -->
+            <div class="location-path text-center" id="location_path_display">
+                <i class="fas fa-map-marker-alt ml-2"></i>
+                <span>مسیر انتخاب نشده</span>
+            </div>
+            
+            <form action="{{ route('register.step3.process') }}" method="POST" id="step3Form" class="space-y-4">
                 @csrf
                 
-                <div class="location-path" id="location_path_display"></div>
-
                 <div id="location-selects">
-                    <div class="mb-3">
-                        <label class="form-label">انتخاب قاره</label>
-                        <select class="form-select location-select" name="continent_id" data-level="1" id="continent-select">
-                            <option value="">انتخاب کنید</option>
-                            @foreach($continents as $continent)
-                                <option value="{{ $continent->id }}" {{ $continent->id == 4 ? 'selected' : '' }}>
-                                    {{ $continent->name }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <!-- قاره (سطح 1) -->
+                    <div class="level-container">
+                        <label class="block text-base sm:text-lg font-bold text-gray-800 mb-3">
+                            <i class="fas fa-globe ml-2" style="color: var(--color-ocean-blue);"></i>
+                            قاره:
+                        </label>
+                        <div class="level-input-group">
+                            <select id="continent_select" name="continent_id" class="location-select w-full px-4 py-3 border border-gray-300 rounded-lg" data-level="1">
+                                <option value="">انتخاب کنید</option>
+                                @foreach($continents as $continent)
+                                    <option value="{{ $continent->id }}" {{ $continent->id == 1 ? 'selected' : '' }}>
+                                        {{ $continent->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                 </div>
-
-                <div class="text-center mt-4">
-                    <button type="submit" class="btn btn-primary btn-submit disabled-btn" id="continueBtn" disabled>
-                        <i class="fas fa-check"></i>
-                        ثبت و ادامه
+                
+                <!-- Submit Button -->
+                <button type="submit" id="continueBtn" disabled
+                        class="w-full px-6 py-4 rounded-full text-white font-bold text-base sm:text-lg shadow-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-8"
+                        style="background-color: var(--color-earth-green);">
+                    <i class="fas fa-check-circle ml-2"></i>
+                    تکمیل ثبت نام
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal: Create New Location -->
+    <div id="createLocationModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md mx-auto p-6 sm:p-8 w-full">
+            <h3 class="text-xl sm:text-2xl font-bold text-gentle-black mb-6" style="color: var(--color-gentle-black);">
+                ایجاد <span id="modal_location_type"></span> جدید
+            </h3>
+            
+            <form id="createLocationForm">
+                <input type="hidden" id="location_level">
+                <input type="hidden" id="location_parent_id">
+                <input type="hidden" id="location_type">
+                
+                <div class="mb-6">
+                    <label for="location_name" class="block text-base sm:text-lg font-bold text-gray-800 mb-3">
+                        نام <span id="modal_location_type_label"></span>:
+                    </label>
+                    <input type="text" id="location_name" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-blue"
+                           placeholder="نام را وارد کنید">
+                </div>
+                
+                <div id="create_location_error" class="hidden bg-red-100 text-red-700 px-4 py-2 rounded-lg mb-4">
+                    خطا در ثبت اطلاعات. لطفاً دوباره تلاش کنید.
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button type="submit"
+                            class="flex-1 px-6 py-3 rounded-full text-white font-bold shadow-lg hover:shadow-xl transition duration-300"
+                            style="background-color: var(--color-earth-green);">
+                        ذخیره
+                    </button>
+                    <button type="button" onclick="closeCreateLocationModal()"
+                            class="flex-1 px-6 py-3 rounded-full text-gray-700 font-bold border-2 border-gray-300 hover:bg-gray-100 transition duration-300">
+                        لغو
                     </button>
                 </div>
             </form>
         </div>
     </div>
-</div>
 
-@include('partials.add_location_modal', ['type' => 'region', 'label' => 'منطقه/ روستا'])
-@include('partials.add_location_modal', ['type' => 'neighborhood', 'label' => 'محله'])
-@include('partials.add_location_modal', ['type' => 'street', 'label' => 'خیابان'])
-@include('partials.add_location_modal', ['type' => 'alley', 'label' => 'کوچه'])
-
-@endsection
-
-@section('scripts')
-
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js" defer></script>
-<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-@if(session('success'))
-    document.addEventListener('DOMContentLoaded', function() {
-        showErrorAlert('{{ session('success') }}');
-    });
-@endif
-
-function updateSubmitButtonState() {
-    const neighborhoodId = pathValues[7]; // محله = سطح هشتم = index 7
-    const $btn = $('#continueBtn');
-
-    if (neighborhoodId) {
-        $btn.prop('disabled', false).removeClass('disabled-btn');
-    } else {
-        $btn.prop('disabled', true).addClass('disabled-btn');
-    }
-}
-
-const levelLabels = ['قاره', 'کشور', 'استان', 'شهرستان', 'بخش', 'شهر / دهستان', 'منطقه/ روستا', 'محله', 'خیابان', 'کوچه'];
-const levelKeys = ['continent', 'country', 'province', 'county', 'section', 'city', 'region', 'neighborhood', 'street', 'alley'];
-const nameKeys = ['continent_id', 'country_id', 'province_id', 'county_id', 'section_id', 'city_id', 'region_id', 'neighborhood_id', 'street_id', 'alley_id'];
-const allowAddModal = ['region', 'neighborhood', 'street', 'alley'];
-
-let pathParts = [];
-let pathValues = [];
-
-$(document).ready(function() {
-    // تنظیمات Select2
-    $('.location-select').select2({
-        width: '100%',
-        placeholder: 'انتخاب کنید',
-        allowClear: true
-    });
-
-    // مدیریت تغییر انتخاب‌ها
-    $(document).on('change', '.location-select', function() {
-        const level = $(this).data('level');
-        const value = $(this).val();
-
-        if (value === '__add_new__') {
-            const type = levelKeys[level - 1];
-            const parentId = pathValues[level - 2];
-            openAddModal(type, parentId, level);
-            return;
-        }
-
-        if (value) {
-            pathParts[level - 1] = $(this).find('option:selected').text();
-            pathValues[level - 1] = value;
+    <script>
+        // Global Variables
+        const levelLabels = ['قاره', 'کشور', 'استان', 'شهرستان', 'بخش', 'شهر / دهستان', 'منطقه/ روستا', 'محله', 'خیابان', 'کوچه'];
+        const levelKeys = ['continent', 'country', 'province', 'county', 'section', 'city', 'region', 'neighborhood', 'street', 'alley'];
+        const nameKeys = ['continent_id', 'country_id', 'province_id', 'county_id', 'section_id', 'city_id', 'region_id', 'neighborhood_id', 'street_id', 'alley_id'];
+        const allowAddModal = ['region', 'neighborhood', 'street', 'alley'];
+        const optionalLevels = [9, 10]; // خیابان و کوچه اختیاری هستند
+        const defaultContinentId = '4'; // آسیا
+        const defaultCountryId = '74'; // ایران
+        
+        let pathParts = [];
+        let pathValues = [];
+        let currentCreateLevel = null;
+        let currentCreateType = null;
+        let pendingDefaultCountry = true;
+        const levelRequestTokens = {};
+        
+        $(document).ready(function() {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
             
-            // حذف سطوح بعدی
-            for (let i = level; i < pathParts.length; i++) {
-                pathParts[i] = null;
-                pathValues[i] = null;
-            }
+            $('.location-select').select2({
+                dir: 'rtl',
+                language: 'fa',
+                placeholder: 'انتخاب کنید',
+                allowClear: true
+            });
             
-            // بارگذاری سطح بعدی
-            if (level < levelKeys.length) {
-                loadNextLevel(value, level + 1);
-            }
-        } else {
-            // حذف سطوح بعدی در صورت خالی شدن انتخاب
-            for (let i = level - 1; i < pathParts.length; i++) {
-                pathParts[i] = null;
-                pathValues[i] = null;
-            }
-            // نمایش مجدد سطوح قبلی
-            for (let i = 1; i < level; i++) {
-                $(`select[data-level="${i}"]`).closest('.mb-3').show();
-            }
-        }
-        
-        updatePathDisplay();
-    });
-
-    // مدیریت کلیک روی مسیر
-    $(document).on('click', '#location_path_display span', function() {
-        const level = $(this).data('level');
-        const value = $(this).data('value');
-        
-            if (level === 0) {
-        // بازنشانی کل مسیر
-        pathParts = [];
-        pathValues = [];
-
-        // حذف همه‌ی سلکت‌ها بجز سطح قاره
-        $('#location-selects').html('');
-
-        // افزودن مجدد سلکت قاره
-        const continentSelect = `
-            <div class="mb-3">
-                <label class="form-label">انتخاب قاره</label>
-                <select class="form-select location-select" name="continent_id" data-level="1" id="continent-select">
-                    <option value="">انتخاب کنید</option>
-                    @foreach($continents as $continent)
-                        <option value="{{ $continent->id }}">{{ $continent->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-        `;
-        $('#location-selects').append(continentSelect);
-        $('#continent-select').select2();
-
-        updatePathDisplay();
-        return;
-    }
-
-        // حذف سطوح بعدی
-        for (let i = level; i < pathParts.length; i++) {
-            pathParts[i] = null;
-            pathValues[i] = null;
-        }
-        
-        // حذف تمام select های بعد از سطح انتخاب شده
-        for (let i = level + 1; i <= levelKeys.length; i++) {
-            $(`select[data-level="${i}"]`).closest('.mb-3').remove();
-        }
-        
-        // نمایش مجدد select های قبلی
-        for (let i = 1; i <= level; i++) {
-            $(`select[data-level="${i}"]`).closest('.mb-3').show();
-        }
-        
-        // بارگذاری مجدد سطوح
-        loadNextLevel(value, level + 1);
-        updatePathDisplay();
-    });
-
-    // تنظیم مقادیر پیش‌فرض
-    const defaultContinentId = '4'; // آسیا
-    const defaultCountryId = '74';  // ایران
-
-    // بارگذاری کشورهای قاره آسیا
-    loadNextLevel(defaultContinentId, 2);
-
-// انتخاب خودکار ایران
-const observer = new MutationObserver(() => {
-    const $continentSelect = $('select[data-level="1"]');
-    const $countrySelect = $('select[data-level="2"]');
-    
-    if ($continentSelect.length > 0) {
-        // انتخاب پیش‌فرض قاره
-        $continentSelect.val(defaultContinentId).trigger('change');
-    }
-
-    if ($countrySelect.length > 0) {
-        // انتخاب پیش‌فرض کشور
-        $countrySelect.val(defaultCountryId).trigger('change');
-        
-        // پنهان کردن سلکت باکس کشور
-        $countrySelect.addClass('d-none');
-
-    }
-
-    observer.disconnect();
-});
-
-observer.observe(document.getElementById('location-selects'), {
-    childList: true,
-    subtree: true
-});
-
-
-
-    // مدیریت فرم افزودن مکان جدید
-    $('.add-location-form').on('submit', function(e) {
-        e.preventDefault();
-        const form = $(this);
-        const type = form.data('type');
-        const parentId = form.find('input[name="parent_id"]').val();
-        const name = form.find('input[name="name"]').val();
-        
-        // نمایش وضعیت بارگذاری
-        const submitBtn = form.find('button[type="submit"]');
-        submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> در حال افزودن...');
-        
-        // ارسال درخواست به API
-        $.ajax({
-            url: `/api/add-${type}`,
-            method: 'POST',
-            data: {
-                name: name,
-                parent_id: parentId,
-                _token: '{{ csrf_token() }}'
-            },
-            success: function(response) {
-                // بستن مودال و حذف backdrop
-                $(`#add-${type}-modal`).modal('hide');
-                $('.modal-backdrop').remove();
-                $('body').removeClass('modal-open');
+            $(document).on('change', '.location-select', function() {
+                const level = parseInt($(this).data('level'));
+                const value = $(this).val();
                 
-                // مخفی کردن فقط فرم مربوط به type فعلی
-                $(`.add-location-form[data-type="${type}"]`).hide();
-                
-                // پاک کردن فرم
-                form[0].reset();
-                
-                // پیدا کردن select box مربوطه
-                let select;
-                if (type === 'region') {
-                    select = $('select[name="region_id"]');
-                } else if (type === 'neighborhood') {
-                    select = $('select[name="neighborhood_id"]');
-                } else if (type === 'street') {
-                    select = $('select[name="street_id"]');
-                } else if (type === 'alley') {
-                    select = $('select[name="alley_id"]');
+                if (value) {
+                    const text = $(this).find('option:selected').text();
+                    pathParts[level - 1] = text;
+                    pathValues[level - 1] = value;
+                    pathParts = pathParts.slice(0, level);
+                    pathValues = pathValues.slice(0, level);
+                    
+                    removeLevelContainersFrom(level + 1);
+                    
+                    if (level === 1) {
+                        $(this).closest('.level-container').hide();
+                    }
+                    
+                    if (level < levelKeys.length) {
+                        loadNextLevel(value, level + 1);
+                    }
+                } else {
+                    removeLevelContainersFrom(level + 1);
+                    pathParts = pathParts.slice(0, level - 1);
+                    pathValues = pathValues.slice(0, level - 1);
+                    showContainersUpTo(level - 1);
                 }
                 
-                if (select.length > 0) {
-                    // اضافه کردن گزینه جدید به select box
+                updatePathDisplay();
+            });
+            
+            $(document).on('click', '#location_path_display span', function() {
+                const level = parseInt($(this).data('level'));
+                const value = $(this).data('value');
+                
+                if ($(this).hasClass('last')) return;
+                
+                if (level === 0) {
+                    resetToContinent();
+                    return;
+                }
+                
+                showContainersUpTo(level);
+                removeLevelContainersFrom(level + 1);
+                
+                pathParts = pathParts.slice(0, level);
+                pathValues = pathValues.slice(0, level);
+                
+                updatePathDisplay();
+                
+                if (level < levelKeys.length) {
+                    loadNextLevel(value, level + 1);
+                }
+            });
+            
+            $('#createLocationForm').on('submit', function(e) {
+                e.preventDefault();
+                const name = $('#location_name').val();
+                const parentId = $('#location_parent_id').val();
+                const type = $('#location_type').val();
+                const level = parseInt($('#location_level').val());
+                
+                const url = `/api/add-${type}`;
+                
+                $.post(url, {
+                    name: name,
+                    parent_id: parentId
+                }, function(response) {
+                    const $select = $(`select[data-level="${level}"]`);
+                    if (!$select.length) {
+                        closeCreateLocationModal();
+                        return;
+                    }
+
                     const newOption = new Option(name, response.id, true, true);
-                    select.append(newOption);
+                    $select.append(newOption).trigger('change');
                     
-                    // به‌روزرسانی Select2
-                    select.trigger('change.select2');
-                    
-                    // به‌روزرسانی مسیر
-                    const level = select.data('level');
-                    pathParts[level - 1] = name;
-                    pathValues[level - 1] = response.id;
-                    updatePathDisplay();
-                    
-                    // بارگذاری سطح بعدی
-                    if (level < levelKeys.length) {
-                        loadNextLevel(response.id, level + 1);
+                    closeCreateLocationModal();
+                }).fail(function() {
+                    $('#create_location_error').removeClass('hidden');
+                });
+            });
+
+            $(document).on('click', '.create-location-btn', function() {
+                const level = parseInt($(this).data('level'));
+                const type = $(this).data('type');
+                const parentId = $(this).data('parentId');
+                
+                if (!parentId) {
+                    alert('لطفاً ابتدا سطح قبلی را انتخاب کنید، سپس گزینه جدید را ایجاد نمایید.');
+                    return;
+                }
+                
+                openCreateLocationModal(level, type, parentId);
+            });
+
+            initializeDefaultPath();
+        });
+        
+        function initializeDefaultPath() {
+            const $continent = $('#continent_select');
+            if (!$continent.length) return;
+            
+            pathParts = [];
+            pathValues = [];
+            pendingDefaultCountry = true;
+            
+            const continentText = $continent.find(`option[value="${defaultContinentId}"]`).text().trim();
+            const resolvedContinent = continentText || 'آسیا';
+            pathParts[0] = resolvedContinent;
+            pathValues[0] = defaultContinentId;
+            updatePathDisplay();
+            
+            $continent.closest('.level-container').show();
+            $continent.val(defaultContinentId).trigger('change');
+        }
+        
+        function removeLevelContainersFrom(startLevel) {
+            for (let i = startLevel; i <= levelKeys.length; i++) {
+                const $container = $(`select[data-level="${i}"]`).closest('.level-container');
+                if ($container.length) {
+                    $container.remove();
+                }
+            }
+        }
+        
+        function showContainersUpTo(level) {
+            for (let i = 1; i <= level; i++) {
+                const $container = $(`select[data-level="${i}"]`).closest('.level-container');
+                if ($container.length) {
+                    $container.show();
+                }
+            }
+        }
+        
+        function hideContainersBefore(level) {
+            for (let i = 1; i < level; i++) {
+                const $container = $(`select[data-level="${i}"]`).closest('.level-container');
+                if ($container.length) {
+                    $container.hide();
+                }
+            }
+        }
+        
+        function loadNextLevel(parentId, level) {
+            if (level > levelKeys.length) return;
+            
+            const key = levelKeys[level - 1];
+            const label = levelLabels[level - 1];
+            const name = nameKeys[level - 1];
+            const isOptional = optionalLevels.includes(level);
+            const hasAdd = allowAddModal.includes(key);
+            const showLabel = isOptional ? `${label} (اختیاری)` : label;
+            const requestToken = Date.now();
+            
+            levelRequestTokens[level] = requestToken;
+            
+            hideContainersBefore(level);
+            
+            $.get(`/api/locations?level=${key}&parent_id=${parentId}`, function(data) {
+                if (levelRequestTokens[level] !== requestToken) {
+                    return;
+                }
+                
+                removeLevelContainersFrom(level);
+                
+                let optionsHtml = `<option value="">انتخاب ${showLabel}</option>`;
+                if (Array.isArray(data)) {
+                    data.forEach(item => {
+                        const value = item && item.id !== undefined ? String(item.id) : '';
+                        optionsHtml += `<option value="${value}">${item.name}</option>`;
+                    });
+                }
+                
+                const icon = getIconForLevel(level);
+                const buttonHtml = hasAdd ? `
+                    <button type="button"
+                            class="create-location-btn"
+                            data-level="${level}"
+                            data-type="${key}"
+                            data-parent-id="${parentId}">
+                        <i class="fas fa-plus-circle"></i>
+                        ایجاد ${label}
+                    </button>
+                ` : '';
+                
+                const $container = $(`
+                    <div class="level-container">
+                        <label class="block text-base sm:text-lg font-bold text-gray-800 mb-3">
+                            <i class="${icon} ml-2" style="color: var(--color-ocean-blue);"></i>
+                            ${showLabel}:
+                        </label>
+                        <div class="level-input-group">
+                            <select name="${name}" class="location-select w-full px-4 py-3 border border-gray-300 rounded-lg" data-level="${level}">
+                                ${optionsHtml}
+                            </select>
+                            ${buttonHtml}
+                        </div>
+                    </div>
+                `);
+                
+                $('#location-selects').append($container);
+                const $select = $container.find('select');
+                $select.select2({
+                    dir: 'rtl',
+                    language: 'fa',
+                    placeholder: 'انتخاب کنید',
+                    allowClear: true
+                });
+                
+                if (pendingDefaultCountry && level === 2 && parentId === defaultContinentId) {
+                    const $defaultOption = $select.find(`option[value="${defaultCountryId}"]`);
+                    if ($defaultOption.length) {
+                        pendingDefaultCountry = false;
+                        $select.val(defaultCountryId).trigger('change');
                     }
                 }
-            },
-            error: function(xhr) {
-                // نمایش پیام خطا
-                const errorMessage = xhr.responseJSON?.message || 'خطا در افزودن مکان جدید';
-                alert(errorMessage);
-            },
-            complete: function() {
-                // بازگرداندن وضعیت دکمه
-                submitBtn.prop('disabled', false).html('افزودن');
-            }
-        });
-    });
-});
-
-function updatePathDisplay() {
-    const display = [
-        `<span data-level="0" data-value="world">زمین</span>`,
-        ...pathParts
-            .filter(part => part !== null)
-            .map((part, index, arr) => {
-                const level = index + 1;
-                const isLast = index === arr.length - 1;
-                const extraClass = isLast ? 'last' : '';
-                return `<span data-level="${level}" data-value="${pathValues[index]}" class="${extraClass}">${part}</span>`;
-            })
-    ].join(' / ');
-
-    $('#location_path_display').html(display || 'مسیر انتخاب نشده');
-    updateSubmitButtonState();
-}
-
-let loadingLevel = null;
-
-function loadNextLevel(parentId, level) {
-    if (loadingLevel === level) return;
-    loadingLevel = level;
-    
-    const key = levelKeys[level - 1];
-    const label = levelLabels[level - 1];
-    const name = nameKeys[level - 1];
-    
-    if (!key) return;
-
-    // جلوگیری از ساختن دوباره select برای قاره
-    if (level === 1) return;
-
-    $.get(`/api/locations?level=${key}&parent_id=${parentId}`, function(data) {
-        const hasAdd = allowAddModal.includes(key);
-        const showLabel = ['خیابان', 'کوچه'].includes(label) ? `${label} (اختیاری)` : label;
+            }).fail(function(error) {
+                console.error(`Failed to load ${key}:`, error);
+            });
+        }
         
-        let optionsHtml = `<option value="">انتخاب ${showLabel}</option>`;
-        data.forEach(item => {
-            const value = item.type ? `${item.type}_${item.id}` : item.id;
-            optionsHtml += `<option value="${value}">${item.name}</option>`;
-        });
-
-        if (hasAdd) {
-            optionsHtml += `<option value="__add_new__">+ افزودن ${label}</option>`;
+        function getIconForLevel(level) {
+            const icons = [
+                'fas fa-globe',          // قاره
+                'fas fa-flag',           // کشور
+                'fas fa-map',            // استان
+                'fas fa-city',           // شهرستان
+                'fas fa-building',       // بخش
+                'fas fa-home',           // شهر
+                'fas fa-map-marked-alt', // منطقه
+                'fas fa-map-pin',        // محله
+                'fas fa-road',           // خیابان
+                'fas fa-route'           // کوچه
+            ];
+            return icons[level - 1] || 'fas fa-map-marker-alt';
         }
-
-        // حذف select قبلی اگر وجود دارد
-        $(`select[data-level="${level}"]`).remove();
-
-        // مخفی کردن تمام سطوح قبلی
-        for (let i = 1; i < level; i++) {
-            $(`select[data-level="${i}"]`).closest('.mb-3').hide();
+        
+        function updatePathDisplay() {
+            const display = [
+                `<span data-level="0" data-value="world"><i class="fas fa-globe-asia ml-1"></i>زمین</span>`,
+                ...pathParts
+                    .filter(part => part !== null)
+                    .map((part, index, arr) => {
+                        const level = index + 1;
+                        const isLast = index === arr.length - 1;
+                        const extraClass = isLast ? 'last' : '';
+                        return `<span data-level="${level}" data-value="${pathValues[index]}" class="${extraClass}">${part}</span>`;
+                    })
+            ].join(' <i class="fas fa-angle-left mx-1 text-sm"></i> ');
+            
+            $('#location_path_display').html(display || '<i class="fas fa-map-marker-alt ml-2"></i><span>مسیر انتخاب نشده</span>');
+            updateSubmitButtonState();
         }
+        
+        function updateSubmitButtonState() {
+            const neighborhoodId = pathValues[7]; // محله = سطح 8
+            const $btn = $('#continueBtn');
+            
+            if (neighborhoodId) {
+                $btn.prop('disabled', false);
+            } else {
+                $btn.prop('disabled', true);
+            }
+        }
+        
+        function openCreateLocationModal(level, type, parentId) {
+            currentCreateLevel = level;
+            currentCreateType = type;
+            
+            $('#location_level').val(level);
+            $('#location_parent_id').val(parentId || '');
+            $('#location_type').val(type);
+            $('#location_name').val('');
+            $('#modal_location_type').text(levelLabels[level - 1]);
+            $('#modal_location_type_label').text(levelLabels[level - 1]);
+            $('#create_location_error').addClass('hidden');
+            $('#createLocationModal').removeClass('hidden');
+        }
+        
+        function closeCreateLocationModal() {
+            $('#createLocationModal').addClass('hidden');
+        }
+        
+        function resetToContinent() {
+            // پاک کردن مسیر
+            pathParts = [];
+            pathValues = [];
+            
+            // حذف تمام منوهای دیگر
+            $('#location-selects .level-container').not(':first').remove();
+            
+            const $continentContainer = $('#continent_select').closest('.level-container');
+            $continentContainer.show();
+            $('#continent_select').val('').trigger('change');
+            pendingDefaultCountry = true;
+            
+            updatePathDisplay();
+            updateSubmitButtonState();
+        }
+    </script>
 
-        const $select = $(`
-            <div class="mb-3">
-                <label class="form-label">${showLabel}</label>
-                <select class="form-select location-select" name="${name}" data-level="${level}">
-                    ${optionsHtml}
-                </select>
-            </div>
-        `);
-
-        $('#location-selects').append($select);
-        $select.find('select').select2();
-    });
-}
-
-function openAddModal(type, parentId, currentLevel) {
-    const modalId = `#add${capitalize(type)}Modal`;
-    $(`${modalId} .parent-id`).val(parentId).data('current-level', currentLevel);
-    $(modalId).modal('show');
-}
-
-function capitalize(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
-</script>
-@endsection
-
+</body>
+</html>

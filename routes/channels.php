@@ -16,3 +16,15 @@ use Illuminate\Support\Facades\Broadcast;
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
+
+// Channel برای چت پشتیبانی
+Broadcast::channel('support-chat.{chatId}', function ($user, $chatId) {
+    $chat = \App\Models\SupportChat::find($chatId);
+    
+    if (!$chat) {
+        return false;
+    }
+    
+    // کاربر یا پشتیبان می‌توانند به channel گوش دهند
+    return $chat->user_id === $user->id || $chat->agent_id === $user->id;
+});

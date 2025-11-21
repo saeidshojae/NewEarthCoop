@@ -32,7 +32,7 @@ class ChatController extends Controller
             ->value('role');
 
         $messages = $group->messages()
-            ->select('id', 'user_id', 'parent_id', 'message as content', 'removed_by', 'edited_by', 'created_at', DB::raw("'message' as type"))
+            ->select('id', 'user_id', 'parent_id', 'message as content', 'removed_by', 'edited_by', 'created_at', 'read_by', 'reply_count', 'voice_message', 'file_path', 'file_type', DB::raw("'message' as type"))
             ->orderBy('created_at', 'asc')
             ->get();
 
@@ -83,14 +83,27 @@ class ChatController extends Controller
         }elseif($group->gender != null){
             $groupSetting = GroupSetting::where('level', $group->location_level . '_gender')->first();
         }
+
+        if (!$groupSetting) {
+            $groupSetting = new GroupSetting([
+                'election_status' => 0,
+                'max_for_election' => PHP_INT_MAX,
+                'election_time' => 0,
+                'second_election_time' => 0,
+            ]);
+        }
                 
-        $categoryGroupSetting = CategoryGroupSetting::where('group_setting_id', $groupSetting->id)->get()->pluck('category_id')->toArray();
-        $categories = Category::whereIn('id', $categoryGroupSetting)->get();
+        $categoryGroupSetting = $groupSetting->id
+            ? CategoryGroupSetting::where('group_setting_id', $groupSetting->id)->pluck('category_id')->toArray()
+            : [];
+        $categories = $categoryGroupSetting
+            ? Category::whereIn('id', $categoryGroupSetting)->get()
+            : collect();
         
         $activeUserCount = $group->users()->where('role', '>=', '1')->count();
         $allElectionOfGroup = $group->elections()->count();
         
-        if($groupSetting->election_status == 1 && $group->group_type !== 'private' && $groupSetting && $activeUserCount >= $groupSetting->max_for_election){
+        if($groupSetting && $groupSetting->election_status == 1 && $group->group_type !== 'private' && $activeUserCount >= $groupSetting->max_for_election){
             $election = Election::firstOrCreate([
                 'group_id' => $group->id,
                 'is_closed' => 0,
@@ -225,45 +238,84 @@ class ChatController extends Controller
         ]);
     }
 
-    public function chatAPI(Group $group){
-        $messages = $group->messages()
-        ->select('id', 'user_id', 'parent_id', 'message as content','removed_by', 'edited_by', 'created_at', DB::raw("'message' as type"))
-        ->orderBy('created_at', 'asc')
-        ->get();
+    public function chatAPI(Group $group, Request $request){
+        $page = max(1, (int) $request->get('page', 1));
+        $perPage = min(max(20, (int) $request->get('per_page', 50)), 100); // بین 20 تا 100
+        $offset = ($page - 1) * $perPage;
+        $beforeMessageId = $request->get('before_message_id'); // برای pagination به عقب
 
-        $posts = $group->blogs()
-            ->select('id', 'user_id', 'title', 'img', 'content', 'file_type','category_id',  'created_at', 'group_id', DB::raw("'post' as type"))
-            ->orderBy('created_at', 'asc')
-            ->get();
+        $messagesQuery = $group->messages()
+            ->select('id', 'user_id', 'parent_id', 'message as content','removed_by', 'edited_by', 'created_at', 'read_by', 'reply_count', 'voice_message', 'file_path', 'file_type', DB::raw("'message' as type"))
+            ->orderBy('created_at', 'desc');
 
-        $elections = $group->group_type !== 'private' ? $group->elections()
-            ->select('id', 'starts_at', 'ends_at', 'is_closed', 'created_at', DB::raw("'election' as type"))
-            ->orderBy('created_at', 'asc')
-            ->get() : collect();
+        // اگر before_message_id داده شده، فقط پیام‌های قبل از آن را بگیر
+        if ($beforeMessageId) {
+            $messagesQuery->where('id', '<', $beforeMessageId);
+        }
 
-        $polls = $group->polls()->select('id', 'group_id', 'question', 'expires_at',  'created_by', 'created_at', 'type as real_type', 'main_type', 'skill_id', DB::raw("'poll' as type"))
-            ->orderBy('created_at', 'asc')
-            ->get();
+        $messages = $messagesQuery->take($perPage)->get()->reverse()->values();
 
-        $anns = Announcement::where('group_level', $group->location_level)
-        ->orderBy('created_at', 'asc')
-        ->select('*')
-        ->addSelect(DB::raw("'ann' as type"))
-        ->get();
+        // اگر page=1 است و before_message_id نداریم، پست‌ها و نظرسنجی‌ها را هم بگیر
+        $posts = collect();
+        $polls = collect();
+        $elections = collect();
+        $anns = collect();
+
+        if ($page === 1 && !$beforeMessageId) {
+            $posts = $group->blogs()
+                ->select('id', 'user_id', 'title', 'img', 'content', 'file_type','category_id',  'created_at', 'group_id', DB::raw("'post' as type"))
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            $elections = $group->group_type !== 'private' ? $group->elections()
+                ->select('id', 'starts_at', 'ends_at', 'is_closed', 'created_at', DB::raw("'election' as type"))
+                ->orderBy('created_at', 'asc')
+                ->get() : collect();
+
+            $polls = $group->polls()->select('id', 'group_id', 'question', 'expires_at',  'created_by', 'created_at', 'type as real_type', 'main_type', 'skill_id', DB::raw("'poll' as type"))
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            $anns = Announcement::where('group_level', $group->location_level)
+                ->orderBy('created_at', 'asc')
+                ->select('*')
+                ->addSelect(DB::raw("'ann' as type"))
+                ->get();
+        }
     
         $combined = $messages->merge($posts)->merge($elections)->merge($polls)->merge($anns)->sortBy('created_at')->values();
+        
+        // Check if there are more messages
+        $hasMore = false;
+        if ($messages->isNotEmpty()) {
+            $oldestMessageId = $messages->first()->id;
+            $hasMore = $group->messages()->where('id', '<', $oldestMessageId)->exists();
+        }
+
         $poll = $group->polls()->latest()->with('options')->first();
 
         $userVote = null;
         if ($poll && auth()->check()) {
             $userVote = $poll->votes()->where('user_id', auth()->id())->first();
         }
-                $yourRole = GroupUser::where('group_id', $group->id)
+        
+        $yourRole = GroupUser::where('group_id', $group->id)
             ->where('user_id', auth()->id())
             ->value('role');
 
         $categories = Category::all();
         $specialities = OccupationalField::where('status', 1)->get();
+
+        // اگر درخواست JSON است، JSON برگردان
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'messages' => $combined,
+                'has_more' => $hasMore,
+                'page' => $page,
+                'next_page' => $hasMore ? $page + 1 : null,
+                'oldest_message_id' => $messages->isNotEmpty() ? $messages->first()->id : null
+            ]);
+        }
 
         return view('partials.messages', compact('combined', 'group', 'userVote', 'yourRole', 'categories', 'specialities'))->render();
     }

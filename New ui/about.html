@@ -1,0 +1,578 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EarthCoop - درباره ما</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Load Three.js library for 3D graphics -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        /* Custom Tailwind Configuration - Color and font configuration */
+        :root {
+            --color-earth-green: #10b981; /* Earth Green */
+            --color-ocean-blue: #3b82f6; /* Ocean Blue */
+            --color-digital-gold: #f59e0b; /* Digital Gold */
+            --color-pure-white: #ffffff; /* Pure White */
+            --color-light-gray: #f8fafc; /* Light Gray */
+            --color-gentle-black: #1e293b; /* Gentle Black */
+            --color-dark-green: #047857; /* Dark Green */
+            --color-dark-blue: #1d4ed8; /* Dark Blue */
+            --color-accent-peach: #ff7e5f; /* Accent Peach */
+            --color-accent-sky: #6dd5ed; /* Accent Sky */
+            --color-purple-700: #6B46C1; /* Dark Purple for hover */
+            --color-dark-gold: #d97706; /* Darker gold for hover state */
+        }
+
+        /* Utility classes for custom colors */
+        .bg-earth-green { background-color: var(--color-earth-green); }
+        .text-earth-green { color: var(--color-earth-green); }
+        .bg-ocean-blue { background-color: var(--color-ocean-blue); }
+        .text-ocean-blue { color: var(--color-ocean-blue); }
+        .bg-digital-gold { background-color: var(--color-digital-gold); }
+        .text-digital-gold { color: var(--color-digital-gold); }
+        .bg-pure-white { background-color: var(--color-pure-white); }
+        .text-pure-white { color: var(--color-pure-white); }
+        .bg-light-gray { background-color: var(--color-light-gray); }
+        .text-light-gray { color: var(--color-light-gray); }
+        .bg-gentle-black { background-color: var(--color-gentle-black); }
+        .text-gentle-black { color: var(--color-gentle-black); }
+        .bg-dark-green { background-color: var(--color-dark-green); }
+        .bg-dark-blue { background-color: var(--color-dark-blue); }
+        .bg-accent-peach { background-color: var(--color-accent-peach); }
+        .text-accent-peach { color: var(--color-accent-peach); }
+        .bg-accent-sky { background-color: var(--color-accent-sky); }
+        .text-accent-sky { color: var(--color-accent-sky); }
+        .text-purple-700 { color: var(--color-purple-700); }
+        .bg-dark-gold { background-color: var(--color-dark-gold); } /* New class for darker gold */
+
+        /* Font Families - Vazirmatn for Farsi, Poppins for English numbers/text */
+        .font-vazirmatn { font-family: 'Vazirmatn', sans-serif; }
+        .font-poppins { font-family: 'Poppins', sans-serif; }
+
+        /* Custom animations (copied from main.html for consistency) */
+        @keyframes bounce-custom {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        .animate-bounce-custom { animation: bounce-custom 3s infinite ease-in-out; }
+
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Hamburger menu styling (copied from main.html for consistency) */
+        .hamburger-menu {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 30px;
+            height: 25px;
+            cursor: pointer;
+            z-index: 50;
+        }
+
+        .hamburger-menu span {
+            display: block;
+            width: 100%;
+            height: 3px;
+            background-color: var(--color-gentle-black);
+            border-radius: 5px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .hamburger-menu.open span:nth-child(1) { transform: translateY(11px) rotate(45deg); }
+        .hamburger-menu.open span:nth-child(2) { opacity: 0; }
+        .hamburger-menu.open span:nth-child(3) { transform: translateY(-11px) rotate(-45deg); }
+
+        .mobile-nav-menu {
+            position: absolute;
+            top: 100%;
+            right: 0; /* Changed to right for RTL */
+            width: 100%;
+            background-color: var(--color-pure-white);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            padding: 1rem 0;
+            z-index: 40;
+        }
+
+        /* Gradient backgrounds (copied from main.html for consistency) */
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
+        }
+
+        .section-separator {
+            width: 100px;
+            height: 5px;
+            background: linear-gradient(90deg, var(--color-earth-green), var(--color-ocean-blue), var(--color-digital-gold));
+            border-radius: 5px;
+            margin: 0 auto 2.5rem auto; /* Centered with bottom margin */
+        }
+
+        /* Specific styling for this page */
+        .about-section-card {
+            background: linear-gradient(145deg, #ffffff 0%, #f0f4f7 100%);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s ease;
+            border-radius: 18px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(220, 220, 220, 0.3);
+        }
+
+        .about-section-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
+        }
+
+        .about-section-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, var(--color-earth-green), var(--color-ocean-blue), var(--color-digital-gold));
+        }
+
+        .icon-box {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Styling for the 3D globe canvas */
+        #globe-canvas {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            max-width: 800px; /* Max width for globe */
+            max-height: 800px; /* Max height for globe */
+            z-index: 0; /* Behind text content */
+            opacity: 0.2; /* Transparency for better blending */
+        }
+
+        @media (max-width: 768px) {
+            #globe-canvas {
+                width: 100%;
+                height: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="font-poppins text-gentle-black leading-relaxed bg-light-gray">
+
+<header class="bg-pure-white shadow-md py-4 px-6 md:px-8 sticky top-0 z-50">
+    <div class="container mx-auto flex justify-between items-center">
+        <div class="flex items-center space-x-3 md:space-x-reverse md:space-x-3 rtl:space-x-reverse rtl:space-x-3">
+            <svg width="45" height="45" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="animate-bounce-custom">
+                <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" fill="#10b981" opacity="0.8"/>
+                <path d="M12 2C10.5 4 8 6 8 9C8 12 12 14 12 14C12 14 16 12 16 9C16 6 13.5 4 12 2ZM12 14C12 14 10 16 10 18C10 20 12 22 12 22" fill="#047857"/>
+            </svg>
+            <span class="text-2xl md:text-3xl font-extrabold text-gentle-black font-vazirmatn">EarthCoop</span>
+            <span class="text-sm text-gray-500 hidden md:block border-r-2 border-gray-200 pr-4 mr-4 font-vazirmatn">"خانه‌ای برای همه؛ همکاری برای آینده"</span>
+        </div>
+
+        <nav class="hidden md:flex items-center space-x-8 rtl:space-x-reverse rtl:space-x-8 font-vazirmatn text-gentle-black">
+            <a href="about.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                درباره ارث کوپ
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="#" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                راهنما
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="#" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                فرصتهای همکاری
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="#" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                پروژه‌ها
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="#" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                بلاگ
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="#" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                تماس با ما
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+        </nav>
+
+        <div class="hidden md:flex items-center space-x-4 rtl:space-x-reverse rtl:space-x-4">
+            <button class="bg-earth-green text-pure-white px-6 py-2 rounded-full shadow-md hover:bg-dark-green transition duration-300 font-vazirmatn font-medium transform hover:scale-105">عضویت</button>
+            <button class="bg-ocean-blue text-pure-white px-6 py-2 rounded-full shadow-md hover:bg-dark-blue transition duration-300 font-vazirmatn font-medium transform hover:scale-105">ورود</button>
+            <!-- Updated "دعوت" button to golden color -->
+            <button class="bg-digital-gold text-pure-white px-6 py-2 rounded-full shadow-md hover:bg-dark-gold transition duration-300 font-vazirmatn font-medium transform hover:scale-105">دعوت</button>
+        </div>
+
+        <div class="md:hidden flex items-center">
+            <button id="mobile-menu-button" class="hamburger-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </div>
+    <div id="mobile-menu" class="mobile-nav-menu hidden md:hidden">
+        <nav class="flex flex-col items-center space-y-4 font-vazirmatn text-gentle-black py-4">
+            <a href="index.html" class="hover:text-earth-green transition duration-300 font-medium">خانه</a>
+            <a href="about.html" class="hover:text-earth-green transition duration-300 font-medium">درباره ما</a>
+            <a href="#" class="hover:text-earth-green transition duration-300 font-medium">شبکه</a>
+            <a href="#" class="hover:text-earth-green transition duration-300 font-medium">پروژه‌ها</a>
+            <a href="#" class="hover:text-earth-green transition duration-300 font-medium">اقتصاد</a>
+            <hr class="w-full border-t border-light-gray my-2">
+            <button class="bg-earth-green text-pure-white px-5 py-2 rounded-full shadow-md w-3/4 hover:bg-dark-green transition duration-300 font-vazirmatn font-medium">عضویت</button>
+            <!-- Updated "دعوت" button in mobile menu to golden color -->
+            <button class="bg-digital-gold text-pure-white px-5 py-2 rounded-full shadow-md w-3/4 hover:bg-dark-gold transition duration-300 font-vazirmatn font-medium">دعوت</button>
+            <!-- Changed "ورود" button in mobile menu to be blue -->
+            <button class="bg-ocean-blue text-pure-white px-5 py-2 rounded-full shadow-md w-3/4 hover:bg-dark-blue transition duration-300 font-vazirmatn font-medium">ورود</button>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <!-- Hero Section for About Page -->
+    <section class="relative hero-gradient py-20 md:py-32 overflow-hidden fade-in-section text-center">
+        <!-- Canvas for rendering the 3D globe -->
+        <canvas id="globe-canvas"></canvas>
+
+        <div class="absolute inset-0 overflow-hidden">
+            <div class="absolute top-0 right-0 w-full h-full bg-pure-white/5 to-transparent z-0"></div>
+            <!-- Remove current background image or reduce its opacity for better globe visibility -->
+            <!-- <div class="absolute top-0 right-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1542601906-65529f796a32?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1800&q=80')] bg-cover bg-center opacity-15 z-0"></div> -->
+            <div class="absolute inset-0 bg-pure-white/10 backdrop-blur-sm z-0"></div>
+        </div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <h1 class="text-4xl md:text-6xl lg:text-7xl font-extrabold text-gentle-black font-vazirmatn mb-6 leading-tight">
+                درباره <span class="text-earth-green inline-block">ارث‌کوپ</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-700 mb-8 max-w-3xl font-vazirmatn mx-auto">
+                ماموریت، چشم‌انداز و ارزش‌هایی که ما را به سوی آینده‌ای پایدار و عادلانه هدایت می‌کنند.
+            </p>
+        </div>
+    </section>
+
+    <!-- Section 1: Welcome to EarthCoop Global Partnership System -->
+    <section class="py-16 md:py-24 bg-pure-white fade-in-section">
+        <div class="container mx-auto px-6 text-center">
+            <div class="max-w-4xl mx-auto mb-12">
+                <h2 class="text-3xl md:text-5xl font-extrabold font-vazirmatn text-gentle-black mb-6">
+                    به سامانه شراکت جهانی <span class="text-earth-green">ارث‌کوپ</span> خوش آمدید
+                </h2>
+                <div class="section-separator"></div>
+                <p class="text-lg md:text-xl text-gray-700 font-vazirmatn leading-relaxed mb-8">
+                    ما انسان‌ها امروز با چالش‌هایی روبرو هستیم که همه‌ ما را در هر نقطه‌ای از سیاره زمین به یک اندازه تهدید می‌کنند. بحران‌هایی مانند گرمایش جهانی، تخریب محیط زیست، جنگ، خشونت، بیماری، گرسنگی، فقر و نابرابری، نتیجه‌ی سیاست‌ها و رفتارهای ناعادلانه و ناپایدار گذشته‌ی ما هستند.
+                </p>
+                <p class="text-lg md:text-xl text-gray-700 font-vazirmatn leading-relaxed mb-8 font-bold">
+                    اما هنوز امیدی هست.
+                </p>
+                <p class="text-lg md:text-xl text-gray-700 font-vazirmatn leading-relaxed mb-12">
+                    اگر امروز با روحیه‌ای نو، آگاهانه و همدلانه، مسئولیت تاریخی خود را بپذیریم و دست در دست یکدیگر بگذاریم، می‌توانیم آینده‌ای بهتر بسازیم.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-right">
+                    <div class="about-section-card p-8 flex flex-col items-center group text-center">
+                        <div class="icon-box bg-earth-green/15 text-earth-green transform group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-house-chimney"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">زمین، خانه مشترک همه‌ی ماست.</h3>
+                        <p class="text-gray-700 text-center font-vazirmatn">
+                            خانه‌ای که ما در آن وارثانی برابر هستیم و در مالکیت، حقوق و مسئولیت‌های آن شریک یکدیگریم.
+                        </p>
+                    </div>
+                    <div class="about-section-card p-8 flex flex-col items-center group text-center">
+                        <div class="icon-box bg-ocean-blue/15 text-ocean-blue transform group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">شراکت جهانی، آغاز جامعه همکارانه</h3>
+                        <p class="text-gray-700 text-center font-vazirmatn">
+                            این شراکت جهانی، نقطه آغاز ساخت یک جامعه همکارانه و هم‌سرنوشت است که همه‌ی مردم زمین را دربرمی‌گیرد.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: What is EarthCoop? -->
+    <section class="py-16 md:py-24 bg-light-gray fade-in-section">
+        <div class="container mx-auto px-6 text-center">
+            <div class="max-w-4xl mx-auto mb-12">
+                <h2 class="text-3xl md:text-5xl font-extrabold font-vazirmatn text-gentle-black mb-6">
+                    <span class="text-ocean-blue">ارث‌کوپ</span> چیست؟
+                </h2>
+                <div class="section-separator"></div>
+                <p class="text-lg md:text-xl text-gray-700 font-vazirmatn leading-relaxed mb-8">
+                    ارث‌کوپ یک شبکه مشارکت جهانی، با ساختار قانونی و شفاف است که برای همکاری، هم‌فکری و سرمایه‌گذاری جمعی از محله تا سیاره طراحی شده است.
+                </p>
+                <p class="text-lg md:text-xl text-gray-700 font-vazirmatn leading-relaxed mb-12 font-bold">
+                    با عضویت در ارث‌کوپ، شما یکی از سهامداران واقعی این شبکه خواهید بود.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-right mb-12">
+                    <div class="about-section-card p-8 flex flex-col items-center group text-center">
+                        <div class="icon-box bg-digital-gold/15 text-digital-gold transform group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-id-card"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">هویتی</h3>
+                        <p class="text-gray-700 text-center font-vazirmatn">(نام، سن، جنسیت و ...)</p>
+                    </div>
+                    <div class="about-section-card p-8 flex flex-col items-center group text-center">
+                        <div class="icon-box bg-earth-green/15 text-earth-green transform group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">زمینه‌های شغلی و تخصصی</h3>
+                        <p class="text-gray-700 text-center font-vazirmatn">شغلی، صنفی، تخصصی و تجربی</p>
+                    </div>
+                    <div class="about-section-card p-8 flex flex-col items-center group text-center">
+                        <div class="icon-box bg-ocean-blue/15 text-ocean-blue transform group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-location-dot"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">موقعیت مکانی دقیق</h3>
+                        <p class="text-gray-700 text-center font-vazirmatn">(از قاره تا کوچه)</p>
+                    </div>
+                </div>
+
+                <h3 class="text-2xl md:text-3xl font-extrabold font-vazirmatn text-gentle-black mb-6">
+                    بر این اساس، شما در سه نوع گروه سیستمی عضو می‌شوید:
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-right">
+                    <div class="about-section-card p-8 flex flex-col items-center group text-center">
+                        <!-- Changed icon color to green for Public Assemblies Groups (based on residence location) -->
+                        <div class="icon-box bg-earth-green/15 text-earth-green transform group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-users"></i> <!-- Icon for groups/assemblies -->
+                        </div>
+                        <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">گروه‌های مجامع عمومی</h3>
+                        <p class="text-gray-700 text-center font-vazirmatn">(بر اساس مکان سکونت)</p>
+                    </div>
+                    <div class="about-section-card p-8 flex flex-col items-center group text-center">
+                        <div class="icon-box bg-ocean-blue/15 text-ocean-blue transform group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-user-gear"></i> <!-- Changed from fa-user-tie for better representation -->
+                        </div>
+                        <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">گروه‌های تخصصی</h3>
+                        <p class="text-gray-700 text-center font-vazirmatn">(بر اساس صنف و تخصص)</p>
+                    </div>
+                    <div class="about-section-card p-8 flex flex-col items-center group text-center">
+                        <div class="icon-box bg-digital-gold/15 text-digital-gold transform group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-people-arrows"></i> <!-- Changed from fa-user-group for better representation -->
+                        </div>
+                        <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">گروه‌های اختصاصی</h3>
+                        <p class="text-gray-700 text-center font-vazirmatn">(بر اساس سن و جنسیت)</p>
+                    </div>
+                </div>
+                <p class="text-lg md:text-xl text-gray-700 font-vazirmatn leading-relaxed mt-12">
+                    هر گروه، نقشی مشخص در توسعه پروژه‌های محلی و جهانی خواهد داشت و در چارچوب شفاف، مسئولانه و مشارکتی فعالیت می‌کند.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: Invitation to Membership -->
+    <section class="relative py-20 md:py-32 bg-gradient-to-br from-earth-green to-ocean-blue text-pure-white text-center fade-in-section">
+        <div class="absolute inset-0 bg-black/50 z-0"></div>
+        <div class="container mx-auto px-6 relative z-10">
+            <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold font-vazirmatn mb-8 leading-tight animate-pulse">
+                دعوت به عضویت
+            </h2>
+            <p class="text-xl md:text-2xl mb-12 max-w-4xl mx-auto font-vazirmatn opacity-90">
+                اگر شما هم به ساختن دنیایی بهتر برای خود، فرزندانتان و همه‌ی ساکنان این سیاره باور دارید، همین امروز عضویت بالقوه‌ی خود را در <span class="font-bold text-digital-gold">ارث‌کوپ</span> فعال کنید.
+            </p>
+            <button class="bg-digital-gold text-pure-white px-12 py-5 rounded-full shadow-2xl hover:bg-opacity-90 hover:scale-105 transition duration-300 font-vazirmatn text-xl font-bold flex items-center justify-center mx-auto">
+                با هم، آینده‌ای متفاوت بسازیم <i class="fas fa-hand-holding-seedling mr-3"></i>
+            </button>
+        </div>
+    </section>
+</main>
+
+<footer class="bg-gentle-black text-pure-white py-12 px-6">
+    <div class="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 text-right">
+        <div class="col-span-1 md:col-span-1">
+            <div class="flex items-center space-x-2 rtl:space-x-reverse mb-4 justify-end md:justify-start">
+                <svg width="35" height="35" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" fill="#10b981" opacity="0.7"/>
+                    <path d="M12 2C10.5 4 8 6 8 9C8 12 12 14 12 14C12 14 16 12 16 9C16 6 13.5 4 12 2ZM12 14C12 14 10 16 10 18C10 20 12 22 12 22" fill="#047857"/>
+                </svg>
+                <span class="text-2xl font-bold font-vazirmatn">EarthCoop</span>
+            </div>
+            <p class="text-gray-400 text-sm font-vazirmatn">
+                یک تعاونی جهانی که افراد را توانمند می‌سازد تا به صورت جمعی آینده‌ای پایدار را از طریق مالکیت مشترک و اصول دموکراتیک بسازند.
+            </p>
+            <div class="flex space-x-4 rtl:space-x-reverse mt-6 justify-end md:justify-start">
+                <a href="#" class="text-gray-400 hover:text-pure-white transition duration-300"><i class="fab fa-facebook-f text-xl"></i></a>
+                <a href="#" class="text-gray-400 hover:text-pure-white transition duration-300"><i class="fab fa-twitter text-xl"></i></a>
+                <a href="#" class="text-gray-400 hover:text-pure-white transition duration-300"><i class="fab fa-linkedin-in text-xl"></i></a>
+                <a href="#" class="text-gray-400 hover:text-pure-white transition duration-300"><i class="fab fa-instagram text-xl"></i></a>
+            </div>
+        </div>
+
+        <div>
+            <h3 class="text-lg font-semibold mb-4 text-earth-green font-vazirmatn">لینک‌های سریع</h3>
+            <ul class="space-y-2 font-vazirmatn">
+                <li><a href="index.html" class="text-gray-400 hover:text-pure-white transition duration-300">خانه</a></li>
+                <li><a href="about.html" class="text-gray-400 hover:text-pure-white transition duration-300">درباره ما</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">شبکه ما</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">پروژه‌ها</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">اقتصاد</a></li>
+            </ul>
+        </div>
+
+        <div>
+            <h3 class="text-lg font-semibold mb-4 text-ocean-blue font-vazirmatn">پشتیبانی</h3>
+            <ul class="space-y-2 font-vazirmatn">
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">سوالات متداول</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">تماس با ما</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">حریم خصوصی</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">شرایط خدمات</a></li>
+            </ul>
+        </div>
+
+        <div>
+            <h3 class="text-lg font-semibold mb-4 text-digital-gold font-vazirmatn">در تماس باشید</h3>
+            <p class="text-gray-400 mb-2 font-vazirmatn"><i class="fas fa-map-marker-alt ml-2"></i> دفتر مرکزی جهانی، EarthCoop</p>
+            <p class="text-gray-400 mb-2 font-vazirmatn"><i class="fas fa-envelope ml-2"></i> info@earthcoop.org</p>
+            <p class="text-gray-400 font-vazirmatn"><i class="fas fa-phone-alt ml-2"></i> +1 (123) 456-7890</p>
+        </div>
+    </div>
+    <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-500 text-sm font-vazirmatn">
+        &copy; 2025 EarthCoop. تمامی حقوق محفوظ است.
+    </div>
+</footer>
+
+<script>
+    // Smooth scroll animation logic
+    document.addEventListener('DOMContentLoaded', () => {
+        const sections = document.querySelectorAll('.fade-in-section');
+
+        const observerOptions = {
+            root: null, // viewport
+            rootMargin: '0px',
+            threshold: 0.1 // Trigger when 10% of the section is visible
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target); // Stop observing once visible
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            mobileMenuButton.classList.toggle('open');
+        });
+    });
+
+    // Three.js Globe setup - Three.js globe settings
+    let scene, camera, renderer, globe, lines;
+
+    function initGlobe() {
+        // Scene
+        scene = new THREE.Scene();
+
+        // Camera
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 2; // Camera distance from the globe
+
+        // Renderer
+        const canvas = document.getElementById('globe-canvas');
+        renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true }); // alpha: true for transparent background
+        renderer.setPixelRatio(window.devicePixelRatio);
+        resizeGlobe(); // Initial size adjustment
+
+        // Globe
+        const geometry = new THREE.SphereGeometry(1, 32, 32); // Radius 1, 32 horizontal and vertical segments
+        const material = new THREE.MeshBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.8 }); // Ocean blue with transparency
+        globe = new THREE.Mesh(geometry, material);
+        scene.add(globe);
+
+        // Lines (to display continents or networks)
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0x10b981, linewidth: 2 }); // Earth green
+        const points = [];
+        // Add some simple lines to simulate lines on the globe
+        for (let i = 0; i <= 20; i++) {
+            const lat = (Math.random() * Math.PI) - Math.PI / 2; // Latitude
+            const lon = (Math.random() * Math.PI * 2) - Math.PI; // Longitude
+            points.push(new THREE.Vector3(
+                Math.cos(lat) * Math.cos(lon),
+                Math.sin(lat),
+                Math.cos(lat) * Math.sin(lon)
+            ).multiplyScalar(1.01)); // Slightly larger than the globe
+        }
+        const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+        lines = new THREE.Line(lineGeometry, lineMaterial);
+        scene.add(lines);
+
+        // Lighting (optional, not much effect for MeshBasicMaterial)
+        const ambientLight = new THREE.AmbientLight(0x404040); // Ambient light
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        directionalLight.position.set(1, 1, 1).normalize();
+        scene.add(directionalLight);
+    }
+
+    // Animation function
+    function animateGlobe() {
+        requestAnimationFrame(animateGlobe);
+
+        // Rotate globe and lines
+        globe.rotation.y += 0.002;
+        lines.rotation.y += 0.002;
+
+        renderer.render(scene, camera);
+    }
+
+    // Globe resize function
+    function resizeGlobe() {
+        const canvas = renderer.domElement;
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+
+        if (canvas.width !== width || canvas.height !== height) {
+            renderer.setSize(width, height, false);
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+        }
+    }
+
+    // Add window resize event listener
+    window.addEventListener('resize', resizeGlobe);
+
+    // Start animation after full page load
+    window.onload = function () {
+        initGlobe();
+        animateGlobe();
+    };
+</script>
+</body>
+</html>

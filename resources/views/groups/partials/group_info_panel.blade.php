@@ -1,1145 +1,1283 @@
-<div id="groupInfoPanel" style="position: fixed; top: 0; width: 100%; max-width: 400px; height: 100vh; background-color: #fff; box-shadow: -2px 0 6px rgba(0,0,0,0.1); z-index: 1000; transition: right 0.3s ease; overflow-y: auto;">
-    <style>
-                  .chat-body{
-              width: calc(100% - 400px) !important;
-            }
+@php
+    use Illuminate\Support\Str;
 
-            .chat-header{
-              width: calc(100% - 400px) !important;
-            }
+    $group2 = $group2 ?? $group;
+    $guestCount = $group->guestsCount();
+    $pollCollection = $group2->polls ?? collect();
+    $blogs = \App\Models\Blog::where('group_id', $group2->id ?? 0)->latest()->take(6)->get();
+    $userMemberList = \App\Models\GroupUser::where('group_id', $group2->id ?? 0)
+        ->where('status', 1)
+        ->with('user')
+        ->get();
+    $admins = $group2->users()
+        ->withPivot(['role', 'status'])
+        ->whereIn('role', [2, 3])
+        ->get();
+    $categories = $categories ?? collect();
+    $specialities = $specialities ?? collect();
+    $chatRequests = $chatRequests ?? collect();
+    $managersSorted = $managersSorted ?? collect();
+    $inspectorsSorted = $inspectorsSorted ?? collect();
+    $managerCounts = $managerCounts ?? collect();
+    $inspectorCounts = $inspectorCounts ?? collect();
+    $groupSetting = $groupSetting ?? null;
+@endphp
 
-            .navbar{
-              width: calc(100% - 400px) !important;
-            }
-            #exitNavbar{
-              display: none;
-            }
-            #groupInfoPanel {
-                right: 0;
-            }
-            #chatForm{
-              width: calc(100% - 400px) !important;
-            }
+<div id="groupInfoPanel" class="group-info-panel">
+    <div class="group-info-panel__inner">
+        <button id="exitNavbar" class="panel-close-btn" onclick="closeGroupInfo()">
+            <i class="fas fa-times"></i>
+        </button>
 
-            #pollOptionsBox{
-              right: auto;
-              width: calc(90% - 400px);
-              margin-left: 5%;
-              direction: rtl
-            }
-            #postFormBox{
-              right: auto;
-              width: calc(90% - 400px);
-              margin-left: 5%;
-              direction: rtl
-            }
+        <div class="panel-hero">
+            <div class="panel-hero__avatar">
+                @if($group->avatar)
+                    <img src="{{ asset('images/groups/' . $group->avatar) }}" alt="{{ $group->name }}">
+                @else
+                    <span>{{ Str::substr($group->name, 0, 2) }}</span>
+                @endif
+            </div>
+            <div class="panel-hero__content">
+                <h3 onclick="openGroupInfo()" class="panel-hero__title">{{ $group->name }}</h3>
+                <p class="panel-hero__subtitle">
+                    {{ $group->userCount() }} عضو
+                    @if($guestCount > 0)
+                        <span class="mx-2 text-emerald-900/70">·</span>
+                        {{ $guestCount }} میهمان
+                    @endif
+                </p>
+                @if($group->description)
+                    <p class="panel-hero__description">
+                        {{ Str::limit(strip_tags($group->description), 140) }}
+                    </p>
+                @endif
+            </div>
+        </div>
 
-            #electionOptionsBox{
-              right: auto;
-              width: calc(90% - 400px);
-              margin-left: 5%;
-              direction: rtl
-            }
-
-        @media (max-width: 767px) {
-            #groupInfoPanel {
-                right: -100%;
-            }
-
-            .chat-body{
-              width: 100% !important;
-            }
-
-            .chat-header{
-              width: 100% !important;
-            }
-
-            .navbar{
-              width: 100% !important;
-            }
-
-            #exitNavbar{
-              display: block;
-            }
-            #chatForm{
-              width: 100% !important;
-            }
-
-            #pollOptionsBox{
-              right: auto;
-              width: 90%;
-              margin-left: 5%;
-            }
-            #postFormBox{
-              right: auto;
-              width: 90%;
-              margin-left: 5%;
-            }
-
-            #electionOptionsBox{
-              right: auto;
-              width: 90%;
-              margin-left: 5%;
-            }
-        }
-
-  .groups-list {
-    max-width: 800px;
-    margin: 0 auto;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  
-  .group-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid #f0f0f0;
-    transition: background-color 0.2s;
-  }
-  
-  .group-item:last-child {
-    border-bottom: none;
-  }
-  
-  .group-item:hover {
-    background-color: #f5f5f5;
-  }
-  
-  .group-avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    margin-left: 15px;
-    overflow: hidden;
-    background: #e0e0e0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .group-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .default-avatar {
-    width: 100%;
-    height: 100%;
-    background: #3f7d58d1 !important;
-    background: linear-gradient(90deg, rgba(63, 125, 88, .8) 0%, rgba(122, 207, 156, .8) 100%) !important;    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    font-weight: bold;
-  }
-  
-  .group-info {
-    flex: 1;
-  }
-  
-  .group-main-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 4px;
-  }
-  
-  .group-name {
-    font-weight: 500;
-    font-size: 16px;
-    color: #212121;
-  }
-  
-  .group-name a {
-    color: #212121;
-    text-decoration: none;
-  }
-  
-  .group-members-count {
-    color: #757575;
-    font-size: 13px;
-  }
-  
-  .group-secondary-info {
-    display: flex;
-    justify-content: space-between;
-    color: #757575;
-    font-size: 13px;
-  }
-  
-  .member-role {
-    color: #2196F3;
-  }
-  
-  .text-muted {
-    color: #757575;
-  }
-  
-  .manager-info {
-    color: #757575;
-  }
-  
-  .text-primary {
-    color: #2196F3;
-    text-decoration: none;
-  }
-  
-  .text-primary:hover {
-    text-decoration: underline;
-  }
-
-  .tabs{
-    overflow: scroll;
-
-  }
-
-  /* مودال */
-.modal {
-    display: none; 
-    position: fixed; 
-    z-index: 1; 
-    left: 0;
-    top: 0;
-    width: 100%; 
-    height: 100%; 
-    overflow: auto; 
-    background-color: rgb(0,0,0); 
-    background-color: rgba(0,0,0,0.4); 
-    padding-top: 60px;
-}
-
-/* محتوای مودال */
-.modal-content {
-    background-color: #fefefe;
-    margin: 5% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-}
-
-/* دکمه بستن */
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.close:hover,
-.close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-/* استایل مودال */
-.modal {
-    display: none; 
-    position: fixed; 
-    z-index: 1; 
-    left: 0;
-    top: 0;
-    width: 100%; 
-    height: 100%; 
-    overflow: auto; 
-    background-color: rgb(0,0,0); 
-    background-color: rgba(0,0,0,0.4); 
-    padding-top: 60px;
-}
-
-/* محتوای مودال */
-.modal-content {
-    background-color: #fefefe;
-    margin: 5% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    border-radius: 10px;
-    max-height: 80vh;
-    overflow-y: auto;
-}
-
-/* دکمه بستن */
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.close:hover,
-.close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-/* جعبه جستجو */
-.input-group {
-    margin-bottom: 1rem;
-}
-
-.input-group .form-control {
-    padding-right: 2rem;
-    border-radius: 0.5rem;
-}
-
-/* استایل برای هر مورد در لیست */
-.manager-item {
-    transition: background-color 0.2s ease;
-}
-
-.manager-item:hover {
-    background-color: #f0f0f0;
-}
-
-.manager-item span {
-    font-weight: bold;
-}
-
-/* استایل کلی برای دکمه‌ها */
-button {
-    border-radius: 0.5rem;
-}
-
-/* استایل برای اسکرول داخل لیست */
-#managerList {
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.card{
-        width: 100%;
-    margin-top: .5rem;
-}
-
-
-
-  </style>
-    <div style="padding: 1rem; direction: rtl;">
-      <button onclick="closeGroupInfo()" id="exitNavbar" style="float: left; border: none; background: transparent; font-size: 1.2rem; position: absolute; left: 1rem;">✖</button>
-      
-      <div style="text-align: center; margin-top: 2rem; display: flex; flex-direction: column; align-items: center;">
-        <div class="group-avatar" style="width: 6rem; height: 6rem; font-size: 3rem; margin: 0;">
-          
-          @if($group->avatar)
-          <img src="{{ asset('images/groups/' . $group->avatar) }}" alt="{{ $group->name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-      @else
-      <span>{{ strtoupper(substr($group->location_level, 0, 1)) }}</span>
+        <div class="panel-metrics">
+            <div class="panel-metrics__item">
+                <span class="panel-metrics__label">سطح گروه</span>
+                <span class="panel-metrics__value">{{ $group->location_level ?? '—' }}</span>
+            </div>
+            <div class="panel-metrics__item">
+                <span class="panel-metrics__label">نظرسنجی فعال</span>
+                <span class="panel-metrics__value">{{ $pollCollection->count() }}</span>
+            </div>
+            <div class="panel-metrics__item">
+                <span class="panel-metrics__label">پست‌ها</span>
+                <span class="panel-metrics__value">{{ $blogs->count() }}</span>
+            </div>
+            @if($groupSetting)
+                <div class="panel-metrics__item">
+                    <span class="panel-metrics__label">مدیران مورد نیاز</span>
+                    <span class="panel-metrics__value">{{ $groupSetting->manager_count ?? '—' }}</span>
+                </div>
             @endif
         </div>
-        
-        <h4 style="margin-top: 1rem;">{{ $group->name }}</h4>
-        <p>{{ $group->userCount() }} عضو + {{ $group->guestsCount() }} مهمان</p>
-        <p>{{ $group->description }}</p>
-        @if($yourRole === 3 OR $yourRole === 2)
 
-
-            <!-- Modal -->
-<div id="userSearchModal" class="modal" style="display: none;">
-  <div class="modal-content position-relative">
-    <span class="close">&times;</span>
-    
-    <h2>جستجوی کاربران</h2>
-
-    <input type="text" id="searchUsers" placeholder="کد کاربری، نام، ایمیل یا شماره تماس کاربر..." class="form-control" autocomplete="off">
-    <ul id="searchUserResults" class="list-group position-absolute w-100 mt-1" style="z-index: 1000; display: none;"></ul>
-
-    <input type="number" id="hoursUser" placeholder="چند ساعت بتواند در گروه باشد؟" class="form-control mt-3">
-     <div class="d-flex gap-2">
-    <button id="addUsersToGroup" class="btn btn-success mt-2">افزودن به گروه</button>
-            <button type="button" class="btn btn-secondary mt-2" onclick="cancelAddGuests()" style='    background-color: red !important;'>لغو</button>
+        <div class="panel-actions">
+            @if($group->location_level != 10 && in_array($yourRole ?? 0, [2,3]))
+                <button type="button" class="panel-action-btn" onclick="openGroupEdit()">
+                    <i class="fas fa-pen-to-square"></i>
+                    <span>ویرایش گروه</span>
+                </button>
+                <button type="button" class="panel-action-btn" id="addUserButton">
+                    <i class="fas fa-user-plus"></i>
+                    <span>افزودن کاربر مهمان</span>
+                </button>
+                <button type="button" class="panel-action-btn" id="addChatRequestButton">
+                    <i class="fas fa-comments"></i>
+                    <span>درخواست چت مدیران</span>
+                </button>
+                <button type="button" class="panel-action-btn" onclick="openElection2Box()">
+                    <i class="fas fa-ballot-check"></i>
+                    <span>افزودن انتخابات</span>
+                </button>
+                <a href="{{ route('groups.open', $group) }}" class="panel-action-btn">
+                    <i class="fas fa-toggle-on"></i>
+                    <span>{{ $group->is_open == 0 ? 'فعال کردن نشست' : 'غیرفعال کردن نشست' }}</span>
+                </a>
+            @endif
+            <a href="{{ route('groups.logout', $group->id) }}" class="panel-action-btn panel-action-btn--danger">
+                <i class="fas fa-door-open"></i>
+                <span>خروج از گروه</span>
+            </a>
         </div>
-  </div>
+
+        <div class="panel-tabs">
+            <button class="tab active" data-tab="group">گروه‌ها</button>
+            <button class="tab" data-tab="members">اعضا</button>
+            <button class="tab" data-tab="admins">مدیران</button>
+            <button class="tab" data-tab="post">پست‌ها</button>
+            <button class="tab" data-tab="poll">نظرسنجی</button>
+            <button class="tab" data-tab="election">انتخابات</button>
+            @if(($yourRole ?? 0) == 3)
+                <button class="tab" data-tab="stats">آمار و گزارش‌گیری</button>
+            @endif
+        </div>
+
+        <div class="panel-tab-contents">
+            <div class="tab-content active" id="group">
+                <div class="panel-search">
+                    <select class="form-select" id="searchType">
+                        <option value="name">جستجو در نام گروه</option>
+                        <option value="content">جستجو در محتوا</option>
+                    </select>
+                    <div class="panel-search__input">
+                        <i class="fas fa-magnifying-glass"></i>
+                        <input type="text" id="groupSearch" class="form-control" placeholder="جستجوی گروه..." autocomplete="off">
+                    </div>
+                </div>
+                <div id="groupsList" class="groups-list space-y-3">
+                    @foreach (auth()->user()->groups()->orderBy('last_activity_at', 'desc')->get() as $relatedGroup)
+                        @php
+                            $currentUser = auth()->id();
+                            $pivot = \App\Models\GroupUser::where('group_id', $relatedGroup->id)->where('user_id', $currentUser)->first();
+
+                            $locationApproved = true;
+                            if ($relatedGroup->address_id !== null) {
+                                $level = $relatedGroup->location_level;
+                                if (!in_array($level, ['continent', 'country', 'province', 'county', 'section', 'city'])) {
+                                    $modelMap = [
+                                        'region' => \App\Models\Region::class,
+                                        'neighborhood' => \App\Models\Neighborhood::class,
+                                        'street' => \App\Models\Street::class,
+                                        'alley' => \App\Models\Alley::class,
+                                    ];
+                                    $model = $modelMap[$level] ?? null;
+                                    if ($model) {
+                                        $instance = $model::find($relatedGroup->address_id);
+                                        if ($instance && $instance->status == 0) {
+                                            $locationApproved = false;
+                                        }
+                                    }
+                                }
+                            }
+
+                            $specialtyApproved = true;
+                            if (($relatedGroup->specialty && $relatedGroup->specialty->status == 0) ||
+                                ($relatedGroup->experience && $relatedGroup->experience->status == 0)) {
+                                $specialtyApproved = false;
+                            }
+                        @endphp
+
+                        @if($pivot)
+                            @php
+                                $memberRole = match($pivot->role) {
+                                    0 => 'ناظر',
+                                    1 => 'فعال',
+                                    2 => 'بازرس',
+                                    3 => 'مدیر',
+                                    4 => 'مهمان',
+                                    5 => 'فعال ۲',
+                                    default => 'عضو'
+                                };
+                            @endphp
+                            <div class="group-item" data-level="{{ $relatedGroup->location_level }}" data-group-id="{{ $relatedGroup->id }}">
+                                <div class="group-avatar">
+                                    @if($relatedGroup->avatar)
+                                        <img src="{{ asset('images/groups/' . $relatedGroup->avatar) }}" alt="{{ $relatedGroup->name }}">
+                                    @else
+                                        <div class="default-avatar">{{ Str::substr($relatedGroup->name, 0, 2) }}</div>
+                                    @endif
+                                </div>
+                                <div class="group-info">
+                                    <div class="group-main-info">
+                                        <div class="group-name">
+                                            @if($locationApproved && $specialtyApproved && $pivot->status == 1)
+                                                <a href="{{ route('groups.chat', $relatedGroup) }}">{{ $relatedGroup->name }}</a>
+                                            @else
+                                                <span class="text-muted">{{ $relatedGroup->name }} (در انتظار تأیید)</span>
+                                            @endif
+                                        </div>
+                                        <div class="group-members-count">{{ $relatedGroup->userCount() }} عضو</div>
+                                    </div>
+                                    <div class="group-secondary-info">
+                                        <div class="member-role">
+                                            @if($pivot->status == 1)
+                                                <span>{{ $memberRole }}</span>
+                                            @else
+                                                <span>خارج شده <a class="text-primary" href="{{ route('groups.relogout', $relatedGroup) }}">بازگردانی</a></span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="group-meta text-muted">
+                                        آخرین فعالیت: {{ verta($relatedGroup->updated_at)->format('Y/m/d H:i') }}
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="tab-content" id="members">
+                <div class="panel-search">
+                    <div class="panel-search__input w-100">
+                        <i class="fas fa-user"></i>
+                        <input id="membersSearch" type="text" class="form-control" placeholder="جستجوی عضو (نام، نقش، ایمیل)..." autocomplete="off">
+                    </div>
+                </div>
+                <div class="members-count text-muted mb-3" id="membersCount"></div>
+                <ul id="membersList" class="member-list">
+                    @foreach ($userMemberList as $member)
+                        @php
+                            $person = $member->user;
+                            $full = trim(($person->first_name ?? '') . ' ' . ($person->last_name ?? '')) ?: '—';
+                            $email = $person->email ?? '';
+                            $initial = Str::upper(Str::substr($email ?: $full, 0, 1));
+                            $memberRoleLabel = match((int)($member->role ?? -1)) {
+                                0 => 'ناظر',
+                                1 => 'فعال',
+                                2 => 'بازرس',
+                                3 => 'مدیر',
+                                4 => 'مهمان',
+                                5 => 'فعال ۲',
+                                default => 'نقش ناشناخته'
+                            };
+                            $expiredHuman = null;
+                            if (!empty($member->expired)) {
+                                try { $expiredHuman = \Carbon\Carbon::parse($member->expired)->diffForHumans(); } catch (\Exception $e) {}
+                            }
+                            $profileUrl = $person?->id ? route('profile.member.show', $person->id) : '#';
+                            $isOnline = method_exists($person, 'isOnline') ? (bool)$person->isOnline() : false;
+                        @endphp
+                        <li class="member-item"
+                            data-name="{{ $full }}"
+                            data-role="{{ $memberRoleLabel }}"
+                            data-email="{{ $email }}">
+                            <div class="member-avatar">
+                                <span>{{ $initial }}</span>
+                                <span class="member-status {{ $isOnline ? 'online' : 'offline' }}"></span>
+                            </div>
+                            <div class="member-info">
+                                <a href="{{ $profileUrl }}" class="member-name">{{ $full }}</a>
+                                <div class="member-meta">
+                                    <span class="member-role-label">{{ $memberRoleLabel }}</span>
+                                    @if($expiredHuman)
+                                        <span class="member-expired">· {{ $expiredHuman }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                            @if(($yourRole ?? null) == 3 && in_array((int)($member->role ?? -1), [0,1], true) && $person?->id)
+                                <a href='{{ route('change-user-role', [ $person->id, $group2->id ]) }}' class="member-change-role">
+                                    تغییر نقش
+                                </a>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+
+            <div class="tab-content" id="admins">
+                <ul class="admin-list">
+                    @foreach ($admins as $admin)
+                        @php
+                            $memberRole = match($admin->pivot->role) {
+                                2 => 'بازرس',
+                                3 => 'مدیر',
+                                default => 'عضو'
+                            };
+                            $onlineState = method_exists($admin, 'isOnline') ? (bool)$admin->isOnline() : false;
+                        @endphp
+                        <li class="admin-item">
+                            <div class="admin-avatar {{ $onlineState ? 'online' : 'offline' }}">
+                                <span>{{ Str::upper(Str::substr($admin->email, 0, 1)) }}</span>
+                            </div>
+                            <div class="admin-info">
+                                <a href='{{ route('profile.member.show', $admin) }}' class="admin-name">
+                                    {{ $admin->first_name }} {{ $admin->last_name }}
+                                </a>
+                                <span class="admin-role">{{ $memberRole }}</span>
+                            </div>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+
+            <div class="tab-content" id="post">
+                @forelse ($blogs as $item)
+                    @php
+                        $type = $item->file_type ? explode('/', $item->file_type)[0] : null;
+                    @endphp
+                    <article class="post-card">
+                        @if($item->img)
+                            <div class="post-card__media">
+                                @if($type === 'image')
+                                    <img src="{{ asset('images/blogs/' . $item->img) }}" alt="{{ $item->title }}">
+                                @elseif($type === 'video')
+                                    <video controls>
+                                        <source src="{{ asset('images/blogs/' . $item->img) }}" type="{{ $item->file_type }}">
+                                    </video>
+                                @elseif($type === 'audio')
+                                    <audio controls>
+                                        <source src="{{ asset('images/blogs/' . $item->img) }}" type="{{ $item->file_type }}">
+                                    </audio>
+                                @endif
+                            </div>
+                        @endif
+                        <div class="post-card__body">
+                            <h3 class="post-card__title">{{ $item->title }}</h3>
+                            <p class="post-card__excerpt">{!! Str::limit(strip_tags($item->content), 200, '…') !!}</p>
+                            <div class="post-card__footer">
+                                <span class="time">{{ verta($item->created_at)->format('Y/m/d H:i') }}</span>
+                                <a href="{{ route('groups.comment', $item) }}" class="post-card__link">
+                                    مشاهده نظرات
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                @empty
+                    <div class="empty-state">
+                        هنوز پستی در این گروه ثبت نشده است.
+                    </div>
+                @endforelse
+            </div>
+
+            <div class="tab-content" id="poll">
+                @forelse ($pollCollection as $item)
+                    @include('groups.partials.poll', ['item' => $item, 'userVote' => $userVote])
+                @empty
+                    <div class="empty-state">نظرسنجی فعالی وجود ندارد.</div>
+                @endforelse
+            </div>
+
+            <div class="tab-content" id="election">
+                @php
+                    $electionPolls = $pollCollection->where('main_type', 0);
+                @endphp
+                @forelse ($electionPolls as $item)
+                    @include('groups.partials.poll', ['item' => $item, 'userVote' => $userVote])
+                @empty
+                    <div class="empty-state">انتخاباتی برای نمایش وجود ندارد.</div>
+                @endforelse
+            </div>
+
+            @if(($yourRole ?? 0) == 3)
+            <div class="tab-content" id="stats">
+                <div id="stats-loading" class="text-center py-8" style="display: none;">
+                    <i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i>
+                    <p class="mt-2 text-slate-600">در حال بارگذاری آمار...</p>
+                </div>
+                <div id="stats-error" class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-4" style="display: none;">
+                    <i class="fas fa-exclamation-circle ml-2"></i>
+                    <span id="stats-error-text"></span>
+                </div>
+                <div id="stats-content" class="stats-container">
+                    <!-- آمار اینجا نمایش داده می‌شود -->
+                </div>
+            </div>
+            @endif
+        </div>
+    </div>
 </div>
 
-<script>
-    function cancelAddGuests(){
-        document.querySelector('#userSearchModal').style='display: none'
-    }
-    
-document.addEventListener('DOMContentLoaded', function () {
-    const searchInput = document.getElementById('searchUsers');
-    const resultBox = document.getElementById('searchUserResults');
-    let selectedUserId = null;
-    
+<div id="userSearchModal" class="panel-modal" style="display: none;">
+    <div class="panel-modal__dialog">
+        <button type="button" class="panel-modal__close" onclick="cancelAddGuests()">×</button>
+        <h3 class="panel-modal__title">اضافه کردن کاربر مهمان</h3>
 
-    
-    searchInput.addEventListener('input', function () {
-        const query = this.value.trim();
-        if (query.length < 2) {
-            resultBox.style.display = 'none';
-            resultBox.innerHTML = '';
+        <div class="panel-modal__body">
+            <div class="panel-search__input mb-3">
+                <i class="fas fa-user-search"></i>
+                <input type="text" id="searchUsers" class="form-control" placeholder="کد کاربری، نام، ایمیل یا شماره تماس کاربر..." autocomplete="off">
+            </div>
+            <ul id="searchUserResults" class="panel-modal__list" style="display:none;"></ul>
+
+            <div class="row gx-2 align-items-center mt-3">
+                <div class="col-12 col-sm-6">
+                    <input type="number" id="hoursUser" class="form-control" placeholder="مدت حضور (ساعت)">
+                </div>
+                <div class="col-12 col-sm-6 d-flex gap-2 mt-2 mt-sm-0">
+                    <button type="button" class="btn btn-success flex-fill" id="addUsersToGroup">افزودن به گروه</button>
+                    <button type="button" class="btn btn-outline-secondary flex-fill" onclick="cancelAddGuests()">انصراف</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="chatRequestModal" class="panel-modal" style="display: none;">
+    <div class="panel-modal__dialog">
+        <button type="button" class="panel-modal__close" onclick="cancelManagerChat()">×</button>
+        <h3 class="panel-modal__title">درخواست چت با مدیران دیگر گروه‌ها</h3>
+        <div class="panel-modal__body">
+            <div class="panel-search__input mb-3">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchManagers" class="form-control" placeholder="جستجوی مدیران..." autocomplete="off">
+            </div>
+            <ul id="managerList" class="panel-modal__list">
+                @php
+                    $managers = \App\Models\GroupUser::where('role', 3)->get();
+                @endphp
+                @foreach ($managers as $manager)
+                    @if (auth()->id() !== $manager->user_id)
+                        <li class="panel-modal__list-item manager-item">
+                            <span>{{ $manager->user->first_name }} {{ $manager->user->last_name }} ({{ $manager->group->name }})</span>
+                            @include('chat_request', ['user' => $manager->user, 'request_to_group' => $manager->group_id])
+                        </li>
+                    @endif
+                @endforeach
+            </ul>
+        </div>
+    </div>
+</div>
+
+@include('chat_request', ['user' => auth()->user()])
+
+@push('styles')
+<style>
+    .group-info-panel {
+        width: 100%;
+        background: linear-gradient(135deg, #f9fbfd 0%, #ffffff 45%, #f1f5f9 100%);
+        border-radius: 26px;
+        border: 1px solid rgba(15, 118, 110, 0.12);
+        box-shadow: 0 30px 80px -45px rgba(15, 23, 42, 0.25);
+    }
+    @media (min-width: 1200px) {
+        .group-info-panel {
+            position: sticky;
+            top: 0;
+            max-height: calc(100vh - 4rem);
+            overflow-y: auto;
+        }
+        .panel-close-btn {
+            display: none;
+        }
+    }
+    @media (max-width: 1199px) {
+        .group-info-panel {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            max-width: 360px;
+            height: 100vh;
+            border-radius: 0;
+            z-index: 1000;
+            transition: right .35s ease;
+            overflow-y: auto;
+        }
+        .group-info-panel.is-open {
+            right: 0;
+        }
+    }
+    .group-info-panel__inner {
+        position: relative;
+        padding: 1.5rem 1.75rem 2.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+    .panel-close-btn {
+        position: absolute;
+        top: 1.2rem;
+        left: 1.2rem;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1px solid rgba(15, 118, 110, 0.15);
+        background: rgba(255, 255, 255, 0.85);
+        color: #0f4c3a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 25px -15px rgba(15, 118, 110, 0.5);
+    }
+    .panel-hero {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1rem;
+        padding-top: .75rem;
+    }
+    .panel-hero__avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: 30px;
+        background: linear-gradient(145deg, rgba(59, 130, 246, 0.35), rgba(16, 185, 129, 0.32));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #0f172a;
+        box-shadow: 0 18px 40px -22px rgba(16, 185, 129, 0.6);
+        overflow: hidden;
+    }
+    .panel-hero__avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .panel-hero__title {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #0f4c3a;
+        cursor: pointer;
+    }
+    .panel-hero__subtitle {
+        font-size: .95rem;
+        color: #0f766e;
+    }
+    .panel-hero__description {
+        font-size: .85rem;
+        color: #0f3d32;
+        line-height: 1.8;
+    }
+    .panel-metrics {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .75rem;
+    }
+    .panel-metrics__item {
+        background: rgba(255, 255, 255, 0.85);
+        border-radius: 18px;
+        padding: .75rem;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        box-shadow: inset 0 8px 24px -18px rgba(15, 118, 110, 0.4);
+        text-align: center;
+    }
+    .panel-metrics__label {
+        display: block;
+        font-size: .75rem;
+        color: #475569;
+    }
+    .panel-metrics__value {
+        display: block;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #0f4c3a;
+        margin-top: .35rem;
+    }
+    .panel-actions {
+        display: flex;
+        flex-direction: column;
+        gap: .6rem;
+    }
+    .panel-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .65rem;
+        justify-content: center;
+        padding: .65rem .9rem;
+        border-radius: 16px;
+        background: rgba(240, 253, 244, 0.85);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        color: #047857;
+        font-weight: 600;
+        text-decoration: none;
+        transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .panel-action-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 16px 40px -24px rgba(16, 185, 129, 0.45);
+        background: rgba(16, 185, 129, 0.12);
+    }
+    .panel-action-btn--danger {
+        background: rgba(254, 242, 242, 0.9);
+        border-color: rgba(248, 113, 113, 0.25);
+        color: #b91c1c;
+    }
+    .panel-tabs {
+        display: flex;
+        overflow-x: auto;
+        gap: .6rem;
+        padding-top: .5rem;
+    }
+    .panel-tabs .tab {
+        border: none;
+        background: rgba(241, 245, 249, 0.8);
+        padding: .55rem 1.1rem;
+        border-radius: 14px;
+        font-size: .85rem;
+        color: #0f4c3a;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .panel-tabs .tab.active {
+        background: linear-gradient(135deg, #10b981, #0f766e);
+        color: #fff;
+        box-shadow: 0 12px 24px -18px rgba(15, 118, 110, 0.65);
+    }
+    .panel-tab-contents {
+        position: relative;
+        min-height: 300px;
+    }
+    .tab-content {
+        display: none;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 18px;
+        padding: 1.1rem;
+        border: 1px solid rgba(226, 232, 240, 0.6);
+        box-shadow: 0 10px 30px -32px rgba(15, 23, 42, 0.6);
+    }
+    .tab-content.active {
+        display: block;
+    }
+    .panel-search {
+        display: flex;
+        gap: .75rem;
+        margin-bottom: 1rem;
+    }
+    .panel-search__input {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        border-radius: 14px;
+        padding: .5rem .75rem;
+        flex: 1;
+        background: rgba(248, 250, 252, 0.9);
+    }
+    .panel-search__input input {
+        border: none;
+        outline: none;
+        background: transparent;
+        font-size: .85rem;
+        width: 100%;
+    }
+    .groups-list .group-item {
+        display: flex;
+        gap: .9rem;
+        align-items: center;
+        padding: .8rem .9rem;
+        border-radius: 16px;
+        background: rgba(249, 250, 251, 0.92);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .groups-list .group-item:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.98);
+        box-shadow: 0 16px 32px -28px rgba(15, 23, 42, 0.5);
+    }
+    .group-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(96, 165, 250, 0.35), rgba(16, 185, 129, 0.28));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #0f4c3a;
+    }
+    .group-avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .group-info .group-name a {
+        color: #0f4c3a;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .group-info .group-name span.text-muted {
+        color: #64748b;
+        font-weight: 600;
+    }
+    .member-list,
+    .admin-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: .65rem;
+    }
+    .member-item,
+    .admin-item {
+        display: flex;
+        align-items: center;
+        gap: .8rem;
+        padding: .7rem .9rem;
+        border-radius: 16px;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        background: rgba(248, 250, 252, 0.92);
+    }
+    .member-avatar,
+    .admin-avatar {
+        position: relative;
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: linear-gradient(145deg, rgba(125, 211, 252, 0.3), rgba(125, 211, 252, 0.08));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #0369a1;
+    }
+    .member-avatar .member-status {
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        border: 2px solid #fff;
+    }
+    .member-status.online {
+        background: #22c55e;
+    }
+    .member-status.offline {
+        background: #94a3b8;
+    }
+    .member-name,
+    .admin-name {
+        font-weight: 700;
+        color: #0f4c3a;
+        text-decoration: none;
+    }
+    .member-change-role {
+        margin-right: auto;
+        font-size: .78rem;
+        font-weight: 600;
+        color: #047857;
+        text-decoration: none;
+    }
+    .post-card {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        border-radius: 18px;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 14px 32px -28px rgba(15, 23, 42, 0.55);
+    }
+    .post-card__media img,
+    .post-card__media video {
+        width: 100%;
+        border-radius: 14px;
+    }
+    .post-card__title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0f4c3a;
+    }
+    .post-card__excerpt {
+        font-size: .9rem;
+        color: #334155;
+        line-height: 1.8;
+    }
+    .post-card__footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #64748b;
+    }
+    .post-card__link {
+        color: #0d9488;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 1.25rem;
+        font-size: .9rem;
+        color: #64748b;
+        background: rgba(240, 253, 244, 0.6);
+        border-radius: 16px;
+    }
+    .panel-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        background: rgba(15, 23, 42, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+    }
+    .panel-modal__dialog {
+        background: #fff;
+        border-radius: 24px;
+        width: min(560px, 92vw);
+        padding: 1.5rem;
+        position: relative;
+        box-shadow: 0 35px 70px -30px rgba(15, 23, 42, 0.45);
+    }
+    .panel-modal__close {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        border: none;
+        background: rgba(241, 245, 249, 0.8);
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        font-size: 1.1rem;
+        line-height: 1;
+        color: #334155;
+    }
+    .panel-modal__title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: #0f4c3a;
+    }
+    .panel-modal__list {
+        display: flex;
+        flex-direction: column;
+        gap: .6rem;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        max-height: 320px;
+        overflow-y: auto;
+    }
+    .panel-modal__list-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: .75rem 1rem;
+        border-radius: 16px;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        background: rgba(248, 250, 252, 0.92);
+    }
+    @media (max-width: 767px) {
+        #exitNavbar {
+            display: block;
+        }
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+    if (typeof window.performSearch === 'undefined') {
+        const performSearch = debounce(function(e) {
+            const searchText = (e.target.value || '').toLowerCase();
+            const searchType = document.getElementById('searchType')?.value ?? 'name';
+            const groupsList = document.getElementById('groupsList');
+
+            if (!groupsList) {
+                return;
+            }
+
+            if (searchText.length < 2) {
+                groupsList.querySelectorAll('.group-item').forEach(item => item.style.display = '');
+                return;
+            }
+
+            groupsList.innerHTML = '<div class="empty-state">در حال جستجو…</div>';
+
+            fetch(`/api/groups/search?q=${encodeURIComponent(searchText)}&type=${searchType}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.groups?.length) {
+                        groupsList.innerHTML = '<div class="empty-state">نتیجه‌ای یافت نشد</div>';
+                        return;
+                    }
+
+                    groupsList.innerHTML = '';
+                    data.groups.forEach(group => {
+                        const card = document.createElement('div');
+                        card.className = 'group-item';
+                        card.dataset.groupId = group.id;
+                        card.dataset.level = group.location_level;
+                        card.innerHTML = `
+                            <div class="group-avatar">
+                                ${group.avatar
+                                    ? `<img src="${group.avatar}" alt="${group.name}">`
+                                    : `<div class="default-avatar">${group.name.substring(0, 2)}</div>`
+                                }
+                            </div>
+                            <div class="group-info">
+                                <div class="group-main-info">
+                                    <div class="group-name">
+                                        ${group.is_approved
+                                                ? `<a href="/groups/chat/${group.id}">${group.name}</a>`
+                                                : `<span class="text-muted">${group.name} (در انتظار تأیید)</span>`
+                                            }
+                                    </div>
+                                    <div class="group-members-count">${group.members_count} عضو</div>
+                                </div>
+                                <div class="group-secondary-info">
+                                    <div class="member-role">
+                                        ${group.status === 1
+                                                ? `<span>${group.role}</span>`
+                                                : `<span>خارج شده <a href="/groups/${group.id}/relogout" class="text-primary">بازگردانی</a></span>`
+                                            }
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        groupsList.appendChild(card);
+                    });
+                })
+                .catch(() => {
+                    groupsList.innerHTML = '<div class="empty-state text-danger">خطا در بازیابی نتایج.</div>';
+                });
+        }, 500);
+
+        document.getElementById('groupSearch')?.addEventListener('input', performSearch);
+    }
+
+    // Tabs functionality - استفاده از کد ساده و کارآمد فایل قدیمی
+    // اطمینان از اینکه کد بعد از بارگذاری DOM اجرا شود
+    function initTabs() {
+        const tabs = document.querySelectorAll('.tab');
+        const contents = document.querySelectorAll('.tab-content');
+        
+        if (tabs.length === 0 || contents.length === 0) {
+            console.warn('Tabs or tab contents not found');
             return;
         }
-
-        fetch(`/users/search?q=${encodeURIComponent(query)}`)
-            .then(res => res.json())
-            .then(users => {
-                resultBox.innerHTML = '';
-                if (users.length) {
-                    users.forEach(user => {
-                        const li = document.createElement('li');
-                        li.classList.add('list-group-item', 'list-group-item-action');
-                        li.textContent = `${user.first_name} ${user.last_name} (${user.email})`;
-                        li.addEventListener('click', () => {
-                            searchInput.value = user.email;
-                            selectedUserId = user.id;
-                            resultBox.innerHTML = '';
-                            resultBox.style.display = 'none';
-                        });
-                        resultBox.appendChild(li);
-                    });
-                    resultBox.style.display = 'block';
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // حذف active از همه تب‌ها و محتواها
+                tabs.forEach(t => t.classList.remove('active'));
+                contents.forEach(c => c.classList.remove('active'));
+                
+                // اضافه کردن active به تب و محتوای انتخاب شده
+                tab.classList.add('active');
+                const targetContent = document.getElementById(tab.dataset.tab);
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                    
+                    // اگر تب آمار انتخاب شد، آمار را بارگذاری کن
+                    if (tab.dataset.tab === 'stats') {
+                        loadGroupStats();
+                    }
                 } else {
-                    resultBox.innerHTML = '<li class="list-group-item disabled">کاربری یافت نشد</li>';
-                    resultBox.style.display = 'block';
+                    console.error('Tab content not found for:', tab.dataset.tab);
                 }
             });
-    });
+        });
+    }
+    
+    // اجرای فوری اگر DOM آماده است، وگرنه منتظر می‌ماند
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTabs);
+    } else {
+        initTabs();
+    }
 
-    document.addEventListener('click', (e) => {
-        if (!searchInput.contains(e.target) && !resultBox.contains(e.target)) {
-            resultBox.style.display = 'none';
-        }
-    });
-
-    document.getElementById('addUsersToGroup').addEventListener('click', function () {
-        const hours = document.getElementById('hoursUser').value;
-        if (!selectedUserId || !hours) {
-            alert("لطفاً کاربر را انتخاب و مدت ساعت را وارد کنید.");
+    // بارگذاری آمار گروه
+    function loadGroupStats() {
+        const loadingEl = document.getElementById('stats-loading');
+        const errorEl = document.getElementById('stats-error');
+        const errorTextEl = document.getElementById('stats-error-text');
+        const statsContentEl = document.getElementById('stats-content');
+        
+        if (!loadingEl || !errorEl || !errorTextEl || !statsContentEl) {
+            console.error('Stats elements not found');
             return;
         }
 
-        // ارسال اطلاعات با AJAX (یا اضافه کردن به فرم یا لیست)
-        fetch('/groups/add-user', {
-            method: 'POST',
+        // نمایش loading
+        loadingEl.style.display = 'block';
+        errorEl.style.display = 'none';
+        statsContentEl.innerHTML = '';
+
+        const groupId = {{ $group->id ?? 0 }};
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+        fetch(`/groups/${groupId}/stats`, {
+            method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            },
-            body: JSON.stringify({
-                user_id: selectedUserId,
-                group_id: {{ $group->id }},
-                hours: hours
-            })
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         })
-        .then(res => res.json())
-        .then(data => {
-            alert("کاربر با موفقیت اضافه شد");
-            selectedUserId = null;
-            searchInput.value = '';
-            document.getElementById('hoursUser').value = '';
-            // optionally close modal
-        });
-    });
-
-});
-</script>
-
-
-  <!-- دکمه درخواست چت -->
-<!-- Modal Chat Request -->
-<div id="chatRequestModal" class="modal" style="display: none;">
-  <div class="modal-content">
-      <h2>درخواست چت با مدیران دیگر گروه‌ها</h2>
-
-      <!-- جعبه جستجو -->
-      <div class="input-group mb-3">
-          <input type="text" id="searchManagers" class="form-control" placeholder="جستجوی مدیران..." style="direction: rtl;">
-      </div>
-        <style>
-            .chat-request{
-                width: 20% !important;
-            }
-        </style>
-      <!-- لیست مدیران -->
-      <ul id="managerList" style="list-style: none; padding: 0; overflow-y: auto; max-height: 300px;">
-        @php
-            $managers = \App\Models\GroupUser::where('role', 3)->get();
-        @endphp
-        @foreach ($managers as $manager)
-          @if (auth()->user()->id !== $manager->user->id)
-              <li class="manager-item" style="border: 1px solid #888888d0; padding: 0 .5rem; border-radius: .5rem; margin: .5rem 0; display: flex; justify-content: space-between; align-items: center;">
-                  <span>{{ $manager->user->first_name }} {{ $manager->user->last_name }} ({{ $manager->group->name }})</span>
-                  @include('chat_request', ['user' => $manager->user, 'request_to_group' => $manager->group_id])
-              </li>
-          @endif
-        @endforeach
-      </ul>
-           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-secondary mt-2" onclick="cancelManagerChat()" style='    background-color: red !important;'>لغو</button>
-        </div>
-  </div>
-</div>
-    <script>
-        function cancelManagerChat(){
-            document.querySelector('#chatRequestModal').style='display: none'
-        }
-    </script>
-    
-    
-    
-
-        
-     @include('chat_request', ['user' => auth()->user()])
-     
-        @endif
-
-     @foreach ($group2->elections as $item)
-          @include('groups.partials.election', ['item' => $item, 'side' => true])
-        @endforeach
-      </div>
-  
-      <hr>
-      {{-- Tabs --}}
-      <div class="tabs">
-        <div class="tab active" data-tab="grooup" style="display: flex">گروه <span>ها</span></div>
-        @if($group->location_level != 10)
-          <div class="tab" data-tab="members">اعضا</div>
-          <div class="tab" data-tab="admins">مدیران</div>
-          <div class="tab" data-tab="post">پست</div>
-          <div class="tab" data-tab="poll">نظرسنجی</div>
-          <div class="tab" data-tab="election">انتخابات</div>
-        @endif
-      </div>
-  
-      {{-- Tab Grooup --}}
-      <div class="tab-content active" id="grooup" style="padding: .5rem 1rem;">
-        <div class="search-box mb-3">
-          <div class="input-group">
-            <select class="form-select" id="searchType" style="direction: rtl;">
-              <option value="name">جستجو در نام گروه</option>
-              <option value="content">جستجو در محتوا</option>
-            </select>
-            <input type="text" id="groupSearch" class="form-control" placeholder="جستجوی گروه..." style="direction: rtl;">
-          </div>
-        </div>
-        <ul style="list-style: none; padding: 0;" id="groupsList">
-          
-          @foreach (auth()->user()->groups()->orderBy('last_activity_at', 'desc')->get() as $group)
-          
-          @php
-            $currentUser = auth()->id();
-            $pivot = \App\Models\GroupUser::where('group_id', $group->id)->where('user_id', $currentUser)->first();
-      
-            $locationApproved = true;
-            if ($group->address_id !== null) {
-                $level = $group->location_level;
-                if (!in_array($level, ['continent', 'country', 'province', 'county', 'section', 'city'])) {
-                    $modelMap = [
-                        'region' => \App\Models\Region::class,
-                        'neighborhood' => \App\Models\Neighborhood::class,
-                        'street' => \App\Models\Street::class,
-                        'alley' => \App\Models\Alley::class,
-                    ];
-                    $model = $modelMap[$level] ?? null;
-                    if ($model) {
-                        $instance = $model::find($group->address_id);
-                        if ($instance && $instance->status == 0) {
-                            $locationApproved = false;
-                        }
-                    }
-                }
-            }
-      
-            $specialtyApproved = true;
-            if (($group->specialty && $group->specialty->status == 0) ||
-                ($group->experience && $group->experience->status == 0)) {
-                $specialtyApproved = false;
-            }
-          @endphp
-      
-          @if($pivot)
-            @php
-              $memberRole = match($pivot->role) {
-                0 => 'ناظر',
-                1 => 'فعال',
-                2 => 'بازرس',
-                3 => 'مدیر',
-                4 => 'مهمان',
-                5 => 'فعال ۲',
-              };
-      
-              $inspectors = $group->users->filter(fn($u) => $u->pivot->role == 2);
-              $managers = $group->users->filter(fn($u) => $u->pivot->role == 3);
-            @endphp
-      
-            <div class="group-item" data-level="{{ $group->location_level }}" data-group-id="{{ $group->id }}">
-              <div class="group-avatar">
-                @if($group->avatar)
-                  <img src="{{ asset('images/groups/' . $group->avatar) }}" alt="{{ $group->name }}">
-                @else
-                  <div class="default-avatar">{{ substr($group->name, 0, 2) }}</div>
-                @endif
-              </div>
-              
-              <div class="group-info">
-                <div class="group-main-info">
-                  <div class="group-name">
-                    @if($locationApproved && $specialtyApproved && $pivot->status == 1)
-                      <a href="{{ route('groups.chat', $group) }}">{{ $group->name }}</a>
-                    @else
-                      <span class="text-muted">{{ $group->name }} (در انتظار تأیید)</span>
-                    @endif
-                  </div>
-                  <div class="group-members-count">{{ $group->userCount() }} عضو</div>
-                </div>
-
-                
-                <div class="group-secondary-info">
-                  <div class="member-role">
-                    @if($pivot->status == 1)
-                      <span>{{ $memberRole }}</span>
-                    @else
-                      <span>
-                        خارج شده <a href="{{ route('groups.relogout', $group) }}" class="text-primary">بازگردانی</a>
-                      </span>
-                    @endif
-                  </div>
-                </div>
-
-                <div class="group-content" style="display: none;">
-                  @php
-                    $latestBlogs = $group->blogs()->latest()->take(5)->get();
-                    $latestComments = $group->blogs()->with('comments')->get()->pluck('comments')->flatten()->take(5);
-                    $latestPolls = $group->polls()->latest()->take(5)->get();
-                  @endphp
-                  
-                  @foreach($latestBlogs as $blog)
-                    {{ $blog->title }} {{ $blog->content }}
-                  @endforeach
-                  
-                  @foreach($latestComments as $comment)
-                    {{ $comment->message }}
-                  @endforeach
-                  
-                  @foreach($latestPolls as $poll)
-                    {{ $poll->title }} {{ $poll->description }}
-                  @endforeach
-                </div>
-              </div>
-            </div>
-          @endif
-          @endforeach
-        </ul>
-      </div>
-     <div class="tab-content" id="members" style="padding: .5rem 1rem;">
-  {{-- جعبه جستجو + شمارنده --}}
-  <div style="display:flex; gap:.5rem; align-items:center; margin:.5rem 0; direction:rtl;">
-    <input id="membersSearch" type="text" class="form-control"
-           placeholder="جستجوی عضو (نام، نقش، ایمیل)..."
-           style="max-width:420px;">
-  </div>
-
-  <ul id="membersList" style="list-style: none; padding: 0;">
-    @php
-      $userMemberList = \App\Models\GroupUser::where('group_id', $group2->id ?? 0)
-                          ->where('status', 1)
-                          ->with('user') // برای جلوگیری از N+1
-                          ->get();
-    @endphp
-
-    @foreach ($userMemberList as $user)
-      @php
-        $person = $user->user; // ممکنه null باشه
-        $first  = $person->first_name ?? '';
-        $last   = $person->last_name ?? '';
-        $full   = trim($first.' '.$last) ?: '—';
-        $email  = $person->email ?? '';
-        $initial= strtoupper(substr($email ?: ($group2->name ?? 'U'), 0, 1));
-
-        $fColor = rand(1,255);
-        $sColor = rand(1,255);
-        $tColor = rand(1,255);
-
-        $memberRole = match((int)($user->role ?? -1)) {
-          0 => 'ناظر',
-          1 => 'فعال',
-          2 => 'بازرس',
-          3 => 'مدیر',
-          4 => 'مهمان',
-          5 => 'فعال ۲',
-          default => 'نقش ناشناخته'
-        };
-
-        // تاریخ انقضا (اختیاری)
-        $expiredHuman = null;
-        if (!empty($user->expired)) {
-          try { $expiredHuman = \Carbon\Carbon::parse($user->expired)->diffForHumans(); } catch (\Exception $e) {}
-        }
-
-        $profileUrl = $person?->id ? route('profile.member.show', $person->id) : '#';
-        $isOnline = method_exists($person, 'isOnline') ? (bool)$person->isOnline() : false;
-      @endphp
-
-      <li class="member-item"
-          data-name="{{ $full }}"
-          data-role="{{ $memberRole }}"
-          data-email="{{ $email }}"
-          style="margin:.5rem 0; display:flex; align-items:center;">
-
-        <div class="group-avatar"
-             style="width:2rem; height:2rem; font-size:.7rem; margin:0; position:relative;
-                    background-color: rgba({{ $fColor }}, {{ $sColor }}, {{ $tColor }}, .1);
-                    color: rgb({{ $fColor }}, {{ $sColor }}, {{ $tColor }});">
-          <span>{{ $initial }}</span>
-          <div class="online-status"
-               style="position:absolute; bottom:-2px; right:-2px; width:10px; height:10px; border-radius:50%;
-                      background-color: {{ $isOnline ? '#4CAF50' : '#9E9E9E' }}; border:2px solid #fff;">
-          </div>
-        </div>
-
-        <a style="margin:0; margin-right:.5rem;" href="{{ $profileUrl }}">
-          {{ $full }}
-          <span>
-            ({{ $memberRole }})
-            @if($expiredHuman) {{ $expiredHuman }} @endif
-          </span>
-        </a>
-
-        @if(($yourRole ?? null) == 3 && in_array((int)($user->role ?? -1), [0,5], true) && $person?->id)
-          <div class="group-main-info">
-            <a href='{{ route('change-user-role', [ $person->id, $group2->id ]) }}'
-               class="group-members-count"
-               style="background-color:#459f96; margin-right:.5rem; padding:.1rem 1rem; color:#fff; border-radius:.4rem;">
-              تغییر نقش
-            </a>
-          </div>
-        @endif
-      </li>
-    @endforeach
-  </ul>
-</div>
-
-{{-- فیلتر زنده اعضا --}}
-<script>
-(function(){
-  const $input = document.getElementById('membersSearch');
-  const $list  = document.getElementById('membersList');
-  const $count = document.getElementById('membersCount');
-
-  if(!$input || !$list) return;
-
-  const items = Array.from($list.querySelectorAll('.member-item'));
-
-  // نمایش شمارنده اولیه
-  updateCount(items.length, items.length);
-
-  // دی‌بونس سریع
-  let t = null;
-  $input.addEventListener('input', function(){
-    clearTimeout(t);
-    t = setTimeout(applyFilter, 120);
-  });
-
-  function norm(s){
-    return (s || '')
-      .toString()
-      .trim()
-      .toLowerCase()
-      // نرمال‌سازی ساده حروف فارسی/عربی
-      .replace(/[\u064A\u06CC]/g, 'ی')
-      .replace(/[\u0643\u06A9]/g, 'ک');
-  }
-
-  function applyFilter(){
-    const q = norm($input.value);
-    let shown = 0;
-
-    if(!q){
-      items.forEach(li => li.style.display = '');
-      updateCount(items.length, items.length);
-      return;
-    }
-
-    items.forEach(li => {
-      const name  = norm(li.getAttribute('data-name'));
-      const role  = norm(li.getAttribute('data-role'));
-      const email = norm(li.getAttribute('data-email'));
-      const hit = name.includes(q) || role.includes(q) || email.includes(q);
-      li.style.display = hit ? '' : 'none';
-      if (hit) shown++;
-    });
-
-    updateCount(shown, items.length);
-  }
-
-  function updateCount(shown, total){
-    if($count) $count.textContent = `نمایش ${shown} از ${total}`;
-  }
-})();
-</script>
-
-    
-    
-
-                        {{-- Tab Members --}}
-            <div class="tab-content" id="admins" style="padding: .5rem 1rem;">
-              <ul style="list-style: none; padding: 0;">
-                @foreach ($group2->users()->withPivot(['role', 'status'])->whereIn('role', [2, 3])->get() as $userr)
-                  @php
-                    $fColor = rand(1, 255);
-                    $sColor = rand(1, 255);
-                    $tColor = rand(1, 255);
-                  @endphp
-                  <li style="margin: .5rem 0; display: flex; align-items: center;">
-                    <div class="group-avatar" style="width: 2rem; height: 2rem; font-size: .7rem; margin: 0; background-color: rgba({{ $fColor }}, {{ $sColor }}, {{ $tColor }}, .1); color: rgb({{ $fColor }}, {{ $sColor }}, {{ $tColor }}); position: relative;">
-                      <span>{{ strtoupper(substr($userr->email, 0, 1)) }}</span>
-                      <div class="online-status" style="position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; background-color: {{ $userr->isOnline() ? '#4CAF50' : '#9E9E9E' }}; border: 2px solid #fff;"></div>
-                    </div>
-                    <a style="margin: 0; margin-right: .5rem;" href='{{ route('profile.member.show', $userr) }}'>
-                      {{ $userr->first_name }} {{ $userr->last_name }}
-                      @php
-                        $memberRole = match($userr->pivot->role) {
-                          0 => 'ناظر',
-                          1 => 'فعال',
-                          2 => 'بازرس',
-                          3 => 'مدیر',
-                          4 => 'مهمان',
-                          5 => 'فعال ۲',
-                        };
-                      @endphp
-                      <span>({{ $memberRole }})</span>
-                    </a>
-                  </li>
-                @endforeach
-              </ul>
-            </div>
-  
-      {{-- Tab Posts --}}
-      <div class="tab-content" id="post" style="padding: .5rem 1rem;">
-        <ul style="display: flex; justify-content: space-between; font-size: .8rem; padding: 0; list-style: none;" class="tags">
-          <li @if(isset($_GET['filter']) && $_GET['filter'] == 'most-like') style='background-color: #2451666e;' @endif ><a href="{{ route('groups.chat', [$group2->id, 'filter' => 'most-like']) }}">بیشترین لایک</a></li>
-          <li @if(isset($_GET['filter']) && $_GET['filter'] == 'most-dislike') style='background-color: #2451666e;' @endif><a href="{{ route('groups.chat', [$group2->id, 'filter' => 'most-dislike']) }}">بیشترین دیسلایک</a></li>
-          <li @if(isset($_GET['filter']) && $_GET['filter'] == 'most-comment') style='background-color: #2451666e;' @endif><a href="{{ route('groups.chat', [$group2->id, 'filter' => 'most-comment']) }}">بیشترین نظر</a></li>
-          @foreach (\App\Models\Category::all() as $category)
-            <li @if(isset($_GET['filter']) && $_GET['filter'] == 'c-' . $category->id) style='background-color: #2451666e;' @endif><a href="{{ route('groups.chat', [$group2->id, 'filter' => 'c-' . $category->id]) }}">{{ 'دسته ' . $category->name }}</a></li>
-          @endforeach
-
-        </ul>
-
-        <hr>
-@php
-  $blogsQuery = \App\Models\Blog::where('group_id', $group2->id)
-      ->with(['user.groupUser' => function($query) use ($group) {
-          $query->where('group_id', $group->id);
-      }, 'comments', 'reactions'])
-      ->withCount(['comments', 'likes as likes_count', 'dislikes as dislikes_count']);
-
-  // فیلترها بر اساس query string
-  $filter = request()->get('filter');
-
-  if ($filter == 'most-like') {
-      $blogsQuery->orderByDesc('likes_count');
-  } elseif ($filter == 'most-dislike') {
-      $blogsQuery->orderByDesc('dislikes_count');
-  } elseif ($filter == 'most-comment') {
-      $blogsQuery->orderByDesc('comments_count');
-  } elseif (Str::startsWith($filter, 'c-')) {
-      $categoryId = (int) Str::after($filter, 'c-');
-      $blogsQuery->where('category_id', $categoryId);
-  } else {
-      $blogsQuery->latest(); // پیش‌فرض: جدیدترین پست‌ها
-  }
-
-  $blogs = $blogsQuery->get();
-@endphp
-        @foreach ($blogs as $item)
-             @if ($item->img != null)
-    @php
-        $type = explode('/', $item->file_type)[0];
-    @endphp
-
-    @if($type === 'image')
-        <img src="{{ asset('images/blogs/' . $item->img) }}" style="width: 100%">
-    @elseif($type === 'video')
-        <video controls style="width: 100%">
-            <source src="{{ asset('images/blogs/' . $item->img) }}" type="{{ $item->file_type }}">
-        </video>
-    @elseif($type === 'audio')
-        <audio controls>
-            <source src="{{ asset('images/blogs/' . $item->img) }}" type="{{ $item->file_type }}">
-        </audio>
-    @endif
-    @endif
-
-          <h3 style="text-align: center">{{ $item->title }}</h3>
-          <p style="text-align: center">{!! $item->content !!}</p>
-          <div class="d-flex justify-content-between align-items-center">
-            <span class="time">{{ $item->created_at->format('H:i') }}</span>
-            <a href="{{ route('groups.comment', $item) }}" class="comments-link">
-              <i class="fas fa-arrow-right me-2"></i> نظرات
-            </a>
-          </div>
-          <hr>
-        @endforeach
-      </div>
-  
-      {{-- Tab Polls --}}
-      <div class="tab-content" id="poll" style="padding: .5rem 1rem;">
-        @foreach ($group2->polls as $item)
-          @include('groups.partials.poll', ['item' => $item, 'userVote' => $userVote])
-        @endforeach
-      </div>
-
-      <style>
-        #electionRedirect{
-          width: 100%;
-        }
-      </style>
-      <div class="tab-content" id="election" style="padding: .5rem 1rem;">
-        @foreach ($group2->polls as $item)
-            @if($item->main_type == 0)  
-                  @include('groups.partials.poll', ['item' => $item, 'userVote' => $userVote])
-            @endif
-        @endforeach
-       
-      </div>
-    </div>
-  </div>
-  
-  @if (isset($_GET['filter']))
-    <script>
-      document.getElementById('groupInfoPanel').style.right = '0';
-      document.querySelector('#post').classList.add('active')
-      document.querySelector('#grooup').classList.remove('active')
-      document.querySelector('#members').classList.remove('active')
-      document.querySelectorAll('.tab').forEach(tab => {
-        let dataTab = tab.getAttribute('data-tab')
-
-        if(dataTab == 'post'){
-          tab.classList.add('active')
-        }else{
-          tab.classList.remove('active')
-        }
-      })
-    </script>
-@endif
-
-<script>
-  // Debounce function to limit API calls
-  function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-      const later = () => {
-        clearTimeout(timeout);
-        func(...args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-    };
-  }
-
-  // Search function
-  const performSearch = debounce(function(e) {
-    const searchText = e.target.value.toLowerCase();
-    const searchType = document.getElementById('searchType').value;
-    
-    // Show loading indicator
-    const groupsList = document.getElementById('groupsList');
-    groupsList.innerHTML = '<div style="text-align: center; padding: 1rem;">در حال جستجو...</div>';
-    
-    // Make API call to search through all groups
-    fetch(`/api/groups/search?q=${encodeURIComponent(searchText)}&type=${searchType}`, {
-      headers: {
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      credentials: 'same-origin'
-    })
-      .then(response => {
-        if (response.status === 429) {
-          throw new Error('تعداد درخواست‌ها زیاد است. لطفاً چند لحظه صبر کنید.');
-        }
-        if (response.status === 401) {
-          throw new Error('لطفاً ابتدا وارد شوید.');
-        }
-        if (!response.ok) {
-          throw new Error('خطا در ارتباط با سرور. لطفاً دوباره تلاش کنید.');
-        }
-        return response.json();
-      })
-      .then(data => {
-        groupsList.innerHTML = '';
-        
-        if (data.groups.length === 0) {
-          groupsList.innerHTML = '<div style="text-align: center; padding: 1rem;">نتیجه‌ای یافت نشد</div>';
-          return;
-        }
-        
-        data.groups.forEach(group => {
-          const groupItem = document.createElement('div');
-          groupItem.className = 'group-item';
-          groupItem.dataset.groupId = group.id;
-          groupItem.dataset.level = group.location_level;
-          
-          groupItem.innerHTML = `
-            <div class="group-avatar">
-              ${group.avatar ? 
-                `<img src="${group.avatar}" alt="${group.name}">` : 
-                `<div class="default-avatar">${group.name.substring(0, 2)}</div>`
-              }
-            </div>
-            
-            <div class="group-info">
-              <div class="group-main-info">
-                <div class="group-name">
-                  ${group.is_approved ? 
-                    `<a href="/groups/chat/${group.id}">${group.name}</a>` : 
-                    `<span class="text-muted">${group.name} (در انتظار تأیید)</span>`
-                  }
-                </div>
-                <div class="group-members-count">${group.members_count} عضو</div>
-              </div>
-              
-              <div class="group-secondary-info">
-                <div class="member-role">
-                  ${group.status === 1 ? 
-                    `<span>${group.role}</span>` : 
-                    `<span>خارج شده <a href="/groups/${group.id}/relogout" class="text-primary">بازگردانی</a></span>`
-                  }
-                </div>
-              </div>
-              
-              <div class="group-content" style="display: none;">
-                ${group.content}
-              </div>
-            </div>
-          `;
-          
-          groupsList.appendChild(groupItem);
-        });
-      })
-      .catch(error => {
-        console.error('Error searching groups:', error);
-        groupsList.innerHTML = `
-          <div style="text-align: center; padding: 1rem; color: red;">
-            ${error.message}
-            <br>
-            <button onclick="performSearch(event)" class="btn btn-sm btn-primary mt-2">تلاش مجدد</button>
-          </div>
-        `;
-      });
-  }, 500); // 500ms delay
-
-  // Add event listener with debounced search
-  document.getElementById('groupSearch').addEventListener('input', performSearch);
-
-  // Add content elements to group items
-  document.querySelectorAll('.group-item').forEach(group => {
-    const groupId = group.dataset.groupId;
-    if (groupId) {
-      fetch(`/api/groups/${groupId}/content`)
         .then(response => response.json())
         .then(data => {
-          const contentDiv = document.createElement('div');
-          contentDiv.className = 'group-content';
-          contentDiv.style.display = 'none';
-          contentDiv.textContent = data.content;
-          group.appendChild(contentDiv);
+            loadingEl.style.display = 'none';
+            
+            if (data.status === 'success') {
+                displayStats(data.stats);
+            } else {
+                errorTextEl.textContent = data.message || 'خطا در بارگذاری آمار';
+                errorEl.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            loadingEl.style.display = 'none';
+            errorTextEl.textContent = 'خطا در ارتباط با سرور';
+            errorEl.style.display = 'block';
+            console.error('Error loading stats:', error);
         });
     }
-  });
-  
 
+    function displayStats(stats) {
+        const statsContentEl = document.getElementById('stats-content');
+        if (!statsContentEl) return;
 
-  document.getElementById("addUserButton").onclick = function() {
-    document.getElementById("userSearchModal").style.display = 'block';
-};
+        statsContentEl.innerHTML = `
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <!-- آمار اعضا -->
+                <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <h4 style="margin: 0; font-size: 1rem; font-weight: 600;">اعضای گروه</h4>
+                        <i class="fas fa-users" style="font-size: 1.5rem; opacity: 0.8;"></i>
+                    </div>
+                    <div style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">${stats.members.total}</div>
+                    <div style="font-size: 0.85rem; opacity: 0.9;">
+                        فعال: ${stats.members.active} | ناظر: ${stats.members.observer} | مدیر: ${stats.members.manager}
+                    </div>
+                </div>
 
+                <!-- آمار پیام‌ها -->
+                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <h4 style="margin: 0; font-size: 1rem; font-weight: 600;">پیام‌ها</h4>
+                        <i class="fas fa-comments" style="font-size: 1.5rem; opacity: 0.8;"></i>
+                    </div>
+                    <div style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">${stats.messages.total}</div>
+                    <div style="font-size: 0.85rem; opacity: 0.9;">
+                        امروز: ${stats.messages.today} | این هفته: ${stats.messages.this_week} | این ماه: ${stats.messages.this_month}
+                    </div>
+                </div>
 
-// بسته کردن مودال
-document.querySelector(".close").onclick = function() {
-    document.getElementById("userSearchModal").style.display = "none";
-};
+                <!-- آمار پست‌ها -->
+                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <h4 style="margin: 0; font-size: 1rem; font-weight: 600;">پست‌ها</h4>
+                        <i class="fas fa-file-alt" style="font-size: 1.5rem; opacity: 0.8;"></i>
+                    </div>
+                    <div style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">${stats.posts.total}</div>
+                    <div style="font-size: 0.85rem; opacity: 0.9;">
+                        این ماه: ${stats.posts.this_month} | با تصویر: ${stats.posts.with_images}
+                    </div>
+                </div>
 
-// بسته کردن مودال زمانی که کلیک خارج از مودال انجام می‌شود
-window.onclick = function(event) {
-    if (event.target == document.getElementById("userSearchModal")) {
-        document.getElementById("userSearchModal").style.display = "none";
+                <!-- آمار نظرسنجی‌ها -->
+                <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <h4 style="margin: 0; font-size: 1rem; font-weight: 600;">نظرسنجی‌ها</h4>
+                        <i class="fas fa-chart-pie" style="font-size: 1.5rem; opacity: 0.8;"></i>
+                    </div>
+                    <div style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">${stats.polls.total}</div>
+                    <div style="font-size: 0.85rem; opacity: 0.9;">
+                        فعال: ${stats.polls.active} | منقضی شده: ${stats.polls.expired}
+                    </div>
+                </div>
+
+                <!-- آمار انتخابات -->
+                <div class="stat-card" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); color: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <h4 style="margin: 0; font-size: 1rem; font-weight: 600;">انتخابات</h4>
+                        <i class="fas fa-ballot-check" style="font-size: 1.5rem; opacity: 0.8;"></i>
+                    </div>
+                    <div style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">${stats.elections.total}</div>
+                    <div style="font-size: 0.85rem; opacity: 0.9;">
+                        فعال: ${stats.elections.active} | بسته شده: ${stats.elections.closed}
+                    </div>
+                </div>
+
+                <!-- آمار گزارش‌ها -->
+                <div class="stat-card" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); color: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <h4 style="margin: 0; font-size: 1rem; font-weight: 600;">گزارش‌ها</h4>
+                        <i class="fas fa-flag" style="font-size: 1.5rem; opacity: 0.8;"></i>
+                    </div>
+                    <div style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">${stats.reports.pending + stats.reports.resolved + stats.reports.escalated}</div>
+                    <div style="font-size: 0.85rem; opacity: 0.9;">
+                        در انتظار: ${stats.reports.pending} | حل شده: ${stats.reports.resolved} | ارجاع شده: ${stats.reports.escalated}
+                    </div>
+                </div>
+            </div>
+
+            <!-- فعال‌ترین اعضا -->
+            <div class="most-active-members" style="background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 700; color: #0f172a;">
+                    <i class="fas fa-fire ml-2" style="color: #f59e0b;"></i>
+                    فعال‌ترین اعضا
+                </h4>
+                ${stats.most_active_members.length > 0 ? `
+                    <div class="members-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        ${stats.most_active_members.map((member, index) => `
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: #f8fafc; border-radius: 12px;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <span style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.85rem;">
+                                        ${index + 1}
+                                    </span>
+                                    <span style="font-weight: 600; color: #0f172a;">${member.name}</span>
+                                </div>
+                                <span style="color: #64748b; font-size: 0.9rem;">
+                                    <i class="fas fa-comment ml-1"></i>
+                                    ${member.message_count} پیام
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<p style="color: #64748b; text-align: center; padding: 2rem;">هنوز پیامی ارسال نشده است.</p>'}
+            </div>
+        `;
     }
-};
 
-document.getElementById("addUsersToGroup").onclick = function() {
-    let userInfo = document.querySelector("#searchUsers").value;
-    let hours = document.querySelector("#hoursUser").value;
-
-    if(hours == ""){
-        alert("لطفا ساعات مدنظر را وارد کنید");
-        return;
-    }
-
-    if(userInfo == ""){
-        alert("لطفا کاربر مدنظر را وارد کنید");
-        return;
-    }
-
-    fetch(`/add-users-to-group`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({ userInfo: userInfo, groupId: {{ $group2->id }}, hours: hours})
-    }).then(response => response.json())
-      .then(data => alert(data.message));
-};
-
-// نمایش مودال درخواست چت
-document.getElementById("addChatRequestButton").onclick = function() {
-    document.getElementById("chatRequestModal").style.display = 'block';
-};
-
-// بستن مودال
-document.querySelector(".close").onclick = function() {
-    document.getElementById("chatRequestModal").style.display = "none";
-};
-
-// بستن مودال زمانی که کلیک خارج از مودال انجام می‌شود
-window.onclick = function(event) {
-    if (event.target == document.getElementById("chatRequestModal")) {
-        document.getElementById("chatRequestModal").style.display = "none";
-    }
-};
-
-
-// جستجو در میان مدیران
-document.getElementById("searchManagers").addEventListener("input", function() {
-    let query = this.value.toLowerCase();
-    let managerItems = document.querySelectorAll(".manager-item");
-
-    managerItems.forEach(item => {
-        let managerName = item.querySelector("span").textContent.toLowerCase();
-        
-        if (managerName.includes(query)) {
-            item.style.display = "flex"; // نمایش مورد
-        } else {
-            item.style.display = "none"; // مخفی کردن مورد
-        }
+    document.getElementById('addUserButton')?.addEventListener('click', function () {
+        document.getElementById('userSearchModal').style.display = 'flex';
     });
-});
 
-// نمایش مودال درخواست چت
-document.getElementById("addChatRequestButton").onclick = function() {
-    document.getElementById("chatRequestModal").style.display = 'block';
-};
+    document.getElementById('addChatRequestButton')?.addEventListener('click', function () {
+        document.getElementById('chatRequestModal').style.display = 'flex';
+    });
 
-// بستن مودال
-document.querySelector(".close").onclick = function() {
-    document.getElementById("chatRequestModal").style.display = "none";
-};
-
-// بستن مودال زمانی که کلیک خارج از مودال انجام می‌شود
-window.onclick = function(event) {
-    if (event.target == document.getElementById("chatRequestModal")) {
-        document.getElementById("chatRequestModal").style.display = "none";
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
     }
-};
 
+    const membersSearchInput = document.getElementById('membersSearch');
+    if (membersSearchInput) {
+        const memberItems = Array.from(document.querySelectorAll('.member-item'));
+        const membersCount = document.getElementById('membersCount');
+
+        const updateCount = (shown, total) => {
+            if (membersCount) {
+                membersCount.textContent = `نمایش ${shown} از ${total}`;
+            }
+        };
+        updateCount(memberItems.length, memberItems.length);
+
+        membersSearchInput.addEventListener('input', debounce(() => {
+            const query = (membersSearchInput.value || '').trim().toLowerCase();
+            let shown = 0;
+            memberItems.forEach(li => {
+                const name = (li.dataset.name || '').toLowerCase();
+                const role = (li.dataset.role || '').toLowerCase();
+                const email = (li.dataset.email || '').toLowerCase();
+                const hit = !query || name.includes(query) || role.includes(query) || email.includes(query);
+                li.style.display = hit ? '' : 'none';
+                if (hit) shown++;
+            });
+            updateCount(shown, memberItems.length);
+        }, 200));
+    }
+
+    function cancelAddGuests(){
+        document.getElementById('userSearchModal').style.display = 'none';
+    }
+
+    function cancelManagerChat(){
+        document.getElementById('chatRequestModal').style.display = 'none';
+    }
+
+    window.cancelAddGuests = cancelAddGuests;
+    window.cancelManagerChat = cancelManagerChat;
+    window.debounce = debounce;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchUsers');
+        const resultBox = document.getElementById('searchUserResults');
+        let selectedUserId = null;
+
+        if (searchInput && resultBox) {
+            searchInput.addEventListener('input', debounce(function () {
+                const query = (searchInput.value || '').trim();
+                if (query.length < 2) {
+                    resultBox.style.display = 'none';
+                    resultBox.innerHTML = '';
+                    selectedUserId = null;
+                    return;
+                }
+
+                fetch(`/users/search?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(users => {
+                        resultBox.innerHTML = '';
+                        if (users.length) {
+                            users.forEach(user => {
+                                const li = document.createElement('li');
+                                li.className = 'panel-modal__list-item';
+                                li.textContent = `${user.first_name ?? ''} ${user.last_name ?? ''} (${user.email ?? ''})`;
+                                li.addEventListener('click', () => {
+                                    searchInput.value = user.email ?? '';
+                                    selectedUserId = user.id;
+                                    resultBox.style.display = 'none';
+                                    resultBox.innerHTML = '';
+                                });
+                                resultBox.appendChild(li);
+                            });
+                            resultBox.style.display = 'flex';
+                            resultBox.style.flexDirection = 'column';
+                        } else {
+                            resultBox.innerHTML = '<li class="panel-modal__list-item text-muted">کاربری یافت نشد</li>';
+                            resultBox.style.display = 'flex';
+                        }
+                    });
+            }, 250));
+
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !resultBox.contains(e.target)) {
+                    resultBox.style.display = 'none';
+                }
+            });
+
+            document.getElementById('addUsersToGroup')?.addEventListener('click', function () {
+                const hours = document.getElementById('hoursUser').value;
+                if (!selectedUserId || !hours) {
+                    alert('لطفاً کاربر را انتخاب و مدت ساعت را وارد کنید.');
+                    return;
+                }
+
+                fetch('/groups/add-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    },
+                    body: JSON.stringify({
+                        user_id: selectedUserId,
+                        group_id: {{ $group->id }},
+                        hours: hours
+                    })
+                })
+                .then(res => res.json())
+                .then(() => {
+                    alert('کاربر با موفقیت اضافه شد');
+                    selectedUserId = null;
+                    searchInput.value = '';
+                    document.getElementById('hoursUser').value = '';
+                    cancelAddGuests();
+                });
+            });
+        }
+
+        const managerSearchInput = document.getElementById('searchManagers');
+        if (managerSearchInput) {
+            managerSearchInput.addEventListener('input', debounce(function () {
+                const query = (managerSearchInput.value || '').toLowerCase();
+                document.querySelectorAll('.manager-item').forEach(item => {
+                    const text = item.querySelector('span')?.textContent?.toLowerCase() ?? '';
+                    item.style.display = text.includes(query) ? 'flex' : 'none';
+                });
+            }, 200));
+        }
+
+        @if (isset($_GET['filter']))
+            const groupPanel = document.getElementById('groupInfoPanel');
+            const backdrop = document.getElementById('groupInfoBackdrop');
+            if (groupPanel) {
+                groupPanel.classList.add('is-open');
+            }
+            if (backdrop) {
+                backdrop.classList.remove('hidden');
+                backdrop.classList.add('group-info-backdrop--visible');
+            }
+            const postTab = document.querySelector('[data-tab="post"]');
+            postTab?.click();
+        @endif
+    });
 </script>
+@endpush
+

@@ -69,27 +69,42 @@ class Step3Controller extends Controller
                 'alley_id' => $validated['alley_id'] ?? null,
             ];
 
-            if (strpos($validated['city_id'], 'rural_rural_') === 0) {
-                $addressData['rural_id'] = str_replace('rural_', '', $validated['city_id']);
+            if (strpos($validated['city_id'], 'rural_') === 0) {
+                // دهستان: rural_123
+                $ruralId = (int) str_replace('rural_', '', $validated['city_id']);
+                $addressData['rural_id'] = $ruralId;
                 $addressData['village_id'] = $validated['region_id'];
-            } elseif (strpos($validated['city_id'], 'city_city_') === 0) {
-                $addressData['city_id'] = str_replace('city_', '', $validated['city_id']);
+                $addressData['city_id'] = null;
+                $addressData['region_id'] = null;
+            } elseif (strpos($validated['city_id'], 'city_') === 0) {
+                // شهر: city_123
+                $cityId = (int) str_replace('city_', '', $validated['city_id']);
+                $addressData['city_id'] = $cityId;
                 $addressData['region_id'] = $validated['region_id'];
+                $addressData['rural_id'] = null;
+                $addressData['village_id'] = null;
+            } else {
+                // اگر فرمت معتبر نبود
+                return back()->withErrors(['city_id' => 'فرمت شهر/دهستان نامعتبر است.']);
             }
 
-            if(isset($addressData['region_id'])){
+            // یافتن region یا village بر اساس نوع انتخاب شده
+            if(isset($addressData['region_id']) && $addressData['region_id']){
                 $region = Region::find($addressData['region_id']);
-            }else{
+            }elseif(isset($addressData['village_id']) && $addressData['village_id']){
                 $region = Village::find($addressData['village_id']);
+            }else{
+                return back()->withErrors(['region_id' => 'منطقه یا روستا انتخاب نشده است.']);
             }
 
             $neighborhood = Neighborhood::find($addressData['neighborhood_id']);
             $street = $addressData['street_id'] ? Street::find($addressData['street_id']) : null;
             $alley = $addressData['alley_id'] ? Alley::find($addressData['alley_id']) : null;
 
-            if($region->status == 0){
+            // بررسی وضعیت (status) برای غیرفعال کردن آدرس در صورت نیاز
+            if($region && $region->status == 0){
                 $addressData['status'] = 0;
-            }elseif($neighborhood->status == 0){
+            }elseif($neighborhood && $neighborhood->status == 0){
                 $addressData['status'] = 0;
             }elseif($street && $street->status == 0){
                 $addressData['status'] = 0;

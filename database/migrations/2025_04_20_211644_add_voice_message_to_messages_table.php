@@ -13,9 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('messages', function (Blueprint $table) {
-            $table->string('voice_message')->nullable()->after('message');
-        });
+        if (!Schema::hasColumn('messages', 'voice_message')) {
+            Schema::table('messages', function (Blueprint $table) {
+                $table->string('voice_message')->nullable()->after('message');
+            });
+        }
     }
 
     /**
@@ -25,8 +27,10 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('messages', function (Blueprint $table) {
-            $table->dropColumn('voice_message');
-        });
+        if (Schema::hasColumn('messages', 'voice_message')) {
+            Schema::table('messages', function (Blueprint $table) {
+                $table->dropColumn('voice_message');
+            });
+        }
     }
 };

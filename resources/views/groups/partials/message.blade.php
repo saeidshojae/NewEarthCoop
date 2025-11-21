@@ -3,40 +3,86 @@
     @php
         $sender   = optional($group->users)->firstWhere('id', $item->user_id);
         $isMine   = $item->user_id === auth()->id();
-        $initials = $sender && $sender->first_name
-            ? mb_substr($sender->first_name, 0, 1)
-            : 'U';
+        $first    = $sender->first_name ?? '';
+        $last     = $sender->last_name ?? '';
+        $initials = trim(($first ? mb_substr($first, 0, 1) : '') . ' ' . ($last ? mb_substr($last, 0, 1) : '')) ?: '؟';
+        $senderName = trim($first . ' ' . $last);
+        $rawContent = $item->content ?? '';
     @endphp
 
     {{-- آواتار --}}
-    @if($item->user_id !== optional(auth()->user())->id)
-        <a href="{{ route('profile.member.show', $item->user_id) }}">
-            <div class="avatar">{{ $initials }}</div>
+    @if(!$isMine)
+        <a href="{{ route('profile.member.show', $item->user_id) }}" class="avatar-link" aria-label="نمایه {{ $senderName ?: 'کاربر' }}">
+            @if($sender && $sender->avatar)
+                <span class="avatar avatar--image">
+                    <img src="{{ asset('/images/users/avatars/' . $sender->avatar) }}" alt="{{ $senderName }}">
+                </span>
+            @else
+                <span class="avatar">
+                    <span>{{ $initials }}</span>
+                </span>
+            @endif
         </a>
     @endif
 
     <div class="message-bubble"
-         data-message-id="{{ $item->id }}" style="max-width: 65%;"
+         data-message-id="{{ $item->id }}" 
+         data-user-id="{{ $item->user_id }}"
+         style="max-width: 65%;"
          data-edit-url="{{ route('groups.messages.edit', $item->id) }}"
          data-delete-url="{{ route('groups.messages.delete', $item->id) }}"
          data-report-url="{{ route('messages.report', $item->id) }}"
          data-content-raw="{{ e(strip_tags($item->content ?? '')) }}">
 
-        {{-- نام فرستنده --}}
-        @if(!$isMine && $sender)
-            <a href="{{ route('profile.member.show', $item->user_id) }}">
-                <strong class="message-sender">
-                    {{ $sender->first_name ?? '' }} {{ $sender->last_name ?? '' }}
-                </strong>
-            </a>
-        @endif
-
-        {{-- حساب حذف‌شده --}}
-        @if(!$item->user)
-            <div class="message-sender" style="margin-left:.4rem;margin-bottom:.5rem">
-                <a href="#" style="color:blue;font-weight:900">حساب حذف شده</a>
+        <div class="message-head">
+            <div class="message-head__info">
+                @if(!$item->user)
+                    <span class="message-sender message-sender--deleted">حساب حذف شده</span>
+                @elseif($isMine)
+                    <span class="message-sender message-sender--self">شما</span>
+                @elseif($sender)
+                    <a href="{{ route('profile.member.show', $item->user_id) }}" class="message-sender">
+                        {{ $senderName }}
+                    </a>
+                @endif
             </div>
-        @endif
+
+            <div class="action-menu message-action" data-action-menu>
+                <button type="button" class="action-menu__toggle" aria-expanded="false" aria-label="گزینه‌های پیام">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <div class="action-menu__list">
+                    <button type="button"
+                            onclick="replyToMessage('{{ $item->id }}', @js($senderName), @js($rawContent))"
+                            class="action-menu__item btn-rep">
+                        <i class="fas fa-reply"></i>
+                        پاسخ
+                    </button>
+
+                    @unless($isMine)
+                        <button type="button" class="action-menu__item btn-report">
+                            <i class="fas fa-flag"></i>
+                            گزارش
+                        </button>
+                    @endunless
+
+                    @if($isMine)
+                        <button type="button" class="action-menu__item btn-edit">
+                            <i class="fas fa-edit"></i>
+                            ویرایش
+                        </button>
+                        <button type="button" class="action-menu__item action-menu__item--danger btn-delete">
+                            <i class="fas fa-trash"></i>
+                            حذف
+                        </button>
+                    @endif
+
+                    <div class="menu-meta-time">
+                        {{ verta(optional($item->created_at)->format('Y-m-d H:i:s')) }}
+                    </div>
+                </div>
+            </div>
+        </div>
 
         {{-- پیش‌نمایش پاسخ --}}
         @if ($item->parent_id)
@@ -50,22 +96,22 @@
                     $id     = (int) \Illuminate\Support\Str::after($pid, 'poll-');
                     $parent = \App\Models\Poll::with('user')->find($id);
 
-                    $replySender = trim((optional($parent->user)->first_name ?? '') . ' ' . (optional($parent->user)->last_name ?? ''));
-                    $replyText   = $parent->title ?? $parent->question ?? 'Poll';
+                    $replySender = trim((optional(optional($parent)->user)->first_name ?? '') . ' ' . (optional(optional($parent)->user)->last_name ?? ''));
+                    $replyText   = optional($parent)->title ?? optional($parent)->question ?? 'Poll';
                     $link        = $parent ? '#poll-' . $id : null;
 
                 } elseif (\Illuminate\Support\Str::startsWith($pid, 'post-')) {
                     $id     = (int) \Illuminate\Support\Str::after($pid, 'post-');
                     $parent = \App\Models\Blog::with('user')->find($id);
 
-                    $replySender = trim((optional($parent->user)->first_name ?? '') . ' ' . (optional($parent->user)->last_name ?? ''));
-                    $replyText   = $parent->title ?? 'Post';
+                    $replySender = trim((optional(optional($parent)->user)->first_name ?? '') . ' ' . (optional(optional($parent)->user)->last_name ?? ''));
+                    $replyText   = optional($parent)->title ?? 'Post';
                     $link        = $parent ? '#blog-' . $id : null;
 
                 } else {
                     $parent      = $item->parent ?? null;
                     $replySender = trim((optional(optional($parent)->user)->first_name ?? '') . ' ' . (optional(optional($parent)->user)->last_name ?? ''));
-                    $replyText   = $parent->message ?? '';
+                    $replyText   = optional($parent)->message ?? '';
                     $link        = $parent ? '#msg-' . $parent->id : null;
                 }
 
@@ -89,35 +135,103 @@
         {{-- متن پیام --}} 
         <p class="message-content">{!! $item->content ?? '' !!}</p>
 
-        {{-- منوی سه‌نقطه --}}
-        <details class="menu-wrapper {{ $isMine ? 'left' : 'right' }}">
-            <summary class="menu-trigger">⋮</summary>
-            <div class="menu-dropdown"> 
-                <button type="button"
-                        onclick="replyToMessage('{{ $item->id }}', `{{ trim(($sender->first_name ?? '') . ' ' . ($sender->last_name ?? '')) }}`, `{!! $item->content ?? '' !!}`)"
-                        class="menu-item btn-rep">
-                    <i class="fas fa-reply me-2"></i> پاسخ
-                </button>
-
-                @unless($isMine)
-                    <button type="button" class="menu-item btn-report">
-                        <i class="fas fa-flag me-2"></i> گزارش
-                    </button>
-                @endunless
-
-                @if($isMine)
-                    <button type="button" class="menu-item btn-edit">
-                        <i class="fas fa-edit me-2"></i> ویرایش
-                    </button>
-                    <button type="button" class="menu-item btn-delete text-danger">
-                        <i class="fas fa-trash me-2"></i> حذف
-                    </button>
-                @endif
-
-                <div class="menu-meta-time">
-                    {{ verta(optional($item->created_at)->format('Y-m-d H:i:s')) }}
+        {{-- Voice Message --}}
+        @if(isset($item->voice_message) && $item->voice_message)
+            @php
+                // Get voice message URL - handle both relative and absolute paths
+                $voicePath = $item->voice_message;
+                if (str_starts_with($voicePath, 'http')) {
+                    $voiceUrl = $voicePath;
+                } else {
+                    $voiceUrl = asset('storage/' . ltrim($voicePath, '/'));
+                }
+                $voiceType = isset($item->file_type) ? $item->file_type : 'audio/webm';
+                // Fallback for different audio types
+                if (str_contains($voiceType, 'webm')) {
+                    $voiceType = 'audio/webm';
+                } elseif (str_contains($voiceType, 'ogg')) {
+                    $voiceType = 'audio/ogg';
+                } elseif (str_contains($voiceType, 'wav')) {
+                    $voiceType = 'audio/wav';
+                } elseif (str_contains($voiceType, 'mp3') || str_contains($voiceType, 'mpeg')) {
+                    $voiceType = 'audio/mpeg';
+                } else {
+                    $voiceType = 'audio/webm'; // Default
+                }
+            @endphp
+            <div class="voice-message-container" style="
+                margin-top: 12px;
+                padding: 12px;
+                background: {{ $isMine ? '#e3f2fd' : '#f5f5f5' }};
+                border-radius: 12px;
+                border: 1px solid {{ $isMine ? '#90caf9' : '#e0e0e0' }};
+                direction: ltr;
+            ">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="
+                        width: 40px;
+                        height: 40px;
+                        border-radius: 50%;
+                        background: {{ $isMine ? '#2196f3' : '#757575' }};
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: white;
+                        flex-shrink: 0;
+                    ">
+                        <i class="fas fa-microphone" style="font-size: 18px;"></i>
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 4px;">
+                            <i class="fas fa-headphones"></i> پیام صوتی
+                        </div>
+                        <audio controls style="width: 100%; height: 40px;" preload="metadata">
+                            <source src="{{ $voiceUrl }}" type="{{ $voiceType }}">
+                            <source src="{{ $voiceUrl }}" type="audio/webm">
+                            <source src="{{ $voiceUrl }}" type="audio/ogg">
+                            <source src="{{ $voiceUrl }}" type="audio/mpeg">
+                            مرورگر شما از پخش صدا پشتیبانی نمی‌کند.
+                        </audio>
+                    </div>
                 </div>
             </div>
-        </details>
+        @endif
+
+        {{-- Read Receipts --}}
+        @if($isMine)
+            @php
+                $readBy = null;
+                if (isset($item->read_by)) {
+                    if (is_string($item->read_by)) {
+                        $readBy = json_decode($item->read_by, true);
+                    } else {
+                        $readBy = $item->read_by;
+                    }
+                }
+                $readCount = is_array($readBy) ? count($readBy) : 0;
+            @endphp
+            <div class="read-receipt" style="font-size: 10px; margin-top: 4px; text-align: left; direction: ltr;">
+                @if($readCount > 0)
+                    <span style="color: #10b981;">
+                        <i class="fas fa-check-double"></i> {{ $readCount }} نفر خوانده‌اند
+                    </span>
+                @else
+                    <span style="color: #9ca3af;">
+                        <i class="fas fa-check"></i> ارسال شده
+                    </span>
+                @endif
+            </div>
+        @endif
+
+        {{-- Thread Reply Count --}}
+        @php
+            $replyCount = isset($item->reply_count) ? (int)$item->reply_count : 0;
+        @endphp
+        @if($replyCount > 0)
+            <div class="thread-info" style="margin-top: 8px; font-size: 12px; color: #6b7280; cursor: pointer;" onclick="showThread({{ $item->id }})">
+                <i class="fas fa-comments"></i> {{ $replyCount }} پاسخ
+            </div>
+        @endif
+
     </div>
 </div>

@@ -7,6 +7,12 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
 {
+    protected $commands = [
+        \App\Console\Commands\CreateContactPage::class,
+        \App\Console\Commands\CreateFaqPage::class,
+        \App\Console\Commands\FundWalletsCommand::class,
+    ];
+
     /**
      * Define the application's command schedule.
      *

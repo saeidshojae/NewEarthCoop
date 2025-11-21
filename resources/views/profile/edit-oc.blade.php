@@ -1,189 +1,672 @@
-<!-- resources/views/register/step2.blade.php -->
-@extends('layouts.app')
+@extends('layouts.unified')
 
-@section('head-tag')
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <!-- Select2 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+@section('title', 'ویرایش زمینه‌های صنفی و تجربی - ' . config('app.name', 'EarthCoop'))
 
-    <style>
-      .remove-selection {
-        padding: 0 0.4rem;
-        margin: 0.2rem 0.3rem 0.2rem 0.1rem;
-      }
-      .select2-selection__rendered{
-        background-color: #6bb48945;
-      }
-      .badge {
-        background-color: #57a1d7bf !important;
-      }
-      .error-message {
-        color: red;
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    :root {
+        --color-earth-green: #10b981;
+        --color-ocean-blue: #3b82f6;
+        --color-digital-gold: #f59e0b;
+        --color-pure-white: #ffffff;
+        --color-light-gray: #f8fafc;
+        --color-gentle-black: #1e293b;
+        --color-dark-green: #047857;
+        --color-dark-blue: #1d4ed8;
+        --color-accent-peach: #ff7e5f;
+    }
+
+    .font-vazirmatn { font-family: 'Vazirmatn', sans-serif; }
+
+    /* Form Section */
+    .form-section {
+        background: linear-gradient(145deg, var(--color-pure-white) 0%, #f0f4f7 100%);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+        border-radius: 18px;
+        padding: 2.5rem;
+        border: 1px solid rgba(220, 220, 220, 0.3);
+        position: relative;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .form-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 6px;
+        background: linear-gradient(90deg, var(--color-earth-green), var(--color-ocean-blue), var(--color-digital-gold));
+        border-radius: 18px 18px 0 0;
+    }
+
+    .form-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--color-dark-green);
+        margin-bottom: 1.5rem;
+        text-align: right;
+        font-family: 'Vazirmatn', sans-serif;
+    }
+
+    .field-container {
+        margin-bottom: 2.5rem;
+    }
+
+    .field-label {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--color-gentle-black);
+        margin-bottom: 1rem;
+        display: block;
+        font-family: 'Vazirmatn', sans-serif;
+    }
+
+    /* Selected Fields Display */
+    .selected-fields-wrapper {
+        min-height: 60px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 0.75rem;
+        border: 2px dashed #cbd5e1;
+        background: #f8fafc;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+
+    .selected-fields-wrapper:empty::before {
+        content: 'هیچ فیلدی انتخاب نشده است';
+        color: #94a3b8;
+        font-size: 0.95rem;
+        font-style: italic;
+        width: 100%;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .field-badge {
+        background: linear-gradient(135deg, var(--color-ocean-blue), var(--color-dark-blue));
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-weight: 600;
         font-size: 0.9rem;
-        display: none;
-      }
-      .select2-container {
-        margin-bottom: 1rem !important;
-        width: 100% !important;
-      }
-      .select2-selection {
-        width: 100% !important;
-      }
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        font-family: 'Vazirmatn', sans-serif;
+    }
 
-      #selected_occupational_fields{
+    .field-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .field-badge .remove-btn {
+        cursor: pointer;
+        font-size: 1.25rem;
+        font-weight: 700;
+        line-height: 1;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+    }
+
+    .field-badge .remove-btn:hover {
+        transform: scale(1.2);
+    }
+
+    /* Select and Button Container */
+    .select-button-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
         margin-bottom: 1rem;
-        border-radius: .25rem;
-        border: 1px solid #333333a8;
-      }
-      #selected_experience_fields{
-        margin-bottom: 1rem;
-        border-radius: .25rem;
-        border: 1px solid #333333a8;
-      }
-      .select2-container:nth-of-type(2) {
-        width: 95% !important;
+    }
+
+    @media (min-width: 640px) {
+        .select-button-container {
+            flex-direction: row;
+            align-items: center;
+        }
+    }
+
+    /* Select2 Customization */
+    .select2-container {
+        width: 100% !important;
+        flex-grow: 1;
+    }
+
+    .select2-container--default .select2-selection--single {
+        height: 48px;
+        border: 2px solid #e2e8f0;
+        border-radius: 0.75rem;
+        padding: 0.5rem;
+        background-color: var(--color-pure-white);
+        transition: all 0.3s ease;
+    }
+
+    .select2-container--default .select2-selection--single:hover {
+        border-color: var(--color-earth-green);
+    }
+
+    .select2-container--default.select2-container--focus .select2-selection--single {
+        border-color: var(--color-earth-green);
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 46px;
+        padding-right: 12px;
+        color: var(--color-gentle-black);
+        font-family: 'Vazirmatn', sans-serif;
+        font-size: 1rem;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 46px;
+        right: 10px;
+    }
+
+    .select2-dropdown {
+        border: 2px solid #e2e8f0;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        font-family: 'Vazirmatn', sans-serif;
+    }
+
+    .select2-results__option {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
+
+    .select2-results__option--highlighted {
+        background-color: var(--color-earth-green);
+        color: white;
+    }
+
+    /* Create Button */
+    .create-field-btn {
+        background-color: var(--color-earth-green);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 9999px;
+        font-weight: 700;
+        font-size: 1rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        white-space: nowrap;
+        font-family: 'Vazirmatn', sans-serif;
+    }
+
+    .create-field-btn:hover {
+        background-color: var(--color-dark-green);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .create-field-btn.experience {
+        background-color: var(--color-digital-gold);
+    }
+
+    .create-field-btn.experience:hover {
+        background-color: #d97706;
+    }
+
+    /* Nested Container */
+    .nested-container {
+        margin-top: 1rem;
         margin-right: 5%;
-      }
-      .select2-container:nth-of-type(3) {
-        width: 90% !important;
+        width: 95%;
+    }
+
+    .nested-container.level-2 {
         margin-right: 10%;
-      }
-    </style>
-@endsection
+        width: 90%;
+    }
+
+    .nested-container.level-3 {
+        margin-right: 15%;
+        width: 85%;
+    }
+
+    /* Error Messages */
+    .error-message {
+        color: #ef4444;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+        display: none;
+        padding: 0.75rem;
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        border-radius: 0.5rem;
+        font-family: 'Vazirmatn', sans-serif;
+    }
+
+    .error-message.show {
+        display: block;
+    }
+
+    /* Submit Button */
+    .submit-btn {
+        background: linear-gradient(135deg, var(--color-earth-green) 0%, var(--color-dark-green) 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2.5rem;
+        border-radius: 9999px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        font-family: 'Vazirmatn', sans-serif;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+    }
+
+    .submit-btn:active {
+        transform: translateY(0);
+    }
+
+    /* Modal Styles - Inline Modal like register step 2 */
+    #createFieldModal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        backdrop-filter: blur(4px);
+    }
+
+    #createFieldModal.show {
+        display: flex;
+    }
+
+    /* Close modal when clicking outside */
+    #createFieldModal.show::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        max-width: 500px;
+        width: 100%;
+        padding: 2rem;
+    }
+
+    .modal-title {
+        font-weight: 700;
+        font-size: 1.5rem;
+        color: var(--color-gentle-black);
+        margin-bottom: 1.5rem;
+        font-family: 'Vazirmatn', sans-serif;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #6b7280;
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+    }
+
+    .modal-close-btn:hover {
+        background: #f3f4f6;
+        color: var(--color-gentle-black);
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--color-gentle-black);
+        margin-bottom: 0.75rem;
+        display: block;
+        font-family: 'Vazirmatn', sans-serif;
+        font-size: 1rem;
+    }
+
+    .form-control {
+        border: 2px solid #e2e8f0;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        font-family: 'Vazirmatn', sans-serif;
+        width: 100%;
+    }
+
+    .form-control:focus {
+        border-color: var(--color-earth-green);
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        outline: none;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    .btn-secondary {
+        flex: 1;
+        background: #e5e7eb;
+        color: var(--color-gentle-black);
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        font-family: 'Vazirmatn', sans-serif;
+        cursor: pointer;
+    }
+
+    .btn-secondary:hover {
+        background: #d1d5db;
+    }
+
+    .btn-primary-modal {
+        flex: 1;
+        background: linear-gradient(135deg, var(--color-earth-green), var(--color-dark-green));
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        font-family: 'Vazirmatn', sans-serif;
+        cursor: pointer;
+    }
+
+    .btn-primary-modal:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Alert Messages */
+    .alert {
+        padding: 1rem 1.5rem;
+        border-radius: 0.75rem;
+        margin-bottom: 1.5rem;
+        font-family: 'Vazirmatn', sans-serif;
+    }
+
+    .alert-success {
+        background: #d1fae5;
+        border: 1px solid #10b981;
+        color: #047857;
+    }
+
+    .alert-danger {
+        background: #fee2e2;
+        border: 1px solid #ef4444;
+        color: #dc2626;
+    }
+
+    /* Fade-in animation */
+    .fade-in-section {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+
+    .fade-in-section.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-section {
+            padding: 1.5rem;
+        }
+
+        .form-title {
+            font-size: 1.6rem;
+        }
+
+        .nested-container {
+            margin-right: 0 !important;
+            width: 100% !important;
+        }
+    }
+</style>
+@endpush
 
 @section('content')
-<div class="container" style="direction: rtl; text-align: right;">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card">
-        <div class="card-header text-center bg-primary text-white fs-5">
-          تغییر زمینه های صنفی و تجربی شما
-        </div>
-        <div class="card-body">
-          <form action="{{ route('profile.update.experience') }}" method="POST">
+<div class="container mx-auto p-6 md:p-8">
+    <div class="form-section fade-in-section">
+        <h2 class="form-title">تغییر زمینه‌های صنفی و تجربی شما</h2>
+
+        @if(session('success'))
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle ml-2"></i>
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle ml-2"></i>
+                {{ session('error') }}
+            </div>
+        @endif
+
+        <form action="{{ route('profile.update.experience') }}" method="POST">
             @csrf
             @method('PUT')
             <input type="hidden" id="hidden_occupational_fields" name="occupational_fields[]">
             <input type="hidden" id="hidden_experience_fields" name="experience_fields[]">
             
-            {{-- صنفی --}}
-            <div id="occupational_container" class="mb-4">
-              <label class="form-label">زمینه فعالیت صنفی:</label>
-              <div id="selected_occupational_fields">
-                @foreach($user->specialties as $specialty)
-                @if(isset($specialty->parent) AND isset($specialty->parent->parent))
-                  <span class="badge bg-primary m-1">
-                    {{ $specialty->name }}
-                    <span onclick="removeField({{ $specialty->id }}, this, false)" style="cursor:pointer;">×</span>
-                  </span>
-                  @endif
-                @endforeach
-              </div>
+            {{-- زمینه فعالیت صنفی --}}
+            <div id="occupational_container" class="field-container">
+                <label class="field-label">
+                    <i class="fas fa-briefcase ml-2" style="color: var(--color-earth-green);"></i>
+                    زمینه فعالیت صنفی:
+                </label>
+                
+                <div id="selected_occupational_fields" class="selected-fields-wrapper">
+                    @foreach($user->specialties as $specialty)
+                        @if(isset($specialty->parent) AND isset($specialty->parent->parent))
+                            <span class="field-badge">
+                                {{ $specialty->name }}
+                                <span class="remove-btn" onclick="removeField({{ $specialty->id }}, this, false)">×</span>
+                            </span>
+                        @endif
+                    @endforeach
+                </div>
 
-              <select id="occupational_fields" class="form-control" data-level="1">
-                <option value="">انتخاب کنید</option>
-                @foreach($occupationalFields as $field)
-                  <option value="{{ $field->id }}">{{ $field->name }}</option>
-                @endforeach
-                <option value="create_new">+ ایجاد کنید</option>
-              </select>
+                <div class="error-message" id="error_occupational">حداکثر می‌توانید ۱۰ مورد انتخاب کنید.</div>
+                <div class="error-message" id="duplicate_error_occupational">
+                    این گزینه قبلاً انتخاب شده است.
+                </div>
 
-              <select id="occupational_subfields" class="form-control mt-2 d-none" data-level="2"></select>
-              <select id="occupational_finalfields" class="form-control mt-2 d-none" data-level="3"></select>
+                <!-- Level 1 Select with Create Button -->
+                <div class="select-button-container">
+                    <select id="occupational_fields" class="form-control" data-level="1">
+                        <option value="">انتخاب کنید</option>
+                        @foreach($occupationalFields as $field)
+                            <option value="{{ $field->id }}">{{ $field->name }}</option>
+                        @endforeach
+                    </select>
+                    <button type="button" class="create-field-btn" 
+                            data-level="1" data-parent-id="0" data-is-exp="false">
+                        + ایجاد کنید
+                    </button>
+                </div>
 
-              <div class="error-message" id="error_occupational">حداکثر می‌توانید ۱۰ مورد انتخاب کنید.</div>
-              <div class="error-message text-danger" id="duplicate_error_occupational">
-                این گزینه قبلاً انتخاب شده است.
-              </div>
+                <!-- Level 2 Select with Create Button (hidden initially) -->
+                <div id="occ_level2_container" class="nested-container level-2" style="display: none;">
+                    <div class="select-button-container">
+                        <select id="occupational_subfields" class="form-control" data-level="2">
+                            <option value="">زیردسته را انتخاب کنید</option>
+                        </select>
+                        <button type="button" class="create-field-btn" 
+                                data-level="2" data-parent-id="" data-is-exp="false">
+                            + ایجاد کنید
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Level 3 Select with Create Button (hidden initially) -->
+                <div id="occ_level3_container" class="nested-container level-3" style="display: none;">
+                    <div class="select-button-container">
+                        <select id="occupational_finalfields" class="form-control" data-level="3">
+                            <option value="">سطح سوم را انتخاب کنید</option>
+                        </select>
+                        <button type="button" class="create-field-btn" 
+                                data-level="3" data-parent-id="" data-is-exp="false">
+                            + ایجاد کنید
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            {{-- تجربی --}}
-            <div id="experience_container" class="mb-4">
-              <label class="form-label">زمینه تجربی و تخصصی:</label>
-              <div id="selected_experience_fields">
-                @foreach($user->experiences as $experience)
-                @if(isset($experience->parent) AND isset($experience->parent->parent))
-                  <span class="badge bg-primary m-1">
-                    {{ $experience->name }}
-                    <span onclick="removeField({{ $experience->id }}, this, true)" style="cursor:pointer;">×</span>
-                  </span>
-                  @endif
-                @endforeach
-              </div>
+            {{-- زمینه تجربی و تخصصی --}}
+            <div id="experience_container" class="field-container">
+                <label class="field-label">
+                    <i class="fas fa-graduation-cap ml-2" style="color: var(--color-digital-gold);"></i>
+                    زمینه تجربی و تخصصی:
+                </label>
+                
+                <div id="selected_experience_fields" class="selected-fields-wrapper">
+                    @foreach($user->experiences as $experience)
+                        @if(isset($experience->parent) AND isset($experience->parent->parent))
+                            <span class="field-badge">
+                                {{ $experience->name }}
+                                <span class="remove-btn" onclick="removeField({{ $experience->id }}, this, true)">×</span>
+                            </span>
+                        @endif
+                    @endforeach
+                </div>
 
-              <select id="experience_fields" class="form-control" data-level="1">
-                <option value="">انتخاب کنید</option>
-                @foreach($experienceFields as $field)
-                  <option value="{{ $field->id }}">{{ $field->name }}</option>
-                @endforeach
-                <option value="create_new">+ ایجاد کنید</option>
-              </select>
+                <div class="error-message" id="error_experience">حداکثر می‌توانید ۱۰ مورد انتخاب کنید.</div>
+                <div class="error-message" id="duplicate_error_experience">
+                    این گزینه قبلاً انتخاب شده است.
+                </div>
 
-              <select id="experience_subfields" class="form-control mt-2 d-none" data-level="2"></select>
-              <select id="experience_finalfields" class="form-control mt-2 d-none" data-level="3"></select>
+                <!-- Level 1 Select with Create Button -->
+                <div class="select-button-container">
+                    <select id="experience_fields" class="form-control" data-level="1">
+                        <option value="">انتخاب کنید</option>
+                        @foreach($experienceFields as $field)
+                            <option value="{{ $field->id }}">{{ $field->name }}</option>
+                        @endforeach
+                    </select>
+                    <button type="button" class="create-field-btn experience" 
+                            data-level="1" data-parent-id="0" data-is-exp="true">
+                        + ایجاد کنید
+                    </button>
+                </div>
 
-              <div class="error-message" id="error_experience">حداکثر می‌توانید ۱۰ مورد انتخاب کنید.</div>
-              <div class="error-message text-danger" id="duplicate_error_experience">
-                این گزینه قبلاً انتخاب شده است.
-              </div>
+                <!-- Level 2 Select with Create Button (hidden initially) -->
+                <div id="exp_level2_container" class="nested-container level-2" style="display: none;">
+                    <div class="select-button-container">
+                        <select id="experience_subfields" class="form-control" data-level="2">
+                            <option value="">زیردسته را انتخاب کنید</option>
+                        </select>
+                        <button type="button" class="create-field-btn experience" 
+                                data-level="2" data-parent-id="" data-is-exp="true">
+                            + ایجاد کنید
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Level 3 Select with Create Button (hidden initially) -->
+                <div id="exp_level3_container" class="nested-container level-3" style="display: none;">
+                    <div class="select-button-container">
+                        <select id="experience_finalfields" class="form-control" data-level="3">
+                            <option value="">سطح سوم را انتخاب کنید</option>
+                        </select>
+                        <button type="button" class="create-field-btn experience" 
+                                data-level="3" data-parent-id="" data-is-exp="true">
+                            + ایجاد کنید
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            <div class="text-center">
-              <button type="submit" class="btn btn-primary">ثبت تغییرات</button>
+            <div class="text-center mt-6">
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-save ml-2"></i>
+                    ثبت تغییرات
+                </button>
             </div>
-          </form>
-        </div>
-      </div>
+        </form>
     </div>
-  </div>
 </div>
 
-<!-- Modal: Create Field -->
-<div class="modal fade" id="createFieldModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form id="createFieldForm">
-        <div class="modal-header">
-          <h5 class="modal-title">ایجاد زمینه فعالیت جدید</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<!-- Modal: Create Field - Inline Modal -->
+<div id="createFieldModal" onclick="if(event.target === this) closeCreateModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-title">
+            <span>نام زمینه فعالیت</span>
+            <button type="button" class="modal-close-btn" onclick="closeCreateModal()">×</button>
         </div>
-        <div class="modal-body">
-          <input type="hidden" id="field_level" name="level">
-          <input type="hidden" id="parent_id" name="parent_id">
-          <div class="mb-3">
-            <label for="field_name" class="form-label">نام زمینه فعالیت</label>
-            <input type="text" class="form-control" name="name" id="field_name" required>
-          </div>
-          <div id="create_field_error" class="text-danger d-none">خطا در ثبت اطلاعات. لطفاً دوباره تلاش کنید.</div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">ثبت</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">لغو</button>
-        </div>
-      </form>
+        <form id="createFieldForm">
+            <input type="hidden" id="field_level" name="level">
+            <input type="hidden" id="parent_id" name="parent_id">
+            <div class="mb-4">
+                <input type="text" class="form-control" name="name" id="field_name" 
+                       placeholder="نام زمینه فعالیت جدید" required>
+            </div>
+            <div id="create_field_error" class="error-message" style="display: none;">
+                خطا در ثبت اطلاعات. لطفاً دوباره تلاش کنید.
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn-primary-modal">ثبت</button>
+                <button type="button" class="btn-secondary" onclick="closeCreateModal()">لغو</button>
+            </div>
+        </form>
     </div>
-  </div>
 </div>
 @endsection
 
-@section('scripts')
-  {{-- ✅ jQuery همیشه باید اول لود بشه --}}
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  {{-- ✅ Select2 (بعد از jQuery، بدون defer) --}}
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js" defer></script>
-  {{-- ✅ Bootstrap --}}
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+@push('scripts')
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-  <script>
-    // public/js/register-step2.js
-
+<script>
     @if(session('success'))
-      document.addEventListener('DOMContentLoaded', function() {
-        showSuccessAlert('{{ session('success') }}');
-      });
+        document.addEventListener('DOMContentLoaded', function() {
+            showSuccessAlert('{{ session('success') }}');
+        });
     @endif
 
     let selectedOccupationalFields = @json($user->specialties->pluck('id')->toArray());
@@ -194,212 +677,243 @@
     let isExperienceMode = false;
 
     $(document).ready(function () {
-      // فقط سطح اول‌ها رو Select2 کن
-      $('#occupational_fields, #experience_fields').select2();
-
-      // Occupational سطح ۱
-$('#occupational_fields').on('change', function () {
-  const selectedText = $(this).find('option:selected').text().trim();
-  const selectedId   = $(this).val();
-  if (selectedText === '+ ایجاد کنید')
-    return openCreateFieldModal(1, null, false);
-
-  if (selectedId) {
-    // همینجا اضافه می‌کنیم
-    addSelectedField(selectedId, selectedText, false);
-    // و بعد زیرسطح رو لود می‌کنیم
-    loadSubfields(selectedId, 2, false);
-  }
-});
-
-// Occupational سطح ۲
-$('#occupational_subfields').on('change', function () {
-  const selectedText = $(this).find('option:selected').text().trim();
-  const selectedId   = $(this).val();
-  if (selectedText === '+ ایجاد کنید')
-    return openCreateFieldModal(2, $('#occupational_fields').val(), false);
-
-  if (selectedId) {
-    addSelectedField(selectedId, selectedText, false);
-    loadSubfields(selectedId, 3, false);
-  }
-});
-
-// Occupational سطح ۳ (همون قبلی)
-$('#occupational_finalfields').on('change', function () {
-  const selectedText = $(this).find('option:selected').text().trim();
-  const selectedId   = $(this).val();
-  if (selectedText === '+ ایجاد کنید')
-    return openCreateFieldModal(3, $('#occupational_subfields').val(), false);
-
-  if (selectedId) {
-    addSelectedField(selectedId, selectedText, false, true);
-  }
-});
-
-// برای Experience هم مشابه:
-$('#experience_fields').on('change', function () {
-  const txt = $(this).find('option:selected').text().trim();
-  const id  = $(this).val();
-  if (txt === '+ ایجاد کنید')
-    return openCreateFieldModal(1, null, true);
-  if (id) {
-    addSelectedField(id, txt, true);
-    loadSubfields(id, 2, true);
-  }
-});
-$('#experience_subfields').on('change', function () {
-  const txt = $(this).find('option:selected').text().trim();
-  const id  = $(this).val();
-  if (txt === '+ ایجاد کنید')
-    return openCreateFieldModal(2, $('#experience_fields').val(), true);
-  if (id) {
-    addSelectedField(id, txt, true);
-    loadSubfields(id, 3, true);
-  }
-});
-$('#experience_finalfields').on('change', function () {
-  const txt = $(this).find('option:selected').text().trim();
-  const id  = $(this).val();
-  if (txt === '+ ایجاد کنید')
-    return openCreateFieldModal(3, $('#experience_subfields').val(), true);
-  if (id) addSelectedField(id, txt, true, true);
-});
-
-
-      $('form').on('submit', function () {
-        $('input[name="occupational_fields[]"], input[name="experience_fields[]"]').remove();
-        selectedOccupationalFields.forEach(id => {
-          $('<input>').attr({ type: 'hidden', name: 'occupational_fields[]', value: id }).appendTo('form');
+        // Initialize Select2
+        $('#occupational_fields, #experience_fields').select2({
+            dir: 'rtl',
+            language: 'fa'
         });
-        selectedExperienceFields.forEach(id => {
-          $('<input>').attr({ type: 'hidden', name: 'experience_fields[]', value: id }).appendTo('form');
+
+        // Occupational سطح ۱
+        $('#occupational_fields').on('change', function () {
+            const selectedId = $(this).val();
+            if (selectedId) {
+                addSelectedField(selectedId, $(this).find('option:selected').text(), false);
+                loadSubfields(selectedId, 2, false);
+                // Update create button for level 2
+                $('#occ_level2_container .create-field-btn').attr('data-parent-id', selectedId);
+            }
         });
-      });
+
+        // Occupational سطح ۲
+        $('#occupational_subfields').on('change', function () {
+            const selectedId = $(this).val();
+            if (selectedId) {
+                addSelectedField(selectedId, $(this).find('option:selected').text(), false);
+                loadSubfields(selectedId, 3, false);
+                // Update create button for level 3
+                $('#occ_level3_container .create-field-btn').attr('data-parent-id', selectedId);
+            }
+        });
+
+        // Occupational سطح ۳
+        $('#occupational_finalfields').on('change', function () {
+            const selectedId = $(this).val();
+            if (selectedId) {
+                addSelectedField(selectedId, $(this).find('option:selected').text(), false, true);
+            }
+        });
+
+        // Experience سطح ۱
+        $('#experience_fields').on('change', function () {
+            const selectedId = $(this).val();
+            if (selectedId) {
+                addSelectedField(selectedId, $(this).find('option:selected').text(), true);
+                loadSubfields(selectedId, 2, true);
+                // Update create button for level 2
+                $('#exp_level2_container .create-field-btn').attr('data-parent-id', selectedId);
+            }
+        });
+        
+        // Experience سطح ۲
+        $('#experience_subfields').on('change', function () {
+            const selectedId = $(this).val();
+            if (selectedId) {
+                addSelectedField(selectedId, $(this).find('option:selected').text(), true);
+                loadSubfields(selectedId, 3, true);
+                // Update create button for level 3
+                $('#exp_level3_container .create-field-btn').attr('data-parent-id', selectedId);
+            }
+        });
+        
+        // Experience سطح ۳
+        $('#experience_finalfields').on('change', function () {
+            const selectedId = $(this).val();
+            if (selectedId) {
+                addSelectedField(selectedId, $(this).find('option:selected').text(), true, true);
+            }
+        });
+
+        // Create Field Button Click Handler
+        $(document).on('click', '.create-field-btn', function() {
+            const level = parseInt($(this).attr('data-level'));
+            const parentId = $(this).attr('data-parent-id');
+            const isExp = $(this).attr('data-is-exp') === 'true';
+            openCreateFieldModal(level, parentId === '0' ? null : parentId, isExp);
+        });
+
+        $('form').on('submit', function () {
+            $('input[name="occupational_fields[]"], input[name="experience_fields[]"]').remove();
+            selectedOccupationalFields.forEach(id => {
+                $('<input>').attr({ type: 'hidden', name: 'occupational_fields[]', value: id }).appendTo('form');
+            });
+            selectedExperienceFields.forEach(id => {
+                $('<input>').attr({ type: 'hidden', name: 'experience_fields[]', value: id }).appendTo('form');
+            });
+        });
     });
 
     function loadSubfields(parentId, level, isExp) {
-      const url = isExp
-        ? `/api/experience-fields/${parentId}/children`
-        : `/api/occupational-fields/${parentId}/children`;
-      const selectId = isExp
-        ? (level === 2 ? '#experience_subfields'  : '#experience_finalfields')
-        : (level === 2 ? '#occupational_subfields': '#occupational_finalfields');
-      const $select  = $(selectId);
-      const container = isExp ? '#experience_container' : '#occupational_container';
+        const url = isExp
+            ? `/api/experience-fields/${parentId}/children`
+            : `/api/occupational-fields/${parentId}/children`;
+        const selectId = isExp
+            ? (level === 2 ? '#experience_subfields'  : '#experience_finalfields')
+            : (level === 2 ? '#occupational_subfields': '#occupational_finalfields');
+        const $select  = $(selectId);
+        const containerId = isExp
+            ? (level === 2 ? '#exp_level2_container' : '#exp_level3_container')
+            : (level === 2 ? '#occ_level2_container' : '#occ_level3_container');
 
-      $.get(url, function (data) {
-        $select.empty().append('<option value="">زیر دسته این دسته را انتخاب کنید</option>');
-        data.forEach(field => {
-          $select.append(`<option value="${field.id}">${field.name}</option>`);
-        });
-        $select.append('<option value="create_new">+ ایجاد کنید</option>');
-        $select.select2();
+        $.get(url, function (data) {
+            $select.empty().append('<option value="">زیردسته را انتخاب کنید</option>');
+            data.forEach(field => {
+                $select.append(`<option value="${field.id}">${field.name}</option>`);
+            });
+            $select.select2({dir: 'rtl', language: 'fa'});
 
-        $(`${container} select`).each(function () {
-          const thisLevel = parseInt($(this).data('level'));
-          if (thisLevel == level) $(this).removeClass('d-none');
-          else                 $(this).addClass('d-none');
+            // Show current level container, hide next level
+            $(containerId).show();
+            if (level === 2) {
+                const nextLevel = isExp ? '#exp_level3_container' : '#occ_level3_container';
+                $(nextLevel).hide();
+            }
         });
-      });
     }
 
     function addSelectedField(id, name, isExp, addToHidden = false) {
-      const selected    = isExp ? selectedExperienceFields : selectedOccupationalFields;
-      const maxErrorId  = isExp ? '#error_experience'       : '#error_occupational';
-      const dupErrorId  = isExp ? '#duplicate_error_experience' : '#duplicate_error_occupational';
-      const wrapperId   = isExp ? '#selected_experience_fields' : '#selected_occupational_fields';
-      const inputName   = isExp ? 'experience_fields[]' : 'occupational_fields[]';
+        const selected    = isExp ? selectedExperienceFields : selectedOccupationalFields;
+        const maxErrorId  = isExp ? '#error_experience'       : '#error_occupational';
+        const dupErrorId  = isExp ? '#duplicate_error_experience' : '#duplicate_error_occupational';
+        const wrapperId   = isExp ? '#selected_experience_fields' : '#selected_occupational_fields';
 
-      if (selected.includes(id)) {
-        $(dupErrorId).show(); return;
-      }
-      if (selected.length >= 1000) {
-        $(maxErrorId).show(); disableSelects(isExp); return;
-      }
+        if (selected.includes(id)) {
+            $(dupErrorId).addClass('show');
+            setTimeout(() => $(dupErrorId).removeClass('show'), 3000);
+            return;
+        }
+        if (selected.length >= 10) {
+            $(maxErrorId).addClass('show');
+            disableSelects(isExp);
+            return;
+        }
 
-      selected.push(id);
-      if(addToHidden){
-      $(wrapperId).append(`
-        <span class="badge bg-primary m-1">
-          ${name}
-          <span onclick="removeField('${id}', this, ${isExp})" style="cursor:pointer;">×</span>
-        </span>
-      `);          
-      }
-
+        selected.push(id);
+        if(addToHidden){
+            $(wrapperId).append(`
+                <span class="field-badge">
+                    ${name}
+                    <span class="remove-btn" onclick="removeField('${id}', this, ${isExp})">×</span>
+                </span>
+            `);
+        }
     }
 
     function removeField(id, el, isExp) {
-      if (isExp) {
-        selectedExperienceFields = selectedExperienceFields.filter(x => x != id);
-        $('#error_experience, #duplicate_error_experience').hide();
-      } else {
-        selectedOccupationalFields = selectedOccupationalFields.filter(x => x != id);
-        $('#error_occupational, #duplicate_error_occupational').hide();
-      }
-      enableSelects(isExp);
-      $(el).parent().remove();
+        if (isExp) {
+            selectedExperienceFields = selectedExperienceFields.filter(x => x != id);
+            $('#error_experience, #duplicate_error_experience').removeClass('show');
+        } else {
+            selectedOccupationalFields = selectedOccupationalFields.filter(x => x != id);
+            $('#error_occupational, #duplicate_error_occupational').removeClass('show');
+        }
+        enableSelects(isExp);
+        $(el).parent().remove();
     }
 
     function disableSelects(isExp) {
-      const container = isExp ? '#experience_container' : '#occupational_container';
-      $(`${container} select`).prop('disabled', true);
+        const container = isExp ? '#experience_container' : '#occupational_container';
+        $(`${container} select`).prop('disabled', true);
     }
+    
     function enableSelects(isExp) {
-      const container = isExp ? '#experience_container' : '#occupational_container';
-      $(`${container} select`).prop('disabled', false);
+        const container = isExp ? '#experience_container' : '#occupational_container';
+        $(`${container} select`).prop('disabled', false);
     }
 
     function openCreateFieldModal(level, parentId, isExp) {
-      currentLevel     = level;
-      currentParentId  = parentId;
-      isExperienceMode = isExp;
-      $('#field_level').val(level);
-      $('#parent_id'   ).val(parentId ?? '');
-      $('#field_name'  ).val('');
-      $('#create_field_error').addClass('d-none');
-      new bootstrap.Modal(document.getElementById('createFieldModal')).show();
+        currentLevel     = level;
+        currentParentId  = parentId;
+        isExperienceMode = isExp;
+        $('#field_level').val(level);
+        $('#parent_id'   ).val(parentId ?? '');
+        $('#field_name'  ).val('');
+        $('#create_field_error').hide();
+        $('#createFieldModal').addClass('show');
+    }
+
+    function closeCreateModal() {
+        $('#createFieldModal').removeClass('show');
+        isExperienceMode = false;
+        $('#field_name').val('');
+        $('#create_field_error').hide();
     }
 
     $('#createFieldForm').on('submit', function(e) {
-      e.preventDefault();
-      const name     = $('#field_name').val();
-      const parentId = $('#parent_id').val();
-      const url      = isExperienceMode ? '/api/experience-fields' : '/api/occupational-fields';
+        e.preventDefault();
+        const name     = $('#field_name').val();
+        const parentId = $('#parent_id').val();
+        const url      = isExperienceMode ? '/api/experience-fields' : '/api/occupational-fields';
 
-      $.post(url, { name, parent_id: parentId }, function (newField) {
-        const selectId = getCurrentSelectId();
-        const $select  = $(selectId);
-        const createOpt = $select.find('option').filter(function(){
-          return $(this).text().trim()==='+ ایجاد کنید';
-        }).detach();
+        $.post(url, { name, parent_id: parentId }, function (newField) {
+            const selectId = getCurrentSelectId();
+            const $select  = $(selectId);
+            
+            // Add new field to dropdown
+            $select.append(`<option value="${newField.id}">${newField.name}</option>`);
+            $select.val(newField.id).trigger('change');
 
-        $select.append(`<option value="${newField.id}">${newField.name}</option>`);
-        $select.append(createOpt).val(newField.id);
+            if (currentLevel < 3)
+                loadSubfields(newField.id, currentLevel+1, isExperienceMode);
+            else
+                addSelectedField(newField.id, newField.name, isExperienceMode, true);
 
-        if (currentLevel < 3)
-          loadSubfields(newField.id, currentLevel+1, isExperienceMode);
-        else
-          addSelectedField(newField.id, newField.name, isExperienceMode);
-
-        bootstrap.Modal.getInstance(document.getElementById('createFieldModal')).hide();
-        isExperienceMode = false;
-      }).fail(() => {
-        $('#create_field_error').removeClass('d-none');
-      });
+            closeCreateModal();
+        }).fail(() => {
+            $('#create_field_error').show();
+        });
     });
 
     function getCurrentSelectId() {
-      if (isExperienceMode) {
-        return currentLevel===1 ? '#experience_fields'
-             : currentLevel===2 ? '#experience_subfields'
-             : '#experience_finalfields';
-      } else {
-        return currentLevel===1 ? '#occupational_fields'
-             : currentLevel===2 ? '#occupational_subfields'
-             : '#occupational_finalfields';
-      }
+        if (isExperienceMode) {
+            return currentLevel===1 ? '#experience_fields'
+                 : currentLevel===2 ? '#experience_subfields'
+                 : '#experience_finalfields';
+        } else {
+            return currentLevel===1 ? '#occupational_fields'
+                 : currentLevel===2 ? '#occupational_subfields'
+                 : '#occupational_finalfields';
+        }
     }
-  </script>
-@endsection
+
+    // Fade-in animation
+    document.addEventListener('DOMContentLoaded', () => {
+        const sections = document.querySelectorAll('.fade-in-section');
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+    });
+</script>
+@endpush

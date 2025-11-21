@@ -671,7 +671,7 @@ foreach ($removedExperience as $id) {
     }
 }
 
-        return back()->with('success', 'تخصص‌های شما با موفقیت بروزرسانی شدند.');
+        return redirect()->route('profile.edit')->with('success', 'زمینه‌های صنفی و تجربی با موفقیت به‌روزرسانی شدند.');
     }
 
 
@@ -768,12 +768,14 @@ foreach ($removedExperience as $id) {
             'invite_email' => 'required|email'
         ]);
 
+        $setting = Setting::find(1);
         $code = InvitationCode::create([
             'code' => Str::random(10),
-            'user_id' => auth()->id()
+            'user_id' => auth()->id(),
+            'expire_at' => Carbon::now()->addHours(intval($setting->expire_invation_time ?? 72))
         ]);
 
-        Mail::to($request->invite_email)->send(new InvitationMail($code->code));
+        Mail::to($request->invite_email)->send(new InvitationMail($code->code, $code->expire_at));
 
         return back()->with('success', 'ایمیل دعوت با موفقیت ارسال شد.');
     }

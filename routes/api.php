@@ -133,13 +133,12 @@ Route::get('/locations', function (Request $request) {
             break;
     
         case 'region':
-
-            if (Str::startsWith($parentId, 'city_city_')) {
-                $id = (int) Str::after($parentId, 'city_city_');  // حذف پیشوند city_
+            // بررسی اینکه parent_id مربوط به city است یا rural
+            if (Str::startsWith($parentId, 'city_')) {
+                $id = (int) Str::after($parentId, 'city_');  // حذف پیشوند city_
                 $data = \App\Models\Region::where('parent_id', $id)->get(['id', 'name']);
-            } elseif (Str::startsWith($parentId, 'rural_rural_')) {
-                $id = (int) Str::after($parentId, 'rural_rural_');  // حذف پیشوند rural_
-                
+            } elseif (Str::startsWith($parentId, 'rural_')) {
+                $id = (int) Str::after($parentId, 'rural_');  // حذف پیشوند rural_
                 $data = \App\Models\Village::where('rural_id', $id)->get(['id', 'name']);
             } else {
                 $data = [];
@@ -364,4 +363,62 @@ Route::get('/locations/{level}', function($level,Request $request){
 
     return response()->json($query->get());
 });
+
+/*
+|--------------------------------------------------------------------------
+| نجم‌هدا API Routes
+|--------------------------------------------------------------------------
+|
+| مسیرهای API برای نجم‌هدا - نرم‌افزار جامع مدیریت هوشمند
+|
+*/
+
+use App\Http\Controllers\API\NajmHodaController;
+use App\Http\Controllers\Api\NajmHodaEscalationController;
+
+// مسیرهای عمومی نجم‌هدا (بدون احراز هویت)
+Route::prefix('najm-hoda')->group(function () {
+    Route::get('welcome', [NajmHodaController::class, 'welcome']);
+    // endpoint for external Najm Hoda service to escalate conversations into tickets
+    // rate-limited to avoid abuse
+    Route::post('escalate', [NajmHodaEscalationController::class, 'escalate'])->middleware('throttle:30,1');
+});
+
+// Email Webhook (Mailgun)
+Route::prefix('email')->group(function () {
+    Route::post('webhook', [\App\Http\Controllers\API\EmailWebhookController::class, 'webhook']);
+});
+
+// مسیرهای نیازمند احراز هویت
+Route::middleware('auth:sanctum')->prefix('najm-hoda')->group(function () {
+    // چت با نجم‌هدا
+    Route::post('chat', [NajmHodaController::class, 'chat']);
+    
+    // مدیریت مکالمات
+    Route::get('conversations', [NajmHodaController::class, 'listConversations']);
+    Route::get('conversations/{id}', [NajmHodaController::class, 'getConversation']);
+    Route::delete('conversations/{id}', [NajmHodaController::class, 'deleteConversation']);
+    Route::put('conversations/{id}/archive', [NajmHodaController::class, 'archiveConversation']);
+    
+    // بازخورد
+    Route::post('feedback', [NajmHodaController::class, 'submitFeedback']);
+    
+    // آمار (فقط ادمین)
+    Route::get('stats', [NajmHodaController::class, 'getStats'])->middleware('admin');
+});
+
+// مسیرهای API برای تیکت‌های پشتیبانی
+Route::middleware('auth:sanctum')->prefix('tickets')->group(function () {
+    Route::get('/', [\App\Http\Controllers\API\TicketController::class, 'index']);
+    Route::post('/', [\App\Http\Controllers\API\TicketController::class, 'store']);
+    Route::get('stats', [\App\Http\Controllers\API\TicketController::class, 'stats']);
+    Route::get('{id}', [\App\Http\Controllers\API\TicketController::class, 'show']);
+    Route::put('{id}', [\App\Http\Controllers\API\TicketController::class, 'update']);
+    Route::put('{id}/close', [\App\Http\Controllers\API\TicketController::class, 'close']);
+    Route::post('{id}/comments', [\App\Http\Controllers\API\TicketController::class, 'addComment']);
+    Route::get('{id}/attachments/{attachment_id}/download', [\App\Http\Controllers\API\TicketController::class, 'downloadAttachment']);
+});
+
+// مسیر Webhook ایمیل (بدون احراز هویت، با signature verification)
+Route::post('email/webhook', [\App\Http\Controllers\API\EmailWebhookController::class, 'webhook']);
 

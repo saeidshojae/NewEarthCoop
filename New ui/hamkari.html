@@ -1,0 +1,654 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل کاربری EarthCoop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        /* Custom Tailwind Configuration - پیکربندی رنگ‌ها و فونت‌ها */
+        :root {
+            --color-earth-green: #10b981; /* سبز زمینی */
+            --color-ocean-blue: #3b82f6; /* آبی اقیانوسی */
+            --color-digital-gold: #f59e0b; /* طلایی دیجیتال */
+            --color-pure-white: #ffffff; /* سفید خالص */
+            --color-light-gray: #f8fafc; /* خاکستری روشن */
+            --color-gentle-black: #1e293b; /* مشکی ملایم */
+            --color-dark-green: #047857; /* سبز تیره */
+            --color-dark-blue: #1d4ed8; /* آبی تیره */
+            --color-accent-peach: #ff7e5f; /* هلویی تاکیدی */
+            --color-accent-sky: #6dd5ed; /* آبی آسمانی تاکیدی */
+            --color-purple-700: #6B46C1; /* بنفش تیره برای هاور */
+            --color-red-tomato: #FF6347; /* قرمز گوجه ای */
+        }
+
+        /* Utility classes for custom colors */
+        .bg-earth-green { background-color: var(--color-earth-green); }
+        .text-earth-green { color: var(--color-earth-green); }
+        .bg-ocean-blue { background-color: var(--color-ocean-blue); }
+        .text-ocean-blue { color: var(--color-ocean-blue); }
+        .bg-digital-gold { background-color: var(--color-digital-gold); }
+        .text-digital-gold { color: var(--color-digital-gold); }
+        .bg-pure-white { background-color: var(--color-pure-white); }
+        .text-pure-white { color: var(--color-pure-white); }
+        .bg-light-gray { background-color: var(--color-light-gray); }
+        .text-light-gray { color: var(--color-light-gray); }
+        .bg-gentle-black { background-color: var(--color-gentle-black); }
+        .text-gentle-black { color: var(--color-gentle-black); }
+        .bg-dark-green { background-color: var(--color-dark-green); }
+        .bg-dark-blue { background-color: var(--color-dark-blue); }
+        .bg-accent-peach { background-color: var(--color-accent-peach); }
+        .text-accent-peach { color: var(--color-accent-peach); }
+        .bg-accent-sky { background-color: var(--color-accent-sky); }
+        .text-accent-sky { color: var(--color-accent-sky); }
+        .text-purple-700 { color: var(--color-purple-700); }
+        .text-red-tomato { color: var(--color-red-tomato); }
+
+        /* Font Families - Vazirmatn for Farsi, Poppins for English numbers/text */
+        .font-vazirmatn { font-family: 'Vazirmatn', sans-serif; }
+        .font-poppins { font-family: 'Poppins', sans-serif; }
+
+        /* Custom animations from main.html */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.4), 0 0 25px rgba(245, 158, 11, 0.2); }
+            50% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.7), 0 0 40px rgba(245, 158, 11, 0.4); }
+            100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.4), 0 0 25px rgba(245, 158, 11, 0.2); }
+        }
+
+        @keyframes pulse-light {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes bounce-custom {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0); }
+        }
+
+        /* Apply animations */
+        .animate-glow { animation: glow 3s infinite ease-in-out; }
+        .animate-float { animation: float 6s infinite ease-in-out; }
+        .animate-pulse-light { animation: pulse-light 2s infinite ease-in-out; }
+        .animate-bounce-custom { animation: bounce-custom 3s infinite ease-in-out; }
+
+        /* Ripple effect for buttons */
+        .ripple-effect {
+            position: relative;
+            overflow: hidden;
+            transform: translate3d(0, 0, 0); /* Force hardware acceleration */
+        }
+
+        .ripple-effect span {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            background-color: rgba(255, 255, 255, 0.7); /* White ripple */
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Fade-in section for content */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Specific styles for header elements to match main.html */
+        .header-link.active {
+            @apply bg-earth-green text-pure-white shadow-md;
+        }
+        .header-link:hover {
+            @apply text-pure-white;
+        }
+        .header-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.18) 100%);
+            border-radius: 9999px; /* Tailwind rounded-full */
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: -1;
+        }
+        .header-link:hover::before {
+            opacity: 1;
+        }
+
+        /* Sidebar menu item animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar-menu-item:first-child .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.1s both; }
+        .sidebar-menu-item:nth-child(2) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.2s both; }
+        .sidebar-menu-item:nth-child(3) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.3s both; }
+        .sidebar-menu-item:nth-child(4) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.4s both; }
+        .sidebar-menu-item:nth-child(5) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.5s both; }
+        .sidebar-menu-item:nth-child(6) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.6s both; }
+        .sidebar-menu-item:nth-child(7) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.7s both; }
+        .sidebar-menu-item:nth-child(8) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.8s both; }
+
+        /* Card animations (not directly used in hamkari.html but kept for consistency) */
+        .card {
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Active dot styling for gallery (not directly used in hamkari.html but kept for consistency) */
+        .active-dot {
+            transform: scale(1.25); /* Slightly larger */
+            background-color: var(--color-earth-green) !important; /* Use a prominent color */
+            border-color: var(--color-earth-green) !important;
+        }
+
+        /* Custom hover effect for sidebar menu items */
+        .sidebar-menu-link:hover {
+            background-color: var(--color-light-gray); /* Light gray background on hover */
+            color: var(--color-earth-green); /* Earth green text on hover */
+            transform: translateX(-5px); /* Slight movement to the left */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* Subtle shadow */
+        }
+
+        /* Main container layout */
+        .main-container {
+            display: flex;
+            padding: 24px; /* Adjusted padding for consistency */
+            gap: 32px; /* Adjusted gap for consistency */
+            flex: 1;
+            max-width: 1200px; /* Max width for content */
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Dashboard content (main content area) */
+        .dashboard-content {
+            flex-grow: 1;
+            background-color: var(--color-pure-white);
+            border-radius: 1rem; /* rounded-2xl */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* shadow-md */
+            padding: 2.5rem; /* p-10 */
+            min-height: calc(100vh - 170px);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e2e8f0; /* border-gray-200 */
+            text-align: right; /* Adjusted for RTL */
+            font-size: 1.1rem; /* Adjusted font size for content */
+            color: var(--color-gentle-black); /* Adjusted color for content */
+        }
+
+        /* Specific styles for Collaboration Opportunities content */
+        .collaboration-opportunities {
+            width: 100%;
+            background-color: var(--color-pure-white); /* Use pure-white from new palette */
+            border-radius: 1rem; /* rounded-2xl */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* shadow-md */
+            padding: 2.5rem; /* p-10 */
+            margin-top: 0; /* Remove extra top margin */
+            border: 1px solid #e2e8f0; /* border-gray-200 */
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .collaboration-opportunities h1 { /* Changed to h1 for main title */
+            font-size: 2.2rem; /* Larger title */
+            font-weight: 800; /* Bolder */
+            color: var(--color-dark-green); /* Darker primary for strong contrast */
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--color-earth-green); /* Attractive underline */
+            position: relative;
+            text-align: right; /* Adjusted for RTL */
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .collaboration-opportunities h1::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            right: 0;
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--color-digital-gold), var(--color-accent-peach)); /* Accent gradient */
+            border-radius: 2px;
+        }
+
+        .collaboration-opportunities p {
+            font-size: 1.05rem; /* Slightly larger paragraph text */
+            line-height: 2; /* More relaxed line height */
+            color: var(--color-gentle-black); /* neutral-700 */
+            text-align: justify;
+            margin-bottom: 15px;
+        }
+
+        .collaboration-opportunities ul {
+            list-style: none;
+            padding-right: 20px;
+            margin-bottom: 25px; /* More space after list */
+        }
+
+        .collaboration-opportunities ul li {
+            position: relative;
+            margin-bottom: 10px; /* More space between list items */
+            font-size: 1.05rem;
+            color: var(--color-gentle-black);
+        }
+
+        .collaboration-opportunities ul li::before {
+            content: "\f00c"; /* FontAwesome check icon */
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: var(--color-earth-green); /* Primary green for bullet points */
+            position: absolute;
+            right: 0;
+            top: 2px;
+            margin-right: -20px;
+        }
+
+        .collaboration-opportunities .contact-info {
+            font-weight: 700; /* Bolder contact info */
+            color: var(--color-digital-gold); /* Changed to golden color */
+            direction: ltr; /* Ensure email displays correctly */
+            text-align: center; /* Centered */
+            display: block;
+            margin-top: 30px; /* More space above contact info */
+            font-size: 1.2rem; /* Larger font for contact info */
+            background-color: var(--color-light-gray); /* Light gray background */
+            padding: 15px 25px;
+            border-radius: 0.75rem; /* rounded-lg */
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Responsive settings */
+        @media (max-width: 1024px) { /* lg breakpoint */
+            .main-container {
+                flex-direction: column;
+                padding: 20px;
+                gap: 20px;
+            }
+            
+            .sidebar {
+                width: 100%;
+                position: static;
+                padding: 20px;
+            }
+            .dashboard-content {
+                padding: 20px;
+            }
+            .collaboration-opportunities h1 {
+                font-size: 1.8rem;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+            }
+            .collaboration-opportunities h1::after {
+                width: 60px;
+                height: 2px;
+            }
+            .collaboration-opportunities p,
+            .collaboration-opportunities ul li {
+                font-size: 1rem;
+            }
+            .collaboration-opportunities .contact-info {
+                font-size: 1.1rem;
+                padding: 12px 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 0 16px;
+                height: 60px;
+            }
+            
+            .flex.items-center.space-x-3 span { /* Target EarthCoop title */
+                font-size: 1.8rem;
+            }
+            .flex.items-center.space-x-3 svg { /* Target EarthCoop logo */
+                width: 35px;
+                height: 35px;
+            }
+            
+            .header-links {
+                display: none;
+            }
+            
+            .main-container {
+                padding: 16px;
+                gap: 16px;
+            }
+            
+            .dashboard-content {
+                padding: 16px;
+            }
+
+            .collaboration-opportunities {
+                padding: 1.5rem; /* p-6 */
+            }
+            .collaboration-opportunities h1 {
+                font-size: 1.6rem;
+            }
+            .collaboration-opportunities p,
+            .collaboration-opportunities ul li {
+                font-size: 0.95rem;
+            }
+            .collaboration-opportunities .contact-info {
+                font-size: 1rem;
+                padding: 10px 15px;
+            }
+        }
+    </style>
+</head>
+<body class="font-vazirmatn text-gentle-black leading-relaxed bg-light-gray min-h-screen flex flex-col">
+    <!-- Header from index.html -->
+    <header class="bg-pure-white shadow-md py-4 px-6 md:px-8 sticky top-0 z-50 transition-all duration-300" id="header" x-data="{ mobileMenuOpen: false }">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3 md:space-x-reverse md:space-x-3 rtl:space-x-reverse rtl:space-x-3">
+                <svg width="45" height="45" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="animate-bounce-custom">
+                    <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" fill="#10b981" opacity="0.8"/>
+                    <path d="M12 2C10.5 4 8 6 8 9C8 12 12 14 12 14C12 14 16 12 16 9C16 6 13.5 4 12 2ZM12 14C12 14 10 16 10 18C10 20 12 22 12 22" fill="#047857"/>
+                </svg>
+                <span class="text-2xl md:text-3xl font-extrabold text-gentle-black font-vazirmatn">EarthCoop</span>
+            </div>
+
+            <!-- Desktop Navigation -->
+            <nav class="hidden md:flex items-center space-x-8 rtl:space-x-reverse font-vazirmatn text-gentle-black flex-grow justify-center">
+                <a href="index.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group flex items-center">
+                    <i class="fas fa-home ml-2 text-earth-green"></i> <span>خانه</span>
+                    <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+                </a>
+                <a href="about.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group flex items-center">
+                    <i class="fas fa-info-circle ml-2 text-earth-green"></i> <span>درباره EarthCoop</span>
+                    <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+                </a>
+                <a href="help.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group flex items-center">
+                    <i class="fas fa-question-circle ml-2 text-earth-green"></i> <span>راهنمای استفاده</span>
+                    <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+                </a>
+                <a href="Collaboration.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group flex items-center active">
+                    <i class="fas fa-handshake ml-2 text-earth-green"></i> <span>همکاری</span>
+                    <span class="absolute bottom-0 right-0 w-full h-0.5 bg-earth-green transition-all duration-300"></span>
+                </a>
+            </nav>
+
+            <div class="flex items-center">
+                <!-- Mobile Menu Button (Hamburger Icon) -->
+                <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden text-gentle-black focus:outline-none ml-4">
+                    <i class="fas fa-bars text-2xl" x-show="!mobileMenuOpen"></i>
+                    <i class="fas fa-times text-2xl" x-show="mobileMenuOpen" x-transition></i>
+                </button>
+
+                <!-- User Profile Dropdown -->
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" class="bg-earth-green text-pure-white px-4 py-2 rounded-full shadow-md hover:bg-dark-green transition duration-300 font-vazirmatn font-medium transform hover:scale-105 flex items-center ripple-effect">
+                        <div class="w-8 h-8 bg-pure-white/20 rounded-full flex items-center justify-center text-pure-white text-lg ml-2">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        جان دو
+                        <i class="fas fa-chevron-down mr-2 text-sm transition-transform duration-300" :class="{ 'rotate-180': open }"></i>
+                    </button>
+                    <div x-show="open" @click.away="open = false" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="absolute right-0 mt-2 w-48 bg-pure-white rounded-lg shadow-xl py-2 z-50 text-right font-vazirmatn origin-top-right">
+                        <a href="profile.html" class="block px-4 py-2 hover:bg-light-gray transition duration-200 flex items-center justify-start text-earth-green hover:text-dark-green">
+                            پروفایل <i class="fas fa-user-circle mr-3"></i>
+                        </a>
+                        <a href="asasname.html" class="block px-4 py-2 hover:bg-light-gray transition duration-200 flex items-center justify-start text-earth-green hover:text-dark-green">
+                            اساسنامه <i class="fas fa-file-alt mr-3"></i>
+                        </a>
+                        <hr class="my-1 border-gray-200">
+                        <a href="#" class="block px-4 py-2 hover:bg-light-gray transition duration-200 flex items-center justify-start text-red-tomato hover:text-red-700">
+                            خروج <i class="fas fa-sign-out-alt mr-3"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation (hidden by default, shown with Alpine.js) -->
+        <div x-show="mobileMenuOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2" class="md:hidden mt-4 pb-4 border-t border-gray-200">
+            <nav class="flex flex-col items-center space-y-2 font-vazirmatn text-gentle-black">
+                <a href="index.html" class="block w-full text-center py-2 hover:bg-light-gray rounded-md transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-home ml-2 text-earth-green"></i> <span>خانه</span>
+                </a>
+                <a href="about.html" class="block w-full text-center py-2 hover:bg-light-gray rounded-md transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-info-circle ml-2 text-earth-green"></i> <span>درباره EarthCoop</span>
+                </a>
+                <a href="help.html" class="block w-full text-center py-2 hover:bg-light-gray rounded-md transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-question-circle ml-2 text-earth-green"></i> <span>راهنمای استفاده</span>
+                </a>
+                <a href="Collaboration.html" class="block w-full text-center py-2 hover:bg-light-gray rounded-md transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-handshake ml-2 text-earth-green"></i> <span>همکاری</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container mx-auto flex flex-col lg:flex-row gap-8 p-6 md:p-8 flex-grow">
+        <!-- Sidebar from index.html -->
+        <aside class="w-full lg:w-80 bg-pure-white rounded-2xl shadow-lg p-6 flex-shrink-0 lg:sticky lg:top-24 h-fit border border-gray-200 transition-all duration-300 hover:shadow-xl">
+            <div class="pb-4 mb-4 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-gentle-black font-vazirmatn flex items-center justify-between">
+                    <i class="fas fa-bars text-earth-green"></i>
+                    <span class="mr-3">منو</span>
+                </h2>
+            </div>
+            <nav>
+                <ul class="space-y-2">
+                    <li class="sidebar-menu-item">
+                        <a href="index.html" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black hover:bg-light-gray hover:text-earth-green transition duration-200 flex items-center justify-between relative group">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg bg-earth-green opacity-0 group-hover:opacity-100 transition-all duration-200"></span>
+                            <i class="fas fa-users text-ocean-blue"></i>
+                            <span class="flex-grow text-right mx-3">گروه‌های من</span>
+                            <span class="badge bg-digital-gold text-pure-white text-xs px-2 py-1 rounded-full font-bold">3 جدید</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="Collaboration.html" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black hover:bg-light-gray hover:text-earth-green transition duration-200 flex items-center justify-between relative group active">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg bg-earth-green opacity-0 group-hover:opacity-100 transition-all duration-200"></span>
+                            <i class="fas fa-handshake text-digital-gold"></i>
+                            <span class="flex-grow text-right mx-3">مشارکت‌های من</span>
+                            </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="entekhabat.html" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black hover:bg-light-gray hover:text-earth-green transition duration-200 flex items-center justify-between relative group">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg bg-earth-green opacity-0 group-hover:opacity-100 transition-all duration-200"></span>
+                            <i class="fas fa-vote-yea text-earth-green"></i>
+                            <span class="flex-grow text-right mx-3">انتخابات جاری</span>
+                            <span class="badge bg-earth-green text-pure-white text-xs px-2 py-1 rounded-full font-bold">1 فعال</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="#" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black hover:bg-light-gray hover:text-earth-green transition duration-200 flex items-center justify-between relative group">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg bg-earth-green opacity-0 group-hover:opacity-100 transition-all duration-200"></span>
+                            <i class="fas fa-chart-pie text-ocean-blue"></i>
+                            <span class="flex-grow text-right mx-3">نظرسنجی‌های جاری</span>
+                            </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="#" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black hover:bg-light-gray hover:text-earth-green transition duration-200 flex items-center justify-between relative group">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg bg-earth-green opacity-0 group-hover:opacity-100 transition-all duration-200"></span>
+                            <i class="fas fa-wallet text-digital-gold"></i>
+                            <span class="flex-grow text-right mx-3">حساب مالی نجم بهار</span>
+                            </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="davate doostan.html" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black hover:bg-light-gray hover:text-earth-green transition duration-200 flex items-center justify-between relative group">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg bg-earth-green opacity-0 group-hover:opacity-100 transition-all duration-200"></span>
+                            <i class="fas fa-user-plus text-earth-green"></i>
+                            <span class="flex-grow text-right mx-3">دعوت از دوستان</span>
+                            </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="profile.html" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black hover:bg-light-gray hover:text-earth-green transition duration-200 flex items-center justify-between relative group">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg bg-earth-green opacity-0 group-hover:opacity-100 transition-all duration-200"></span>
+                            <i class="fas fa-cog text-ocean-blue"></i>
+                            <span class="flex-grow text-right mx-3">ویرایش حساب کاربری</span>
+                            </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="#" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black hover:bg-light-gray hover:text-earth-green transition duration-200 flex items-center justify-between relative group">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg bg-earth-green opacity-0 group-hover:opacity-100 transition-all duration-200"></span>
+                            <i class="fas fa-sign-out-alt text-digital-gold"></i>
+                            <span class="flex-grow text-right mx-3">خروج</span>
+                            </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="mt-6 pt-4 border-t border-gray-200 text-center text-sm text-gray-500 font-vazirmatn">
+                نسخه ۲.۱.۰ - EarthCoop
+            </div>
+        </aside>
+
+        <main class="dashboard-content fade-in-section">
+            <!-- Collaboration Opportunities section as the main content -->
+            <div class="collaboration-opportunities">
+                <h1>فرصت‌های همکاری</h1>
+                <div class="content-section active"> <!-- Made this section always active -->
+                    <p>ما در تیم توسعه ارث‌کوپ برای توسعه بهتر این زیست بوم به همکاری شما نیازمندیم.
+                    اگر در زمینه‌های زیر تخصص دارید و مایلید از توسعه‌دهندگان ارث‌کوپ باشید با ما تماس بگیرید:</p>
+                    <ul>
+                        <li>گرافیست و طراح رابط کاربری</li>
+                        <li>برنامه‌نویس اپلیکیشن اندروید و آی‌او‌اس</li>
+                        <li>توسعه‌دهنده دستیارهای هوش مصنوعی</li>
+                        <li>سازنده اینفوگرافی و موشن‌گرافی</li>
+                    </ul>
+                    <p class="contact-info">S.s.sh.kia@gmail.com</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // User menu functionality
+            const userMenuBtn = document.querySelector('[x-data="{ open: false }"] button');
+            const userDropdown = document.querySelector('[x-data="{ open: false }"] > div');
+
+            // Alpine.js handles the dropdown toggle, so manual JS for this is not needed.
+            // However, if you want to ensure the active class for the header link:
+            const headerLinks = document.querySelectorAll('nav a');
+            headerLinks.forEach(link => {
+                if (link.getAttribute('href') === 'Collaboration.html') {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            // Sidebar menu item active state - Modified to reflect current page
+            const sidebarLinks = document.querySelectorAll('.sidebar-menu-link');
+            sidebarLinks.forEach(link => {
+                if (link.getAttribute('href') === 'Collaboration.html') {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+                link.addEventListener('click', (e) => {
+                    sidebarLinks.forEach(l => l.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                });
+            });
+
+            // Ripple effect for buttons
+            const buttons = document.querySelectorAll('.ripple-effect');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const rect = this.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const ripple = document.createElement('span');
+                    ripple.style.width = ripple.style.height = Math.max(rect.width, rect.height) + 'px';
+                    ripple.style.left = `${x}px`;
+                    ripple.style.top = `${y}px`;
+                    this.appendChild(ripple);
+                    
+                    // Remove ripple after animation
+                    ripple.addEventListener('animationend', () => {
+                        ripple.remove();
+                    });
+                });
+            });
+
+            // Header scroll effect
+            window.addEventListener('scroll', () => {
+                const header = document.getElementById('header');
+                if (window.scrollY > 20) {
+                    header.classList.add('bg-pure-white/95', 'backdrop-blur-sm');
+                    header.classList.remove('bg-pure-white');
+                } else {
+                    header.classList.remove('bg-pure-white/95', 'backdrop-blur-sm');
+                    header.classList.add('bg-pure-white');
+                }
+            });
+
+            // Smooth scroll animation for sections (fade-in-section)
+            const sections = document.querySelectorAll('.fade-in-section');
+
+            const observerOptions = {
+                root: null, // viewport
+                rootMargin: '0px',
+                threshold: 0.1 // Trigger when 10% of the section is visible
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target); // Stop observing once visible
+                    }
+                    else {
+                        // Optional: remove 'is-visible' class when element is not intersecting
+                        entry.target.classList.remove('is-visible');
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>

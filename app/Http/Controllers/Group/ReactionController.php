@@ -28,6 +28,12 @@ class ReactionController extends Controller
             } else {
                 // اگه نوعش فرق داره، آپدیت کن
                 $existing->update(['type' => $type]);
+                // award if switched to like
+                if ($type == 1) {
+                    try {
+                        app(\App\Services\ReputationService::class)->applyAction(auth()->user(), 'post_upvoted', ['blog_id' => $blog->id], $blog->id, 'groups');
+                    } catch (\Throwable $e) {}
+                }
             }
         } else {
             // ری‌اکشن جدید
@@ -36,6 +42,12 @@ class ReactionController extends Controller
                 'blog_id' => $blog->id,
                 'type' => $type,
             ]);
+
+            if ($type == 1) {
+                try {
+                    app(\App\Services\ReputationService::class)->applyAction(auth()->user(), 'post_upvoted', ['blog_id' => $blog->id], $blog->id, 'groups');
+                } catch (\Throwable $e) {}
+            }
         }
     
         return response()->json([
@@ -57,7 +69,7 @@ class ReactionController extends Controller
             if ($existing->type == $type) {
                 // اگر همون نوع رأی قبلاً ثبت شده → حذفش کن
                 $existing->delete();
-    
+
                 return response()->json([
                     'status' => 'removed',
                     'likes' => $comment->reactions()->where('type', 1)->count(),
@@ -69,7 +81,7 @@ class ReactionController extends Controller
                 $existing->delete();
             }
         }
-    
+
         // ایجاد رأی جدید
         Reaction::create([
             'comment_id' => $comment->id,
@@ -77,7 +89,14 @@ class ReactionController extends Controller
             'type' => $type,
             'react_type' => 1
         ]);
-    
+
+        // award for comment upvote
+        if ($type == 1) {
+            try {
+                app(\App\Services\ReputationService::class)->applyAction(auth()->user(), 'comment_upvoted', ['comment_id' => $comment->id], $comment->id, 'groups');
+            } catch (\Throwable $e) {}
+        }
+
         return response()->json([
             'status' => 'success',
             'likes' => $comment->reactions()->where('type', 1)->count(),

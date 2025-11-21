@@ -1,77 +1,89 @@
+<form action="{{ route('profile.update.social-network') }}" method="POST">
+    @csrf
+    @method('PUT')
+    
+    <div class="form-group-enhanced">
+        <label class="form-label-enhanced">
+            <i class="fas fa-share-alt"></i>
+            لینک شبکه اجتماعی
+        </label>
+        
+        <div id="dynamic-inputs">
+            @php
+                $storedLinks = $user->social_networks ?? [];
+                if (is_string($storedLinks)) {
+                    $storedLinks = json_decode($storedLinks, true);
+                }
+                $socialLinks = old('options', $storedLinks);
+            @endphp
 
-<div class="toggle-box">
-    <div class="toggle-header" onclick="toggleBox(this)">
-      <span>شبکه های اجتماعی</span>
-      <i class="fas fa-chevron-down toggle-icon" id="toggleIcon"></i>
-    </div>
-    <div class="toggle-content" id="toggleContent">
-        <hr>
-      <form action="{{ route('profile.update.social-network') }}" method="POST">
-        @csrf
-        @method('PUT')
-        <div class="row">
-          <div class="form-group col-12">
-            <label>لینک شبکه اجتماعی</label>
-            <div id="dynamic-inputs">
-                @php
-                    $storedLinks = $user->social_networks ?? [];
-                    if (is_string($storedLinks)) {
-                        $storedLinks = json_decode($storedLinks, true);
-                    }
-                    $socialLinks = old('options', $storedLinks);
-                @endphp
-    
-                @forelse($socialLinks as $index => $link)
-                    <div class="input-group mb-2">
-                        <input type="url" name="options[]" value="{{ old("options.$index", $link) }}"
-                               class="form-control" placeholder="لینک را وارد کنید">
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-danger" onclick="removeInput(this)">✖</button>
-                        </div>
-                    </div>
-                @empty
-                    <div class="input-group mb-2">
-                        <input type="url" name="options[]" class="form-control" placeholder="لینک را وارد کنید">
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-danger" onclick="removeInput(this)">✖</button>
-                        </div>
-                    </div>
-                @endforelse
-            </div>
-    
-            <button type="button" onclick="addInput()" class="btn btn-sm btn-success">➕ افزودن گزینه جدید</button>
-    
-            @error('options.*')
-                <div class="invalid-feedback d-block">{{ $message }}</div>
-            @enderror
+            @forelse($socialLinks as $index => $link)
+                <div class="dynamic-input-group">
+                    <input type="url" 
+                           name="options[]" 
+                           value="{{ old("options.$index", $link) }}"
+                           class="form-input-enhanced" 
+                           placeholder="لینک را وارد کنید (مثال: https://instagram.com/username)">
+                    <button type="button" class="remove-btn" onclick="removeInput(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            @empty
+                <div class="dynamic-input-group">
+                    <input type="url" 
+                           name="options[]" 
+                           class="form-input-enhanced" 
+                           placeholder="لینک را وارد کنید (مثال: https://instagram.com/username)">
+                    <button type="button" class="remove-btn" onclick="removeInput(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            @endforelse
         </div>
-    </div><br>
 
-        <input type="submit" value="ذخیره تغییرات" class="btn btn-primary" style="background-color: #518dbdcc !important;">
-      </form>
-      
+        <button type="button" onclick="addInput()" class="add-btn">
+            <i class="fas fa-plus ml-2"></i>
+            افزودن لینک جدید
+        </button>
+
+        @error('options.*')
+            <div class="text-red-500 text-sm mt-2">{{ $message }}</div>
+        @enderror
     </div>
 
+    <div class="flex justify-center mt-8">
+        <button type="submit" class="submit-btn-enhanced">
+            <i class="fas fa-save ml-2"></i>
+            ذخیره تغییرات
+        </button>
+    </div>
+</form>
 
-    <script>
-      function addInput() {
-          const container = document.getElementById('dynamic-inputs');
-          const inputGroup = document.createElement('div');
-          inputGroup.className = 'input-group mb-2';
-  
-          inputGroup.innerHTML = `
-              <input type="url" name="options[]" class="form-control" placeholder="لینک را وارد کنید">
-              <div class="input-group-append">
-                  <button type="button" class="btn btn-danger" onclick="removeInput(this)">✖</button>
-              </div>
-          `;
-  
-          container.appendChild(inputGroup);
-      }
-  
-      function removeInput(button) {
-          button.closest('.input-group').remove();
-      }
-  </script>
-      
-</div>
+<script>
+    function addInput() {
+        const container = document.getElementById('dynamic-inputs');
+        const inputGroup = document.createElement('div');
+        inputGroup.className = 'dynamic-input-group';
+
+        inputGroup.innerHTML = `
+            <input type="url" name="options[]" class="form-input-enhanced" placeholder="لینک را وارد کنید (مثال: https://instagram.com/username)">
+            <button type="button" class="remove-btn" onclick="removeInput(this)">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+
+        container.appendChild(inputGroup);
+        
+        // Focus on new input
+        inputGroup.querySelector('input').focus();
+    }
+
+    function removeInput(button) {
+        const container = document.getElementById('dynamic-inputs');
+        if (container.children.length > 1) {
+            button.closest('.dynamic-input-group').remove();
+        } else {
+            alert('حداقل یک فیلد باید وجود داشته باشد');
+        }
+    }
+</script>

@@ -8,31 +8,27 @@ use Illuminate\Http\Request;
 
 class TermController extends Controller
 {
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $setting = Setting::find(1);
-        if($setting->finger_status == 0){
-            $input = $request->validate([
-                'finger' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:5020'
-            ]);
-        }else{
-            $input = $request->validate([
-                'finger' => 'required|image|mimes:png,jpg,jpeg,webp|max:5020'
-            ]);
-        }
-        
+
+        $request->validate([
+            'finger' => ($setting && $setting->finger_status == 1)
+                ? 'required|image|mimes:png,jpg,jpeg,webp|max:5020'
+                : 'nullable|image|mimes:png,jpg,jpeg,webp|max:5020',
+        ]);
+
+        $updateData = ['terms_accepted_at' => now()];
+
         if ($request->hasFile('finger')) {
             $name = time() . '.' . $request->finger->extension();
             $request->finger->move(public_path('images/fingers/'), $name);
-            $inputs['finger'] = $name;
+            $updateData['fingerprint_id'] = $name;
         }
 
-        if(auth()->check()){
-            if(isset($inputs['finger'])){
-             auth()->user()->update([
-                'fingerprint_id' =>  $inputs['finger'],
-            ]);   
-            }
-        };
+        if (auth()->check()) {
+            auth()->user()->update($updateData);
+        }
 
         return redirect('/')->with('success', 'تایید اساسنامه باموفقیت انجام شد، به مراحل ثبت نام بازگردید');
     }

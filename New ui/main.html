@@ -1,0 +1,1114 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EarthCoop - خانه‌ای برای همه؛ همکاری برای آینده</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Custom Tailwind Configuration - پیکربندی رنگ‌ها و فونت‌ها */
+        :root {
+            --color-earth-green: #10b981; /* سبز زمینی */
+            --color-ocean-blue: #3b82f6; /* آبی اقیانوسی */
+            --color-digital-gold: #f59e0b; /* طلایی دیجیتال */
+            --color-pure-white: #ffffff; /* سفید خالص */
+            --color-light-gray: #f8fafc; /* خاکستری روشن */
+            --color-gentle-black: #1e293b; /* مشکی ملایم */
+            --color-dark-green: #047857; /* سبز تیره */
+            --color-dark-blue: #1d4ed8; /* آبی تیره */
+            --color-accent-peach: #ff7e5f; /* هلویی تاکیدی */
+            --color-accent-sky: #6dd5ed; /* آبی آسمانی تاکیدی */
+            --color-purple-700: #6B46C1; /* بنفش تیره برای هاور */
+        }
+
+        /* Utility classes for custom colors */
+        .bg-earth-green { background-color: var(--color-earth-green); }
+        .text-earth-green { color: var(--color-earth-green); }
+        .bg-ocean-blue { background-color: var(--color-ocean-blue); }
+        .text-ocean-blue { color: var(--color-ocean-blue); }
+        .bg-digital-gold { background-color: var(--color-digital-gold); }
+        .text-digital-gold { color: var(--color-digital-gold); }
+        .bg-pure-white { background-color: var(--color-pure-white); }
+        .text-pure-white { color: var(--color-pure-white); }
+        .bg-light-gray { background-color: var(--color-light-gray); }
+        .text-light-gray { color: var(--color-light-gray); }
+        .bg-gentle-black { background-color: var(--color-gentle-black); }
+        .text-gentle-black { color: var(--color-gentle-black); }
+        .bg-dark-green { background-color: var(--color-dark-green); }
+        .bg-dark-blue { background-color: var(--color-dark-blue); }
+        .bg-accent-peach { background-color: var(--color-accent-peach); }
+        .text-accent-peach { color: var(--color-accent-peach); }
+        .bg-accent-sky { background-color: var(--color-accent-sky); }
+        .text-accent-sky { color: var(--color-accent-sky); }
+        .text-purple-700 { color: var(--color-purple-700); }
+
+        /* Font Families - Vazirmatn for Farsi, Poppins for English numbers/text */
+        .font-vazirmatn { font-family: 'Vazirmatn', sans-serif; }
+        .font-poppins { font-family: 'Poppins', sans-serif; }
+
+        /* Custom animations */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.4), 0 0 25px rgba(245, 158, 11, 0.2); }
+            50% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.7), 0 0 40px rgba(245, 158, 11, 0.4); }
+            100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.4), 0 0 25px rgba(245, 158, 11, 0.2); }
+        }
+
+        @keyframes pulse-light {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes rotate {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(360deg); }
+        }
+
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) translateZ(75px) scale(1); opacity: 1; } /* Adjusted translateZ */
+            100% { transform: translate(-50%, -50%) translateZ(75px) scale(1.1); opacity: 0.8; } /* Adjusted translateZ */
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        @keyframes bounce-custom {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        /* Apply animations */
+        .animate-glow { animation: glow 3s infinite ease-in-out; }
+        .animate-float { animation: float 6s infinite ease-in-out; }
+        .animate-pulse-light { animation: pulse-light 2s infinite ease-in-out; }
+        .animate-bounce-custom { animation: bounce-custom 3s infinite ease-in-out; }
+
+        /* Coin flip animation */
+        @keyframes flip-coin {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(360deg); }
+        }
+
+        .animate-flip-coin {
+            animation: flip-coin 4s infinite ease-in-out;
+        }
+
+        .coin-flip-wrapper {
+            position: relative; /* Needed for absolute positioning of faces */
+            transform-style: preserve-3d; /* Crucial for 3D effect */
+        }
+
+        .coin-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            backface-visibility: hidden; /* Hide the back of the element when facing away */
+            /* Styles from the original image tag */
+            box-shadow: 0 15px 40px rgba(245, 158, 11, 0.4), inset 0 0 15px rgba(255, 255, 255, 0.5);
+            border: 4px solid var(--color-digital-gold); /* Tailwind border-4 border-digital-gold */
+        }
+
+        .coin-back {
+            transform: rotateY(180deg); /* Initially rotate the back face to be hidden */
+        }
+
+        /* Smooth scroll animations */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Hamburger menu styling */
+        .hamburger-menu {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 30px;
+            height: 25px;
+            cursor: pointer;
+            z-index: 50;
+        }
+
+        .hamburger-menu span {
+            display: block;
+            width: 100%;
+            height: 3px;
+            background-color: var(--color-gentle-black);
+            border-radius: 5px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .hamburger-menu.open span:nth-child(1) { transform: translateY(11px) rotate(45deg); }
+        .hamburger-menu.open span:nth-child(2) { opacity: 0; }
+        .hamburger-menu.open span:nth-child(3) { transform: translateY(-11px) rotate(-45deg); }
+
+        .mobile-nav-menu {
+            position: absolute;
+            top: 100%;
+            right: 0; /* Changed to right for RTL */
+            width: 100%;
+            background-color: var(--color-pure-white);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            padding: 1rem 0;
+            z-index: 40;
+        }
+
+        /* Gradient backgrounds */
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
+        }
+
+        .feature-card {
+            background: linear-gradient(145deg, #ffffff 0%, #f0f4f7 100%);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s ease;
+            border-radius: 18px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(220, 220, 220, 0.3);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, var(--color-earth-green), var(--color-ocean-blue), var(--color-digital-gold));
+        }
+
+        .testimonial-card {
+            background: linear-gradient(145deg, #ffffff 0%, #f0f4f7 100%);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+            border-radius: 18px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(220, 220, 220, 0.3);
+            transition: all 0.4s ease;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .testimonial-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, var(--color-earth-green), var(--color-ocean-blue));
+        }
+
+        /* How it works steps - جهت فلش‌ها و جایگاه آن‌ها برای RTL */
+        .how-it-works-step {
+            position: relative;
+            padding-bottom: 40px;
+        }
+
+        /* Removed ::after pseudo-element for arrows */
+        .how-it-works-step:not(:last-child)::after {
+            content: none; /* Explicitly remove content */
+        }
+
+        @media (max-width: 768px) {
+            .how-it-works-step {
+                padding-bottom: 60px;
+            }
+            .how-it-works-step:not(:last-child)::after {
+                content: none; /* Explicitly remove content for mobile too */
+            }
+        }
+
+        /* Globe and its elements */
+        .globe-container {
+            position: relative;
+            width: 100%;
+            height: 200px; /* Reduced height */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+        }
+
+        .globe {
+            width: 150px; /* Reduced width */
+            height: 150px; /* Reduced height */
+            background: url('https://images.unsplash.com/photo-1614730321146-b6fa89a875eb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80') center/cover;
+            border-radius: 50%;
+            box-shadow: 0 0 60px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.3);
+            position: relative;
+            animation: rotate 60s linear infinite;
+            transform-style: preserve-3d;
+        }
+
+        .globe::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 30%, transparent 50%, rgba(16, 185, 129, 0.15) 100%);
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .globe-dots {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            transform-style: preserve-3d;
+            z-index: 2;
+        }
+
+        .globe-dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--color-earth-green);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) translateZ(75px); /* Adjusted translateZ based on new globe size */
+            box-shadow: 0 0 10px var(--color-earth-green), 0 0 15px rgba(255, 255, 255, 0.5);
+            animation: pulse 1.5s infinite alternate ease-in-out;
+        }
+
+        .globe-dot:nth-child(1) { top: 20%; left: 30%; background-color: var(--color-earth-green); }
+        .globe-dot:nth-child(2) { top: 40%; left: 70%; background-color: var(--color-ocean-blue); animation-delay: 0.3s; }
+        .globe-dot:nth-child(3) { top: 60%; left: 20%; background-color: var(--color-digital-gold); animation-delay: 0.6s; }
+        .globe-dot:nth-child(4) { top: 75%; left: 60%; background-color: var(--color-earth-green); animation-delay: 0.9s; }
+        .globe-dot:nth-child(5) { top: 30%; left: 50%; background-color: var(--color-ocean-blue); animation-delay: 1.2s; }
+        .globe-dot:nth-child(6) { top: 55%; left: 90%; background-color: var(--color-digital-gold); animation-delay: 1.5s; }
+        .globe-dot:nth-child(7) { top: 10%; left: 60%; background-color: var(--color-earth-green); animation-delay: 1.8s; }
+
+        /* Stats item styling for RTL */
+        .stats-item {
+            position: relative;
+            padding-right: 35px; /* Changed to padding-right for RTL */
+            text-align: right; /* Changed to text-align: right for RTL */
+        }
+
+        .stats-item::before {
+            content: '';
+            position: absolute;
+            right: 0; /* Changed from left to right */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: var(--color-earth-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            color: var(--color-pure-white);
+            font-size: 0.8rem;
+        }
+
+        .stats-item:nth-child(1)::before { content: '\f007'; background-color: var(--color-earth-green); }
+        .stats-item:nth-child(2)::before { content: '\f0ae'; background-color: var(--color-ocean-blue); }
+        .stats-item:nth-child(3)::before { content: '\f0ac'; background-color: var(--color-digital-gold); }
+
+        /* RTL specific adjustments for floating cards */
+        /* Adjusted for the image to be on the left */
+        .hero-image-card-right { /* This card was originally on the bottom-left of the image */
+            position: absolute;
+            bottom: -8px;
+            left: -8px; /* Changed from right to left */
+            background-color: white;
+            padding: 1.25rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            transform: rotate(-6deg);
+            transition: transform 0.5s;
+        }
+
+        .hero-image-card-right:hover {
+            transform: rotate(0deg);
+        }
+
+        .hero-image-card-left { /* This card was originally on the top-right of the image */
+            position: absolute;
+            top: -8px;
+            right: -8px; /* Changed from left to right */
+            background-color: white;
+            padding: 1.25rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            transform: rotate(6deg);
+            transition: transform 0.5s;
+        }
+
+        .hero-image-card-left:hover {
+            transform: rotate(0deg);
+        }
+
+        /* Testimonial Quote Marks for RTL */
+        .testimonial-card .italic.relative.z-10::before {
+            left: auto;
+            right: -1rem; /* Adjust for RTL */
+        }
+        .testimonial-card .italic.relative.z-10::after {
+            right: auto;
+            left: -1rem; /* Adjust for RTL */
+        }
+
+        /* Custom styling for new sections */
+        .section-separator {
+            width: 100px;
+            height: 5px;
+            background: linear-gradient(90deg, var(--color-earth-green), var(--color-ocean-blue), var(--color-digital-gold));
+            border-radius: 5px;
+            margin: 0 auto 2.5rem auto; /* Centered with bottom margin */
+        }
+    </style>
+</head>
+<body class="font-poppins text-gentle-black leading-relaxed bg-light-gray">
+
+<header class="bg-pure-white shadow-md py-4 px-6 md:px-8 sticky top-0 z-50">
+    <div class="container mx-auto flex justify-between items-center">
+        <div class="flex items-center space-x-3 md:space-x-reverse md:space-x-3 rtl:space-x-reverse rtl:space-x-3">
+            <svg width="45" height="45" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="animate-bounce-custom">
+                <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" fill="#10b981" opacity="0.8"/>
+                <path d="M12 2C10.5 4 8 6 8 9C8 12 12 14 12 14C12 14 16 12 16 9C16 6 13.5 4 12 2ZM12 14C12 14 10 16 10 18C10 20 12 22 12 22" fill="#047857"/>
+            </svg>
+            <span class="text-2xl md:text-3xl font-extrabold text-gentle-black font-vazirmatn">EarthCoop</span>
+            <span class="text-sm text-gray-500 hidden md:block border-r-2 border-gray-200 pr-4 mr-4 font-vazirmatn">"خانه‌ای برای همه؛ همکاری برای آینده"</span>
+        </div>
+
+        <nav class="hidden md:flex items-center space-x-8 rtl:space-x-reverse rtl:space-x-8 font-vazirmatn text-gentle-black">
+            <a href="#" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                درباره ارث کوپ
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="#" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                راهنما
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="#" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                فرصتهای همکاری 
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="#" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                پروژه‌ها
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="#" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                بلاگ
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="#" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                تماس با ما
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+        </nav>
+
+        <div class="hidden md:flex items-center space-x-4 rtl:space-x-reverse rtl:space-x-4">
+            <button class="bg-earth-green text-pure-white px-6 py-2 rounded-full shadow-md hover:bg-dark-green transition duration-300 font-vazirmatn font-medium transform hover:scale-105">عضویت</button>
+            <button class="bg-ocean-blue text-pure-white px-6 py-2 rounded-full shadow-md hover:bg-dark-blue transition duration-300 font-vazirmatn font-medium transform hover:scale-105">ورود</button>
+            <!-- Updated "دعوت" button to have digital gold background and pure white text -->
+            <button class="bg-digital-gold text-pure-white px-6 py-2 rounded-full shadow-md hover:bg-opacity-90 transition duration-300 font-vazirmatn font-medium transform hover:scale-105">دعوت</button>
+        </div>
+
+        <div class="md:hidden flex items-center">
+            <button id="mobile-menu-button" class="hamburger-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </div>
+    <div id="mobile-menu" class="mobile-nav-menu hidden md:hidden">
+        <nav class="flex flex-col items-center space-y-4 font-vazirmatn text-gentle-black py-4">
+            <a href="#" class="hover:text-earth-green transition duration-300 font-medium">خانه</a>
+            <a href="#" class="hover:text-earth-green transition duration-300 font-medium">درباره ما</a>
+            <a href="#" class="hover:text-earth-green transition duration-300 font-medium">شبکه</a>
+            <a href="#" class="hover:text-earth-green transition duration-300 font-medium">پروژه‌ها</a>
+            <a href="#" class="hover:text-earth-green transition duration-300 font-medium">اقتصاد</a>
+            <hr class="w-full border-t border-light-gray my-2">
+            <button class="bg-earth-green text-pure-white px-5 py-2 rounded-full shadow-md w-3/4 hover:bg-dark-green transition duration-300 font-vazirmatn font-medium">عضویت</button>
+            <!-- Updated "دعوت" button in mobile menu to have digital gold background and pure white text -->
+            <button class="bg-digital-gold text-pure-white px-5 py-2 rounded-full shadow-md w-3/4 hover:bg-opacity-90 transition duration-300 font-vazirmatn font-medium">دعوت</button>
+            <button class="bg-ocean-blue text-pure-white px-5 py-2 rounded-full shadow-md w-3/4 hover:bg-dark-blue transition duration-300 font-vazirmatn font-medium">ورود</button>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <!-- Hero Section - بخش قهرمان -->
+    <section class="relative hero-gradient py-20 md:py-32 overflow-hidden fade-in-section text-right">
+        <div class="absolute inset-0 overflow-hidden">
+            <div class="absolute top-0 right-0 w-full h-full bg-pure-white/5 to-transparent z-0"></div>
+            <div class="absolute top-0 right-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1800&q=80')] bg-cover bg-center opacity-15 z-0"></div>
+            <div class="absolute inset-0 bg-pure-white/10 backdrop-blur-sm z-0"></div>
+        </div>
+
+        <!-- Main content container for hero section, adjusted for layout change -->
+        <!-- Removed md:flex-row-reverse to make the first child appear on the left -->
+        <div class="container mx-auto flex flex-col md:flex-row items-center justify-between px-6 relative z-10">
+            <!-- Titles, text, buttons, stats moved to the right -->
+            <!-- Changed md:text-left to md:text-right and md:justify-start to md:justify-end -->
+            <div class="md:w-1/2 text-center md:text-right mb-12 md:mb-0">
+                <h1 class="text-4xl md:text-6xl lg:text-7xl font-extrabold text-gentle-black font-vazirmatn mb-6 leading-tight">
+                    سهامدار <span class="text-earth-green inline-block animate-pulse-light">سیاره</span> ما شوید
+                </h1>
+                <p class="text-lg md:text-xl text-gray-700 mb-8 max-w-lg font-vazirmatn mx-auto md:mx-0">
+                    به یک تعاونی جهانی بپیوندید که برای آینده‌ای پایدار از طریق مالکیت جمعی و حاکمیت دموکراتیک تلاش می‌کند.
+                </p>
+                <div class="flex flex-col sm:flex-row-reverse gap-4 justify-center md:justify-end">
+                    <button class="bg-earth-green text-pure-white px-9 py-4 rounded-full shadow-xl hover:shadow-2xl hover:bg-dark-green transition duration-300 animate-glow font-vazirmatn text-lg font-bold flex items-center justify-center">
+                        شروع کنید <i class="fas fa-arrow-left mr-3"></i>
+                    </button>
+                    <button class="border-2 border-earth-green text-earth-green bg-white px-9 py-4 rounded-full shadow-lg hover:shadow-xl hover:bg-earth-green group transition duration-300 font-vazirmatn text-lg font-medium flex items-center justify-center">
+                        بیشتر بدانید <i class="fas fa-info-circle mr-3 group-hover:text-purple-700 transition-colors duration-300"></i>
+                    </button>
+                </div>
+
+                <div class="mt-12 flex flex-wrap justify-center md:justify-end gap-8">
+                    <div class="stats-item flex items-center flex-row-reverse">
+                        <div class="p-3 bg-earth-green/10 rounded-full text-earth-green text-xl ml-3">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-3xl font-bold text-gentle-black font-poppins">1.2M+</p>
+                            <p class="text-gray-600 font-vazirmatn">عضو</p>
+                        </div>
+                    </div>
+                    <div class="stats-item flex items-center flex-row-reverse">
+                        <div class="p-3 bg-ocean-blue/10 rounded-full text-ocean-blue text-xl ml-3">
+                            <i class="fas fa-seedling"></i>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-3xl font-bold text-gentle-black font-poppins">5.4K+</p>
+                            <p class="text-gray-600 font-vazirmatn">پروژه</p>
+                        </div>
+                    </div>
+                    <div class="stats-item flex items-center flex-row-reverse">
+                        <div class="p-3 bg-digital-gold/10 rounded-full text-digital-gold text-xl ml-3">
+                            <i class="fas fa-globe-americas"></i>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-3xl font-bold text-gentle-black font-poppins">120+</p>
+                            <p class="text-gray-600 font-vazirmatn">کشور</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image and floating cards moved to the left -->
+            <div class="md:w-1/2 flex justify-center mt-12 md:mt-0 animate-float">
+                <div class="relative w-full max-w-lg">
+                    <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80"
+                          alt="مردمی که در طبیعت همکاری می‌کنند"
+                          class="w-full rounded-3xl shadow-2xl border-8 border-white transform rotate-3 hover:rotate-0 transition duration-500">
+                    <!-- Card 1 (originally hero-image-card-right, now positioned bottom-left relative to image) -->
+                    <!-- Changed right:-8px to left:-8px -->
+                    <div class="absolute -bottom-8 -left-8 bg-white p-5 rounded-2xl shadow-xl flex items-center space-x-3 rtl:space-x-reverse transform -rotate-6 hover:rotate-0 transition duration-500 hero-image-card-right">
+                        <div class="w-14 h-14 bg-earth-green rounded-full flex items-center justify-center text-white text-2xl animate-spin-slow">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <div class="ml-3 rtl:ml-0 rtl:mr-3">
+                            <p class="font-bold text-md text-gentle-black font-vazirmatn">پروژه‌های پایدار</p>
+                            <p class="text-sm text-gray-600 font-vazirmatn">هر روز در حال رشد</p>
+                        </div>
+                    </div>
+                    <!-- Card 2 (originally hero-image-card-left, now positioned top-right relative to image) -->
+                    <div class="absolute -top-8 -right-8 bg-white p-5 rounded-2xl shadow-xl flex items-center space-x-3 rtl:space-x-reverse transform rotate-6 hover:rotate-0 transition duration-500 hidden md:flex hero-image-card-left">
+                        <div class="w-14 h-14 bg-ocean-blue rounded-full flex items-center justify-center text-white text-2xl">
+                            <i class="fas fa-hands-helping"></i>
+                        </div>
+                        <div class="ml-3 rtl:ml-0 rtl:mr-3">
+                            <p class="font-bold text-md text-gentle-black font-vazirmatn">حمایت جامعه</p>
+                            <p class="text-sm text-gray-600 font-vazirmatn">توانمندسازی ابتکارات محلی</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mission & Vision Statement - بخش بیانیه ماموریت و چشم‌انداز (جدید) -->
+    <section class="py-16 md:py-24 bg-pure-white fade-in-section">
+        <div class="container mx-auto px-6 text-center">
+            <div class="max-w-4xl mx-auto mb-12">
+                <h2 class="text-3xl md:text-5xl font-extrabold font-vazirmatn text-gentle-black mb-6">
+                    زمین: خانه‌ی مشترک ما، دارایی مشترک ما
+                </h2>
+                <div class="section-separator"></div>
+                <p class="text-lg md:text-xl text-gray-700 font-vazirmatn leading-relaxed">
+                    در EarthCoop، ما عمیقاً باور داریم که سیاره‌ی ما یک میراث مشترک است و همه‌ی ما به طور برابر در مالکیت آن شریکیم.
+                    ماموریت ما ایجاد بستری است که این شراکت برابر را پشتیبانی کند و به هر فرد این امکان را بدهد که در آینده‌ای پایدار و عادلانه‌تر برای همه‌ی ساکنان زمین، مشارکت فعال داشته باشد.
+                </p>
+            </div>
+            <div class="flex justify-center mt-12">
+                <img src="https://placehold.co/800x450/6dd5ed/ffffff?text=Global+Cooperation+Image"
+                     alt="تصویری الهام‌بخش از همکاری جهانی"
+                     class="w-full max-w-2xl rounded-3xl shadow-xl border-4 border-ocean-blue transform hover:scale-105 transition duration-500">
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section - بخش ویژگی‌های تعاونی ما -->
+    <section class="py-16 md:py-24 bg-light-gray fade-in-section">
+        <div class="container mx-auto px-6 text-center">
+            <div class="max-w-4xl mx-auto mb-16">
+                <h2 class="text-3xl md:text-5xl font-extrabold font-vazirmatn text-gentle-black mb-6">ویژگی‌های تعاونی ما که تفاوت ایجاد می‌کند</h2>
+                <div class="section-separator"></div>
+                <p class="text-lg md:text-xl text-gray-700 mb-8 font-vazirmatn">
+                    EarthCoop حاکمیت دموکراتیک را با سیستم‌های اقتصادی نوآورانه ترکیب می‌کند تا تغییرات واقعی و پایداری برای سیاره و ساکنانش ایجاد کند.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                <div class="feature-card p-8 flex flex-col items-center group text-center">
+                    <div class="w-24 h-24 bg-earth-green/15 rounded-full flex items-center justify-center text-4xl text-earth-green mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">مالکیت دموکراتیک</h3>
+                    <p class="text-gray-700 text-center font-vazirmatn">
+                        هر عضو در تصمیمات اصلی رای برابر دارد و حاکمیت جمعی واقعی را بر منابع مشترک و آینده ما تضمین می‌کند.
+                    </p>
+                </div>
+
+                <div class="feature-card p-8 flex flex-col items-center group text-center">
+                    <div class="w-24 h-24 bg-ocean-blue/15 rounded-full flex items-center justify-center text-4xl text-ocean-blue mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">شبکه گسترده</h3>
+                    <p class="text-gray-700 text-center font-vazirmatn">
+                        با گروه‌های محلی، حرفه‌ای یا مبتنی بر علایق ارتباط برقرار کنید تا در پروژه‌های مهمی که برایتان ارزشمند هستند، همکاری کنید.
+                    </p>
+                </div>
+
+                <div class="feature-card p-8 flex flex-col items-center group text-center">
+                    <div class="w-24 h-24 bg-digital-gold/15 rounded-full flex items-center justify-center text-4xl text-digital-gold mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">اقتصاد پاداش‌محور</h3>
+                    <p class="text-gray-700 text-center font-vazirmatn">
+                        برای مشارکت‌های خود سکه‌های "بهار" کسب کنید و آن‌ها را برای کالاها، خدمات یا مزایای تعاونی مبادله کنید.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Democratic Governance Model - بخش حاکمیت دموکراتیک (جدید) -->
+    <section class="py-16 md:py-24 bg-pure-white fade-in-section">
+        <div class="container mx-auto px-6 text-center">
+            <div class="max-w-4xl mx-auto mb-16">
+                <h2 class="text-3xl md:text-5xl font-extrabold font-vazirmatn text-gentle-black mb-6">
+                    صدای شما، آینده‌ی ما: چگونه حاکمیت دموکراتیک EarthCoop کار می‌کند
+                </h2>
+                <div class="section-separator"></div>
+                <p class="text-lg md:text-xl text-gray-700 mb-8 font-vazirmatn leading-relaxed">
+                    کشف کنید که چگونه سیستم انتخاباتی هوشمند و پویای ما به شما قدرت تصمیم‌گیری می‌دهد و رهبران پاسخگو را در هر سطح تضمین می‌کند.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                <!-- Governance Feature 1 -->
+                <div class="feature-card p-8 flex flex-col items-center group text-center">
+                    <div class="w-24 h-24 bg-earth-green/15 rounded-full flex items-center justify-center text-4xl text-earth-green mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-vote-yea"></i> <!-- Icon for voting -->
+                    </div>
+                    <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">انتخابات پویا و همیشگی</h3>
+                    <p class="text-gray-700 text-center font-vazirmatn">
+                        مدیران گروه از سطح محله تا جهانی، با رای شما انتخاب و در هر زمان قابل عزل هستند. این یک سیستم دموکراتیک واقعی است.
+                    </p>
+                </div>
+
+                <!-- Governance Feature 2 -->
+                <div class="feature-card p-8 flex flex-col items-center group text-center">
+                    <div class="w-24 h-24 bg-ocean-blue/15 rounded-full flex items-center justify-center text-4xl text-ocean-blue mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-hand-pointer"></i> <!-- Icon for choice/delegation -->
+                    </div>
+                    <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">قدرت رای شما</h3>
+                    <p class="text-gray-700 text-center font-vazirmatn">
+                        با امکان پس گرفتن، تغییر رای و تفویض حق رای به کارشناسان برای مسائل تخصصی، کنترل کامل بر مشارکت خود را دارید.
+                    </p>
+                </div>
+
+                <!-- Governance Feature 3 -->
+                <div class="feature-card p-8 flex flex-col items-center group text-center">
+                    <div class="w-24 h-24 bg-digital-gold/15 rounded-full flex items-center justify-center text-4xl text-digital-gold mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-user-shield"></i> <!-- Icon for accountability -->
+                    </div>
+                    <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">مدیریت پاسخگو</h3>
+                    <p class="text-gray-700 text-center font-vazirmatn">
+                        منتخبین تنها تا زمانی در سمت خود هستند که از حمایت رای‌دهندگان برخوردار باشند، که شفافیت و پاسخگویی را تضمین می‌کند.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Global Network Section - بخش شبکه جهانی پررونق ما -->
+    <section class="py-16 md:py-24 bg-light-gray fade-in-section">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-extrabold font-vazirmatn text-gentle-black mb-6">شبکه جهانی پررونق ما را کاوش کنید</h2>
+                <div class="section-separator"></div>
+                <p class="text-lg md:text-xl text-gray-700 max-w-4xl mx-auto font-vazirmatn">
+                    شبکه در حال رشد ما از شرکا در سراسر جهان را کشف کنید که برای دستیابی به اهداف توسعه پایدار تلاش می‌کنند.
+                </p>
+            </div>
+
+            <div class="globe-container mb-16">
+                <div class="globe">
+                    <div class="globe-dots">
+                        <div class="globe-dot"></div>
+                        <div class="globe-dot"></div>
+                        <div class="globe-dot"></div>
+                        <div class="globe-dot"></div>
+                        <div class="globe-dot"></div>
+                        <div class="globe-dot"></div>
+                        <div class="globe-dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Project Type 1 -->
+                <div class="feature-card p-8 flex flex-col items-center group text-center">
+                    <div class="w-24 h-24 bg-ocean-blue/15 rounded-full flex items-center justify-center text-4xl text-ocean-blue mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">نوآوری‌های حرفه‌ای</h3>
+                    <p class="text-gray-700 text-center font-vazirmatn">
+                        با متخصصان در زمینه خود همکاری کنید تا راه‌حل‌های پایدار پیشرفته را توسعه دهید و بهترین شیوه‌ها را به اشتراک بگذارید.
+                    </p>
+                </div>
+
+                <!-- Project Type 2 -->
+                <div class="feature-card p-8 flex flex-col items-center group text-center">
+                    <div class="w-24 h-24 bg-digital-gold/15 rounded-full flex items-center justify-center text-4xl text-digital-gold mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-hand-holding-heart"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">اتحادهای مبتنی بر هدف</h3>
+                    <p class="text-gray-700 text-center font-vazirmatn">
+                        با دیگرانی که به دلایل خاصی مانند حفاظت از اقیانوس‌ها یا انرژی تجدیدپذیر علاقه دارند، متحد شوید.
+                    </p>
+                </div>
+
+                <!-- Project Type 3 -->
+                <div class="feature-card p-8 flex flex-col items-center group text-center">
+                    <div class="w-24 h-24 bg-earth-green/15 rounded-full flex items-center justify-center text-4xl text-earth-green mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-people-carry-box"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">جوامع محلی</h3>
+                    <p class="text-gray-700 text-center font-vazirmatn">
+                        با همسایگان خود ارتباط برقرار کنید تا روی پروژه‌های پایداری محلی, از باغ‌های شهری گرفته تا طرح‌های انرژی تجدیدپذیر، کار کنید.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section - بخش مسیر شما برای ایجاد تفاوت -->
+    <section class="py-16 md:py-24 bg-pure-white fade-in-section">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-extrabold font-vazirmatn text-gentle-black mb-6">مسیر شما برای ایجاد تفاوت: EarthCoop چگونه کار می‌کند</h2>
+                <div class="section-separator"></div>
+                <p class="text-lg md:text-xl text-gray-700 max-w-4xl mx-auto font-vazirmatn">
+                    به میلیون‌ها عضو بپیوندید و تنها در چهار مرحله ساده و تاثیرگذار، تفاوت ایجاد کنید.
+                </p>
+            </div>
+
+            <!-- Changed md:flex-row-reverse to md:flex-row to display cards 1-4 from right to left -->
+            <div class="flex flex-col md:flex-row justify-between items-stretch relative">
+                <!-- Adjusted positioning for the line and dots for RTL (right-to-left) display of 1-4 -->
+                <div class="absolute hidden md:block top-1/3 left-1/4 w-1/2 h-2 bg-gray-200 rounded-full z-0"></div>
+                <div class="absolute hidden md:flex top-1/3 left-1/4 w-1/2 h-2 justify-between z-10">
+                    <div class="w-4 h-4 bg-earth-green rounded-full transform -translate-y-1/2"></div>
+                    <div class="w-4 h-4 bg-ocean-blue rounded-full transform -translate-y-1/2"></div>
+                    <div class="w-4 h-4 bg-digital-gold rounded-full transform -translate-y-1/2"></div>
+                    <div class="w-4 h-4 bg-earth-green rounded-full transform -translate-y-1/2"></div>
+                </div>
+
+                <div class="how-it-works-step flex flex-col items-center text-center p-6 md:w-1/4 bg-pure-white rounded-xl shadow-md transform hover:-translate-y-2 transition duration-300 relative z-20">
+                    <div class="w-20 h-20 bg-earth-green text-pure-white rounded-full flex items-center justify-center text-3xl font-bold mb-4 shadow-lg border-4 border-white">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold font-vazirmatn text-gentle-black mb-3">۱. ثبت‌نام</h3>
+                    <p class="text-gray-700 font-vazirmatn">
+                        روند ثبت‌نام ساده و ایمن را تکمیل کنید تا عضو رسمی EarthCoop شوید.
+                    </p>
+                </div>
+
+                <div class="how-it-works-step flex flex-col items-center text-center p-6 md:w-1/4 bg-pure-white rounded-xl shadow-md transform hover:-translate-y-2 transition duration-300 relative z-20">
+                    <div class="w-20 h-20 bg-ocean-blue text-pure-white rounded-full flex items-center justify-center text-3xl font-bold mb-4 shadow-lg border-4 border-white">
+                        <i class="fas fa-users-gear"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold font-vazirmatn text-gentle-black mb-3">۲. پیوستن به گروه‌ها</h3>
+                    <p class="text-gray-700 font-vazirmatn">
+                        گروه‌های محلی یا مبتنی بر علایق را که با شور و اشتیاق شما همسو هستند، کاوش کرده و به آن‌ها بپیوندید.
+                    </p>
+                </div>
+
+                <div class="how-it-works-step flex flex-col items-center text-center p-6 md:w-1/4 bg-pure-white rounded-xl shadow-md transform hover:-translate-y-2 transition duration-300 relative z-20">
+                    <div class="w-20 h-20 bg-digital-gold text-pure-white rounded-full flex items-center justify-center text-3xl font-bold mb-4 shadow-lg border-4 border-white">
+                        <i class="fas fa-hands-clapping"></i> </div>
+                    <h3 class="text-xl font-semibold font-vazirmatn text-gentle-black mb-3">۳. مشارکت</h3>
+                    <p class="text-gray-700 font-vazirmatn">
+                        فعالانه در پروژه‌ها مشارکت کنید، به ابتکارات کلیدی رای دهید و به شکل‌دهی آینده جمعی ما کمک کنید.
+                    </p>
+                </div>
+
+                <div class="how-it-works-step flex flex-col items-center text-center p-6 md:w-1/4 bg-pure-white rounded-xl shadow-md transform hover:-translate-y-2 transition duration-300 relative z-20">
+                    <div class="w-20 h-20 bg-earth-green text-pure-white rounded-full flex items-center justify-center text-3xl font-bold mb-4 shadow-lg border-4 border-white">
+                        <i class="fas fa-hand-holding-usd"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold font-vazirmatn text-gentle-black mb-3">۴. کسب پاداش</h3>
+                    <p class="text-gray-700 font-vazirmatn">
+                        برای هر مشارکت خود سکه‌های ارزشمند بهار دریافت کنید که قابل مبادله با کالاها و خدمات مختلف هستند.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-16 text-center">
+                <button class="bg-earth-green text-pure-white px-10 py-5 rounded-full shadow-lg hover:bg-dark-green transition duration-300 font-vazirmatn text-xl font-bold transform hover:scale-105 flex items-center justify-center mx-auto">
+                    سفر خود را امروز آغاز کنید <i class="fas fa-rocket mr-3"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bahār Economy & Investment Opportunities - بخش اقتصاد بهار و فرصت‌های سرمایه‌گذاری (جدید) -->
+    <section class="py-16 md:py-24 bg-gradient-to-br from-ocean-blue/15 to-digital-gold/15 fade-in-section">
+        <div class="container mx-auto px-6 flex flex-col items-center justify-center gap-12 text-center">
+            <!-- Moved coin-flip-wrapper here, and adjusted parent flex to items-center and text-center -->
+            <div class="w-full flex justify-center mb-8">
+                <div class="coin-flip-wrapper w-[180px] h-[180px] animate-bounce-custom animate-flip-coin">
+                    <div class="coin-face coin-front"
+                         style="background-image: url('https://i.postimg.cc/KYjDR6V9/coin.png');">
+                    </div>
+                    <div class="coin-face coin-back"
+                         style="background-image: url('https://i.postimg.cc/KYjDR6V9/coin.png');">
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:w-2/3 text-center">
+                <h2 class="text-3xl md:text-5xl font-extrabold font-vazirmatn text-gentle-black mb-6">
+                    اقتصاد بهار: ارزش آفرینی برای آینده‌ای پایدار
+                </h2>
+                <div class="section-separator mx-auto"></div>
+                <p class="text-lg md:text-xl text-gray-700 mb-8 font-vazirmatn leading-relaxed">
+                    کشف کنید چگونه سرمایه‌ی دیجیتال داخلی منحصر به فرد ما، "بهار"، به شما امکان می‌دهد در پروژه‌های سودآور مشارکت کنید و جامعه‌ی خود را توانمند سازید.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mb-8">
+                    <!-- Card 1: سرمایه اولیه (Moved to first position) -->
+                    <div class="feature-card p-8 flex flex-col items-center group text-center">
+                        <div class="w-24 h-24 bg-digital-gold/15 rounded-full flex items-center justify-center text-4xl text-digital-gold mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-dollar-sign"></i> <!-- Changed icon to fa-dollar-sign -->
+                        </div>
+                        <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">سرمایه اولیه</h3>
+                        <p class="text-gray-700 text-center font-vazirmatn">پس از ثبت‌نام، معادل ۱ کیلوگرم طلا در قالب ۱۰,۰۰۰ بهار به حساب شما واریز می‌شود.</p>
+                    </div>
+                    <!-- Card 2: توسعه کسب‌وکار (Moved to second position) -->
+                    <div class="feature-card p-8 flex flex-col items-center group text-center">
+                        <div class="w-24 h-24 bg-ocean-blue/15 rounded-full flex items-center justify-center text-4xl text-ocean-blue mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-store"></i> <!-- Icon for business development -->
+                        </div>
+                        <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">توسعه کسب‌وکار</h3>
+                        <p class="text-gray-700 text-center font-vazirmatn">در مراحل بعد، امکان ایجاد شرکت خصوصی، فروشگاه و دفتر برای اشخاص و کسب‌وکارهای خصوصی وجود خواهد داشت.</p>
+                    </div>
+                    <!-- Card 3: سرمایه‌گذاری جمعی (Moved to third position) -->
+                    <div class="feature-card p-8 flex flex-col items-center group text-center">
+                        <div class="w-24 h-24 bg-earth-green/15 rounded-full flex items-center justify-center text-4xl text-earth-green mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-chart-line"></i> <!-- Icon for crowdfunding -->
+                        </div>
+                        <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">سرمایه‌گذاری جمعی</h3>
+                        <p class="text-gray-700 text-center font-vazirmatn">بهار خود را در پروژه‌های عمومی محلی، ملی و جهانی سرمایه‌گذاری کنید و از سود آن بهره‌مند شوید.</p>
+                    </div>
+                </div>
+                <div class="flex flex-col sm:flex-row-reverse gap-4 justify-center">
+                    <button class="border-2 border-digital-gold text-digital-gold bg-white px-9 py-4 rounded-full shadow-lg hover:shadow-xl hover:bg-digital-gold group transition duration-300 font-vazirmatn text-lg font-medium flex items-center justify-center">
+                        فرصت‌های سرمایه‌گذاری <i class="fas fa-hand-holding-usd mr-3 group-hover:text-purple-700 transition-colors duration-300"></i>
+                    </button>
+                    <button class="bg-digital-gold text-pure-white px-9 py-4 rounded-full shadow-lg hover:bg-opacity-90 transition duration-300 font-vazirmatn text-lg font-bold flex items-center justify-center">
+                        بیشتر درباره بهار بدانید <i class="fas fa-coins mr-3"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Profitable Public Projects - بخش پروژه‌های عمومی سودآور (جدید) -->
+    <section class="py-16 md:py-24 bg-pure-white fade-in-section">
+        <div class="container mx-auto px-6 text-center">
+            <div class="max-w-4xl mx-auto mb-16">
+                <h2 class="text-3xl md:text-5xl font-extrabold font-vazirmatn text-gentle-black mb-6">
+                    همکاری برای پیشرفت: پروژه‌های عمومی EarthCoop
+                </h2>
+                <div class="section-separator"></div>
+                <p class="text-lg md:text-xl text-gray-700 mb-8 font-vazirmatn leading-relaxed">
+                    فرصت‌های منحصر به فرد سرمایه‌گذاری جمعی در پروژه‌هایی که نه تنها سودآورند، بلکه به جامعه و سیاره‌ی ما نیز خدمت می‌کنند.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Project Type 1 -->
+                <div class="feature-card p-8 flex flex-col items-center group text-center">
+                    <div class="w-24 h-24 bg-earth-green/15 rounded-full flex items-center justify-center text-4xl text-earth-green mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-city"></i> <!-- Urban icon -->
+                    </div>
+                    <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">پروژه‌های محلی</h3>
+                    <p class="text-gray-700 text-center font-vazirmatn">
+                        ایده‌های خود را برای بهبود محله و شهرتان پیشنهاد دهید و شاهد تحقق آن‌ها با حمایت جامعه باشید.
+                    </p>
+                </div>
+
+                <!-- Project Type 2 -->
+                <div class="feature-card p-8 flex flex-col items-center group text-center">
+                    <div class="w-24 h-24 bg-ocean-blue/15 rounded-full flex items-center justify-center text-4xl text-ocean-blue mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-solar-panel"></i> <!-- Renewable energy icon -->
+                    </div>
+                    <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">انرژی‌های تجدیدپذیر</h3>
+                    <p class="text-gray-700 text-center font-vazirmatn">
+                        در پروژه‌های انرژی پاک سرمایه‌گذاری کنید که هم به محیط زیست کمک می‌کنند و هم بازده مالی دارند.
+                    </p>
+                </div>
+
+                <!-- Project Type 3 -->
+                <div class="feature-card p-8 flex flex-col items-center group text-center">
+                    <div class="w-24 h-24 bg-digital-gold/15 rounded-full flex items-center justify-center text-4xl text-digital-gold mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-hand-holding-heart"></i> <!-- Social impact icon -->
+                    </div>
+                    <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">ابتکارات اجتماعی</h3>
+                    <p class="text-gray-700 text-center font-vazirmatn">
+                        از پروژه‌هایی حمایت کنید که به طور مستقیم بر رفاه جامعه و توسعه‌ی پایدار اجتماعی تاثیر می‌گذارند.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-16 text-center">
+                <button class="bg-earth-green text-pure-white px-10 py-5 rounded-full shadow-lg hover:bg-dark-green transition duration-300 font-vazirmatn text-xl font-bold transform hover:scale-105 flex items-center justify-center mx-auto">
+                    مشاهده تمامی پروژه‌ها <i class="fas fa-project-diagram mr-3"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Invite & Earn Bahār Section - بخش جنبش را گسترش دهید، سکه‌های بهار کسب کنید! -->
+    <section class="relative py-20 md:py-32 bg-gradient-to-br from-earth-green to-ocean-blue text-pure-white text-center fade-in-section">
+        <div class="absolute inset-0 bg-black/50 z-0"></div> <div class="container mx-auto px-6 relative z-10">
+            <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold font-vazirmatn mb-8 leading-tight animate-pulse">
+                جنبش را گسترش دهید، سکه‌های بهار کسب کنید!
+            </h2>
+            <p class="text-xl md:text-2xl mb-12 max-w-4xl mx-auto font-vazirmatn opacity-90">
+                دوستان خود را به EarthCoop دعوت کنید و برای هر ارجاع موفق، ارز دیجیتال داخلی منحصر به فرد ما، سکه‌های بهار را کسب کنید.
+                سکه‌های بهار را می‌توان در شبکه ما برای خدمات انحصاری, محصولات پایدار و حتی افزایش وزن رای شما در تصمیمات خاص استفاده کرد.
+            </p>
+            <div class="flex flex-col sm:flex-row-reverse gap-6 justify-center">
+                <button class="border-2 border-pure-white text-pure-white px-12 py-5 rounded-full shadow-xl hover:bg-pure-white hover:text-purple-700 group transition duration-300 font-vazirmatn text-xl font-medium flex items-center justify-center">
+                    درباره بهار بدانید <i class="fas fa-coins mr-3 group-hover:text-purple-700 transition-colors duration-300"></i>
+                </button>
+                <button class="bg-digital-gold text-pure-white px-12 py-5 rounded-full shadow-2xl hover:bg-opacity-90 hover:scale-105 transition duration-300 font-vazirmatn text-xl font-bold animate-glow flex items-center justify-center">
+                    ارسال دعوتنامه <i class="fas fa-paper-plane mr-3"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Community Testimonials / Success Stories - بخش صدای جامعه جهانی ما (بهبود یافته) -->
+    <section class="py-16 md:py-24 bg-pure-white fade-in-section">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-3xl md:text-5xl font-extrabold font-vazirmatn text-gentle-black mb-6">
+                داستان‌های الهام‌بخش: چگونه اعضای EarthCoop در حال تغییر جهان هستند
+            </h2>
+            <div class="section-separator"></div>
+            <p class="text-lg md:text-xl text-gray-700 mb-12 max-w-4xl mx-auto font-vazirmatn">
+                مستقیماً از اعضای متنوع و پرشور ما درباره تجربیات متحول‌کننده آن‌ها با EarthCoop و تاثیر واقعی مشارکتشان بشنوید.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="testimonial-card p-8 flex flex-col items-center text-center">
+                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=250&q=80"
+                          alt="عایشه خان"
+                          class="w-24 h-24 rounded-full mb-6 object-cover border-4 border-earth-green shadow-md">
+                    <div class="text-xl text-gray-800 italic mb-5 font-vazirmatn relative z-10 before:content-['“'] before:absolute before:-top-4 before:-right-4 before:text-5xl before:text-gray-200 after:content-['”'] after:absolute after:-bottom-4 after:-left-4 after:text-5xl after:text-gray-200">
+                        "EarthCoop یک بستر باورنکردنی برای ارتباط با افراد همفکر در سطح جهانی به من داده است. ما با هم، سه پروژه پایداری تاثیرگذار را همینجا در شهر من راه‌اندازی کرده‌ایم!"
+                    </div>
+                    <div class="mt-auto pt-4">
+                        <p class="font-bold text-xl font-vazirmatn text-gentle-black">عایشه خان</p>
+                        <p class="text-sm font-vazirmatn text-gray-600">دانشمند محیط زیست، لاهور</p>
+                    </div>
+                </div>
+
+                <div class="testimonial-card p-8 flex flex-col items-center text-center">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=250&q=80"
+                          alt="کارلوس سیلوا"
+                          class="w-24 h-24 rounded-full mb-6 object-cover border-4 border-ocean-blue shadow-md">
+                    <div class="text-xl text-gray-800 italic mb-5 font-vazirmatn relative z-10 before:content-['“'] before:absolute before:-top-4 before:-right-4 before:text-5xl before:text-gray-200 after:content-['”'] after:absolute after:-bottom-4 after:-left-4 after:text-5xl after:text-gray-200">
+                        "مدل حاکمیت دموکراتیک اینجا واقعاً انقلابی است. برای اولین بار، احساس می‌کنم صدای من در تصمیماتی که بر آینده سیاره ما تاثیر می‌گذارد، واقعاً اهمیت دارد."
+                    </div>
+                    <div class="mt-auto pt-4">
+                        <p class="font-bold text-xl font-vazirmatn text-gentle-black">کارلوس سیلوا</p>
+                        <p class="text-sm font-vazirmatn text-gray-600">کارآفرین اجتماعی، سائو پائولو</p>
+                    </div>
+                </div>
+
+                <div class="testimonial-card p-8 flex flex-col items-center text-center">
+                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=250&q=80"
+                          alt="دکتر لنا اشمیت"
+                          class="w-24 h-24 rounded-full mb-6 object-cover border-4 border-digital-gold shadow-md">
+                    <div class="text-xl text-gray-800 italic mb-5 font-vazirmatn relative z-10 before:content-['“'] before:absolute before:-top-4 before:-right-4 before:text-5xl before:text-gray-200 after:content-['”'] after:absolute after:-bottom-4 after:-left-4 after:text-5xl after:text-gray-200">
+                        "کسب سکه‌های بهار برای مشارکت‌هایم تجربه‌ای فوق‌العاده انگیزه‌بخش و پاداش‌دهنده بوده است. من قبلاً از آن‌ها برای دسترسی به منابع آموزشی برتر در شبکه ما استفاده کرده‌ام و دانش خود را افزایش داده‌ام!"
+                    </div>
+                    <div class="mt-auto pt-4">
+                        <p class="font-bold text-xl font-vazirmatn text-gentle-black">دکتر لنا اشمیت</p>
+                        <p class="text-sm font-vazirmatn text-gray-600">محقق پایداری، برلین</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final Call to Action - بخش نهایی دعوت به عمل -->
+    <section class="relative py-20 md:py-32 bg-gradient-to-br from-earth-green to-ocean-blue text-pure-white text-center fade-in-section">
+        <div class="absolute inset-0 bg-black/50 z-0"></div> <div class="container mx-auto px-6 relative z-10">
+            <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold font-vazirmatn mb-8 leading-tight animate-pulse">
+                آماده‌اید بخشی از راه‌حل باشید؟
+            </h2>
+            <p class="text-xl md:text-2xl mb-12 max-w-4xl mx-auto font-vazirmatn opacity-90">
+                امروز به EarthCoop بپیوندید و به بازیگری کلیدی در شکل‌دهی آینده‌ای پایدار و عادلانه‌تر برای همه تبدیل شوید.
+            </p>
+            <div class="flex flex-col sm:flex-row-reverse gap-6 justify-center">
+                <button class="border-2 border-pure-white text-pure-white px-12 py-5 rounded-full shadow-xl hover:bg-pure-white hover:text-purple-700 group transition duration-300 font-vazirmatn text-xl font-medium flex items-center justify-center">
+                    ماموریت ما را کشف کنید <i class="fas fa-question-circle mr-3 group-hover:text-purple-700 transition-colors duration-300"></i>
+                </button>
+                <button class="bg-digital-gold text-pure-white px-12 py-5 rounded-full shadow-2xl hover:bg-opacity-90 hover:scale-105 transition duration-300 font-vazirmatn text-xl font-bold animate-glow flex items-center justify-center">
+                    اکنون به EarthCoop بپیوندید <i class="fas fa-hand-holding-seedling mr-3"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="bg-gentle-black text-pure-white py-12 px-6">
+    <div class="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 text-right">
+        <div class="col-span-1 md:col-span-1">
+            <div class="flex items-center space-x-2 rtl:space-x-reverse mb-4 justify-end md:justify-start">
+                <svg width="35" height="35" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" fill="#10b981" opacity="0.7"/>
+                    <path d="M12 2C10.5 4 8 6 8 9C8 12 12 14 12 14C12 14 16 12 16 9C16 6 13.5 4 12 2ZM12 14C12 14 10 16 10 18C10 20 12 22 12 22" fill="#047857"/>
+                </svg>
+                <span class="text-2xl font-bold font-vazirmatn">EarthCoop</span>
+            </div>
+            <p class="text-gray-400 text-sm font-vazirmatn">
+                یک تعاونی جهانی که افراد را توانمند می‌سازد تا به صورت جمعی آینده‌ای پایدار را از طریق مالکیت مشترک و اصول دموکراتیک بسازند.
+            </p>
+            <div class="flex space-x-4 rtl:space-x-reverse mt-6 justify-end md:justify-start">
+                <a href="#" class="text-gray-400 hover:text-pure-white transition duration-300"><i class="fab fa-facebook-f text-xl"></i></a>
+                <a href="#" class="text-gray-400 hover:text-pure-white transition duration-300"><i class="fab fa-twitter text-xl"></i></a>
+                <a href="#" class="text-gray-400 hover:text-pure-white transition duration-300"><i class="fab fa-linkedin-in text-xl"></i></a>
+                <a href="#" class="text-gray-400 hover:text-pure-white transition duration-300"><i class="fab fa-instagram text-xl"></i></a>
+            </div>
+        </div>
+
+        <div>
+            <h3 class="text-lg font-semibold mb-4 text-earth-green font-vazirmatn">لینک‌های سریع</h3>
+            <ul class="space-y-2 font-vazirmatn">
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">خانه</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">درباره ما</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">شبکه ما</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">پروژه‌ها</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">اقتصاد</a></li>
+            </ul>
+        </div>
+
+        <div>
+            <h3 class="text-lg font-semibold mb-4 text-ocean-blue font-vazirmatn">پشتیبانی</h3>
+            <ul class="space-y-2 font-vazirmatn">
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">سوالات متداول</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">تماس با ما</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">حریم خصوصی</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">شرایط خدمات</a></li>
+            </ul>
+        </div>
+
+        <div>
+            <h3 class="text-lg font-semibold mb-4 text-digital-gold font-vazirmatn">در تماس باشید</h3>
+            <p class="text-gray-400 mb-2 font-vazirmatn"><i class="fas fa-map-marker-alt ml-2"></i> دفتر مرکزی جهانی، EarthCoop</p>
+            <p class="text-gray-400 mb-2 font-vazirmatn"><i class="fas fa-envelope ml-2"></i> info@earthcoop.org</p>
+            <p class="text-gray-400 font-vazirmatn"><i class="fas fa-phone-alt ml-2"></i> +1 (123) 456-7890</p>
+        </div>
+    </div>
+    <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-500 text-sm font-vazirmatn">
+        &copy; 2025 EarthCoop. تمامی حقوق محفوظ است.
+    </div>
+</footer>
+
+<script>
+    // Smooth scroll animation logic
+    document.addEventListener('DOMContentLoaded', () => {
+        const sections = document.querySelectorAll('.fade-in-section');
+
+        const observerOptions = {
+            root: null, // viewport
+            rootMargin: '0px',
+            threshold: 0.1 // Trigger when 10% of the section is visible
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target); // Stop observing once visible
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            mobileMenuButton.classList.toggle('open');
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,571 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EarthCoop - اساسنامه و شرایط استفاده</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Vazirmatn for Farsi, Poppins for English numbers/text -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Custom Tailwind Configuration - پیکربندی رنگ‌ها و فونت‌ها */
+        :root {
+            --color-earth-green: #10b981; /* سبز زمینی */
+            --color-ocean-blue: #3b82f6; /* آبی اقیانوسی */
+            --color-digital-gold: #f59e0b; /* طلایی دیجیتال */
+            --color-pure-white: #ffffff; /* سفید خالص */
+            --color-light-gray: #f8fafc; /* خاکستری روشن */
+            --color-gentle-black: #1e293b; /* مشکی ملایم */
+            --color-dark-green: #047857; /* سبز تیره */
+            --color-dark-blue: #1d4ed8; /* آبی تیره */
+            --color-accent-peach: #ff7e5f; /* هلویی تاکیدی */
+            --color-accent-sky: #6dd5ed; /* آبی آسمانی تاکیدی */
+            --color-purple-700: #6B46C1; /* بنفش تیره برای هاور */
+            --color-dark-purple: #5A3A9E; /* بنفش تیره‌تر برای هاور دکمه */
+            --color-vibrant-yellow: #FFD700; /* زرد پر جنب و جوش */
+            --color-vibrant-pink: #FF69B4; /* صورتی پر جنب و جوش */
+            --color-vibrant-orange: #FFA500; /* نارنجی پر جنب و جوش */
+        }
+
+        /* Utility classes for custom colors */
+        .bg-earth-green { background-color: var(--color-earth-green); }
+        .text-earth-green { color: var(--color-earth-green); }
+        .bg-ocean-blue { background-color: var(--color-ocean-blue); }
+        .text-ocean-blue { color: var(--color-ocean-blue); }
+        .bg-digital-gold { background-color: var(--color-digital-gold); }
+        .text-digital-gold { color: var(--color-digital-gold); }
+        .bg-pure-white { background-color: var(--color-pure-white); }
+        .text-pure-white { color: var(--color-pure-white); }
+        .bg-light-gray { background-color: var(--color-light-gray); }
+        .text-light-gray { color: var(--color-light-gray); }
+        .bg-gentle-black { background-color: var(--color-gentle-black); }
+        .text-gentle-black { color: var(--color-gentle-black); }
+        .bg-dark-green { background-color: var(--color-dark-green); }
+        .bg-dark-blue { background-color: var(--color-dark-blue); }
+        .bg-accent-peach { background-color: var(--color-accent-peach); }
+        .text-accent-peach { color: var(--color-accent-peach); }
+        .bg-accent-sky { background-color: var(--color-accent-sky); }
+        .text-accent-sky { color: var(--color-accent-sky); }
+        .text-purple-700 { color: var(--color-purple-700); }
+        .bg-purple-700 { background-color: var(--color-purple-700); } /* Added for button */
+        .hover\:bg-dark-purple:hover { background-color: var(--color-dark-purple); } /* Added for button hover */
+
+
+        /* Font Families - Vazirmatn for Farsi, Poppins for English numbers/text */
+        .font-vazirmatn { font-family: 'Vazirmatn', sans-serif; }
+        .font-poppins { font-family: 'Poppins', sans-serif; }
+
+        /* Vibrant background for the body */
+        /* پس‌زمینه برای بدنه (تغییر یافته به طوسی) */
+        body {
+            background-color: #e2e8f0; /* رنگ طوسی روشن */
+            background-attachment: fixed;
+        }
+
+        /* Accordion styling */
+        .accordion-header {
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Nested accordion styling */
+        .nested-accordion-header {
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .nested-accordion-header:hover {
+            background-color: #f0f4f7;
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .accordion-content.active {
+            /* Increased max-height to ensure all content is visible */
+            max-height: 4000px; /* Adjust as needed for content length */
+            transition: max-height 0.5s ease-in;
+        }
+
+        .nested-accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .nested-accordion-content.active {
+            /* Increased max-height to ensure all content is visible */
+            max-height: 4000px; /* Adjust as needed for content length */
+            transition: max-height 0.5s ease-in;
+        }
+
+        /* Custom animations (copied from main.html for consistency) */
+        @keyframes bounce-custom {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        .animate-bounce-custom { animation: bounce-custom 3s infinite ease-in-out; }
+
+        /* Hamburger menu styling (copied from main.html for consistency) */
+        .hamburger-menu {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 30px;
+            height: 25px;
+            cursor: pointer;
+            z-index: 50;
+        }
+
+        .hamburger-menu span {
+            display: block;
+            width: 100%;
+            height: 3px;
+            background-color: var(--color-gentle-black);
+            border-radius: 5px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .hamburger-menu.open span:nth-child(1) { transform: translateY(11px) rotate(45deg); }
+        .hamburger-menu.open span:nth-child(2) { opacity: 0; }
+        .hamburger-menu.open span:nth-child(3) { transform: translateY(-11px) rotate(-45deg); }
+
+        .mobile-nav-menu {
+            position: absolute;
+            top: 100%;
+            right: 0; /* Changed to right for RTL */
+            width: 100%;
+            background-color: var(--color-pure-white);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            padding: 1rem 0;
+            z-index: 40;
+        }
+
+        /* Section separator for headings */
+        .section-separator {
+            width: 100px;
+            height: 5px;
+            background: linear-gradient(90deg, var(--color-earth-green), var(--color-ocean-blue), var(--color-digital-gold));
+            border-radius: 5px;
+            margin: 0 auto 2.5rem auto; /* Centered with bottom margin */
+        }
+    </style>
+</head>
+<body class="font-poppins text-gentle-black leading-relaxed bg-light-gray">
+
+<header class="bg-pure-white shadow-md py-4 px-6 md:px-8 sticky top-0 z-50">
+    <div class="container mx-auto flex justify-between items-center">
+        <div class="flex items-center space-x-3 md:space-x-reverse md:space-x-3 rtl:space-x-reverse rtl:space-x-3">
+            <svg width="45" height="45" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="animate-bounce-custom">
+                <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" fill="#10b981" opacity="0.8"/>
+                <path d="M12 2C10.5 4 8 6 8 9C8 12 12 14 12 14C12 14 16 12 16 9C16 6 13.5 4 12 2ZM12 14C12 14 10 16 10 18C10 20 12 22 12 22" fill="#047857"/>
+            </svg>
+            <span class="text-2xl md:text-3xl font-extrabold text-gentle-black font-vazirmatn">EarthCoop</span>
+            <span class="text-sm text-gray-500 hidden md:block border-r-2 border-gray-200 pr-4 mr-4 font-vazirmatn">"خانه‌ای برای همه؛ همکاری برای آینده"</span>
+        </div>
+
+        <nav class="hidden md:flex items-center space-x-8 rtl:space-x-reverse rtl:space-x-8 font-vazirmatn text-gentle-black">
+            <a href="main.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                درباره ارث کوپ
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="help2.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                راهنما
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="cooperation.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                فرصتهای همکاری 
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="#" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                پروژه‌ها
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="blog.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                بلاگ
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="contact.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                تماس با ما
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="terms-and-conditions.html" class="relative text-earth-green font-bold pb-1 group">
+                اساسنامه
+                <span class="absolute bottom-0 right-0 w-full h-0.5 bg-earth-green"></span>
+            </a>
+        </nav>
+
+        <div class="hidden md:flex items-center space-x-4 rtl:space-x-reverse rtl:space-x-4">
+            <button class="bg-earth-green text-pure-white px-6 py-2 rounded-full shadow-md hover:bg-dark-green transition duration-300 font-vazirmatn font-medium transform hover:scale-105">عضویت</button>
+            <button class="bg-ocean-blue text-pure-white px-6 py-2 rounded-full shadow-md hover:bg-dark-blue transition duration-300 font-vazirmatn font-medium transform hover:scale-105">ورود</button>
+            <!-- دکمه دعوت با رنگ طلایی -->
+            <button class="bg-digital-gold text-pure-white px-6 py-2 rounded-full shadow-md hover:bg-opacity-90 transition duration-300 font-vazirmatn font-medium transform hover:scale-105">دعوت</button>
+        </div>
+
+        <div class="md:hidden flex items-center">
+            <button id="mobile-menu-button" class="hamburger-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </div>
+    <div id="mobile-menu" class="mobile-nav-menu hidden md:hidden">
+        <nav class="flex flex-col items-center space-y-4 font-vazirmatn text-gentle-black py-4">
+            <a href="main.html" class="hover:text-earth-green transition duration-300 font-medium">خانه</a>
+            <a href="about.html" class="hover:text-earth-green transition duration-300 font-medium">درباره ما</a>
+            <a href="#" class="hover:text-earth-green transition duration-300 font-medium">شبکه</a>
+            <a href="#" class="hover:text-earth-green transition duration-300 font-medium">پروژه‌ها</a>
+            <a href="#" class="hover:text-earth-green transition duration-300 font-medium">اقتصاد</a>
+            <hr class="w-full border-t border-light-gray my-2">
+            <button class="bg-earth-green text-pure-white px-5 py-2 rounded-full shadow-md w-3/4 hover:bg-dark-green transition duration-300 font-vazirmatn font-medium">عضویت</button>
+            <button class="bg-digital-gold text-pure-white px-5 py-2 rounded-full shadow-md w-3/4 hover:bg-opacity-90 transition duration-300 font-vazirmatn font-medium">دعوت</button>
+            <button class="bg-ocean-blue text-pure-white px-5 py-2 rounded-full shadow-md w-3/4 hover:bg-dark-blue transition duration-300 font-vazirmatn font-medium">ورود</button>
+        </nav>
+    </div>
+</header>
+
+<main class="py-16 md:py-24 bg-light-gray">
+    <div class="container mx-auto px-6 text-right">
+        <div class="w-full max-w-4xl mx-auto bg-pure-white rounded-lg shadow-xl p-8 md:p-10 mb-8">
+            <h1 class="text-4xl md:text-5xl font-extrabold font-vazirmatn text-center text-gentle-black mb-4">
+                اساسنامه و شرایط استفاده
+            </h1>
+            <p class="text-lg text-center text-gray-700 font-vazirmatn mb-8">
+                لطفا اساسنامه سامانه شراکتی ارث‌کوپ و شرایط استفاده را مطالعه کنید.
+            </p>
+
+            <!-- Main Accordion Tabs -->
+            <div class="space-y-4">
+                <!-- Tab 1: قوانین و شرایط استفاده -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="accordion-header bg-earth-green text-pure-white p-5 flex justify-between items-center rounded-t-lg hover:bg-dark-green" data-target="tab1-content">
+                        <h3 class="text-xl font-bold font-vazirmatn">قوانین و شرایط استفاده</h3>
+                        <i class="fas fa-chevron-down transform transition-transform duration-300"></i>
+                    </div>
+                    <div id="tab1-content" class="accordion-content bg-white p-5 text-gray-800 font-vazirmatn text-right">
+                        <p>
+                            شما با ثبت نام در ارث‌کوپ به عنوان یک شخص حقیقی منحصر بفرد پس از احراز هویت بعنوان یکی از مالکان بهره‌های عمومی زمین یکی از سهامداران برابر ارث‌کوپ شده و از همه حقوق مالکانه خود همچون حق مدیریت، مشارکت، نظارت و بهره بردن از منافع عمومی بهره‌مند خواهید شد. ما تلاش کرده ایم با استفاده از احراز هویت و اعتبارسنجی ها و پایش‌های سیستماتیک مانع ثبت نام تکراری یک شخص حقیقی در ارث‌کوپ شویم. زیرا این یک شراکت حقیقی است و هر شخص حقیقی یک سهامدار خواهد خواهد و داشتن حسابهای کاربری متعدد موجب فساد در سیستم خواهد شد. بنابرین شما متعهد می‌شوید که هرگز و تحت هیچ شرایطی دو حساب کاربری در ارث‌کوپ نداشته باشید. این بزرگترین تخلف در این زیست بوم است و کشف آن موجب محروم، محدود یا مسدود سازی موقت یا دائم فعالیت شما در ارث‌کوپ خواهد شد. همچنین بعنوان سهامدار ارث‌کوپ متعهد می‌شوید که در صورت برخورد با انجام چنین تخلفی توسط هر یک از کاربران حساب کاربری مربوطه را به مدیریت ارث‌کوپ گزارش نمایید. ارث‌کوپ متعهد می‌شود از اطلاعات شما در برابر اشخاص ثالث محافظت کند و صرفا در راستای تامین حقوق مالکانه شما از آن بهره برد. امیدواریم در کنار هم با همکاری و اعتماد متقابل بتوانیم دنیای بهتری بسازیم.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Tab 2: اساسنامه و شرایط استفاده (Nested Accordions) -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="accordion-header bg-ocean-blue text-pure-white p-5 flex justify-between items-center rounded-t-lg hover:bg-dark-blue" data-target="tab2-content">
+                        <h3 class="text-xl font-bold font-vazirmatn">اساسنامه و شرایط استفاده (مفصل)</h3>
+                        <i class="fas fa-chevron-down transform transition-transform duration-300"></i>
+                    </div>
+                    <div id="tab2-content" class="accordion-content bg-white p-5 text-gray-800 font-vazirmatn">
+                        <div class="space-y-3">
+                            <!-- Sub-tab 1: مقدمه -->
+                            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                <div class="nested-accordion-header bg-light-gray p-4 flex justify-between items-center" data-target="subtab1-content">
+                                    <h4 class="text-lg font-semibold font-vazirmatn">مقدمه</h4>
+                                    <i class="fas fa-chevron-down transform transition-transform duration-300 text-gray-600"></i>
+                                </div>
+                                <div id="subtab1-content" class="nested-accordion-content p-4 text-gray-700 text-right">
+                                    <p>بنام خدای جان و خرد</p>
+                                    <p>اساسنامه بین‌المللی «جمهوری شراکتی»</p>
+                                    <p class="mt-2">مقدمه</p>
+                                    <p>با تأکید بر حق بنیادین و طبیعی همه انسان‌ها در بهره‌برداری برابر از زمین، منابع طبیعی، فضا و دانش بشری، و با هدف تحقق عدالت پایدار، آزادی و کرامت انسانی، این اساسنامه به‌منظور شکل‌گیری یک سامانه‌ی جهانی شراکتی تنظیم می‌گردد.</p>
+                                    <p class="mt-2">جمهوری شراکتی، منظومه‌ای است از پلتفرم‌های مشارکتی محلی، ملی، قاره‌ای و جهانی، که همه افراد بشر را بر مبنای حقوق برابر، در مالکیت و حاکمیت مشاع و تخصص‌محور بر کره زمین شریک می‌داند.</p>
+                                </div>
+                            </div>
+
+                            <!-- Sub-tab 2: اصول اساسی -->
+                            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                <div class="nested-accordion-header bg-light-gray p-4 flex justify-between items-center" data-target="subtab2-content">
+                                    <h4 class="text-lg font-semibold font-vazirmatn">اصول اساسی</h4>
+                                    <i class="fas fa-chevron-down transform transition-transform duration-300 text-gray-600"></i>
+                                </div>
+                                <div id="subtab2-content" class="nested-accordion-content p-4 text-gray-700 text-right">
+                                    <p class="mb-2">اصول اساسی</p>
+                                    <p>۱. اصل مالکیت زمین: زمین و منابع آن، ملک خالق هستی است؛ همه انسان‌ها در مالکیت بر منافع و بهره‌برداری برابر از آن شریکند.</p>
+                                    <p class="mt-2">۲. اصل مالکیت برابر: با احترام به مالکیت خصوصی، هیچ انسان یا نهادی بر دیگری، در حق مالکیت عمومی و طبیعی، برتری ندارد.</p>
+                                    <p class="mt-2">۳. اصل حاکمیت تخصصی: اداره زمین و دارایی‌های عمومی بر پایه خرد جمعی، تخصص صنفی و رأی آزاد مردمان شکل می‌گیرد.</p>
+                                    <p class="mt-2">۴. اصل شراکت جهانی: همه انسان‌ها، با حفظ تنوع ملی, فرهنگی و بومی، در یک شراکت جهانی منسجم و شفاف سهیم می‌شوند.</p>
+                                    <p class="mt-2">۵. اصل شرکت‌های به‌هم‌ پیوسته: ساختارهای شراکتی از سطح محله تا جهانی، در قالب شرکت‌های تعاونی محلی، ملی، قاره‌ای و نهایتاً شرکت جهانی ارث‌کوپ به‌هم متصل می‌شوند.</p>
+                                </div>
+                            </div>
+
+                            <!-- Sub-tab 3: ساختار سازمانی -->
+                            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                <div class="nested-accordion-header bg-light-gray p-4 flex justify-between items-center" data-target="subtab3-content">
+                                    <h4 class="text-lg font-semibold font-vazirmatn">ساختار سازمانی</h4>
+                                    <i class="fas fa-chevron-down transform transition-transform duration-300 text-gray-600"></i>
+                                </div>
+                                <div id="subtab3-content" class="nested-accordion-content p-4 text-gray-700 text-right">
+                                    <p class="mb-2">ساختار سازمانی</p>
+                                    <ul class="list-disc pr-5">
+                                        <li>شرکت‌های محلی تا استانی (برای هر محله، روستا / منطقه شهری، دهستان / شهر، بخش، شهرستان و استان)</li>
+                                        <li>شرکت‌های ملی (برای ساکنان هر کشور)</li>
+                                        <li>اتحادیه‌های قاره‌ای (برای کشورهای هر قاره)</li>
+                                        <li>شرکت جهانی ارث‌کوپ (متشکل از نمایندگان منتخب قاره‌ها)</li>
+                                    </ul>
+                                    <p class="mt-3 mb-2">تمامی این ساختارها:</p>
+                                    <ul class="list-disc pr-5">
+                                        <li>دارای مجامع عمومی باز و دائماً فعال هستند.</li>
+                                        <li>بر اساس رأی پویا و انتخابات بدون نامزد اداره می‌شوند.</li>
+                                        <li>رأی قابل بازپس‌گیری در هر زمان است.</li>
+                                        <li>اعضا به صورت خودکار بر اساس تخصص، سن، جنس و مکان، در گروه‌های متعدد عضویت دارند.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Sub-tab 4: اقتصاد شراکتی -->
+                            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                <div class="nested-accordion-header bg-light-gray p-4 flex justify-between items-center" data-target="subtab4-content">
+                                    <h4 class="text-lg font-semibold font-vazirmatn">اقتصاد شراکتی</h4>
+                                    <i class="fas fa-chevron-down transform transition-transform duration-300 text-gray-600"></i>
+                                </div>
+                                <div id="subtab4-content" class="nested-accordion-content p-4 text-gray-700 text-right">
+                                    <p class="mb-2">اقتصاد شراکتی</p>
+                                    <ul class="list-disc pr-5">
+                                        <li>یک سامانه مالی و بانکی هوشمند جهانی با پول داخلی قابل تبادل انسان پایه و طلا معیار به نام بهار طراحی شده است.</li>
+                                        <li>از طرف سامانه مالی ارث‌کوپ و طی امضای یک توافقنامه پولی، سرمایه اولیه مکفی معادل ارزش یک کیلوگرم طلای خالص به بهار در بدو ورود هر سهامدار به ارث‌کوپ خلق و در اختیار آنان قرار میگیرد.</li>
+                                        <li>سرمایه‌گذاری در طرح‌های عمومی بر اساس رأی و تأیید صنوف تخصصی صورت می‌گیرد.</li>
+                                        <li>سوددهی، بیمه زیان و شفافیت مالی کامل در سیستم تعبیه شده است.</li>
+                                        <li>هر اتحادیه تخصصی در سطح ملی یا قاره‌ای موظف است سالانه ظرفیت جذب سرمایه، نرخ سود میانگین و طرح‌های اولویت‌دار خود را در پنچره مربوطه اعلام کند.</li>
+                                        <li>سامانه قراردادهای هوشمند برای اجرای پروژه‌ها و تخصیص سود یا بازپرداخت خسارت به سرمایه‌گذاران به‌کار گرفته می‌شود.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Sub-tab 5: شفافیت و نظارت مردمی -->
+                            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                <div class="nested-accordion-header bg-light-gray p-4 flex justify-between items-center" data-target="subtab5-content">
+                                    <h4 class="text-lg font-semibold font-vazirmatn">شفافیت و نظارت مردمی</h4>
+                                    <i class="fas fa-chevron-down transform transition-transform duration-300 text-gray-600"></i>
+                                </div>
+                                <div id="subtab5-content" class="nested-accordion-content p-4 text-gray-700 text-right">
+                                    <p class="mb-2">شفافیت و نظارت مردمی</p>
+                                    <ul class="list-disc pr-5">
+                                        <li>تمام حساب‌ها، تراکنش‌ها و دارایی‌های مدیران در لحظه برای سهامداران قابل مشاهده است.</li>
+                                        <li>حسابرسی داخلی، صنفی و مردمی هم‌زمان انجام می‌شود.</li>
+                                        <li>بازرس‌ها و هیأت مدیره در تمامی سطوح با رأی مستقیم انتخاب می‌شوند.</li>
+                                        <li>رأی‌دهندگان می‌توانند رأی خود را به‌صورت دائمی یا موقت به کارشناسان مورد اعتماد خود تفویض نمایند و رأی این کارشناسان ضریب بالاتری در رأی‌گیری تخصصی خواهد داشت.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Sub-tab 6: بحران و انعطاف پذیری -->
+                            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                <div class="nested-accordion-header bg-light-gray p-4 flex justify-between items-center" data-target="subtab6-content">
+                                    <h4 class="text-lg font-semibold font-vazirmatn">بحران و انعطاف‌پذیری</h4>
+                                    <i class="fas fa-chevron-down transform transition-transform duration-300 text-gray-600"></i>
+                                </div>
+                                <div id="subtab6-content" class="nested-accordion-content p-4 text-gray-700 text-right">
+                                    <p class="mb-2">بحران و انعطاف‌پذیری</p>
+                                    <ul class="list-disc pr-5">
+                                        <li>در صورت بروز بحران اقتصادی، زیست‌محیطی یا اجتماعی، مجامع عمومی می‌توانند به‌سرعت وارد تصمیم‌گیری شوند.</li>
+                                        <li>سازوکارهای هوشمند برای گذار، تصحیح ساختار، یا تفویض موقت اختیارات به افراد متخصص در نظر گرفته شده است.</li>
+                                        <li>امکان فعال‌سازی وضعیت اضطراری شراکتی وجود دارد که در آن ساختار تصمیم‌گیری متمرکزتر، اما با سقف زمانی و کنترل مردمی، فعال می‌گردد.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Sub-tab 7: تعامل با ساختارهای رسمی موجود -->
+                            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                <div class="nested-accordion-header bg-light-gray p-4 flex justify-between items-center" data-target="subtab7-content">
+                                    <h4 class="text-lg font-semibold font-vazirmatn">تعامل با ساختارهای رسمی موجود</h4>
+                                    <i class="fas fa-chevron-down transform transition-transform duration-300 text-gray-600"></i>
+                                </div>
+                                <div id="subtab7-content" class="nested-accordion-content p-4 text-gray-700 text-right">
+                                    <p class="mb-2">تعامل با ساختارهای رسمی موجود</p>
+                                    <ul class="list-disc pr-5">
+                                        <li>سامانه شراکتی خود را رقیب دولت‌ها نمی‌داند، بلکه مکمل مردمی ساختارهای رسمی است.</li>
+                                        <li>در هر کشور، شرکت ملی می‌تواند با نهادهای موجود تعامل یا توافق‌نامه همکاری تنظیم کند.</li>
+                                        <li>دولت‌ها می‌توانند با اطمینان بخشی از وظایف عمومی خود را از طریق سامانه شراکتی به مردم واگذار کنند.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Sub-tab 8: تعامل با شرکت‌های فناوری و نوآوری -->
+                            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                <div class="nested-accordion-header bg-light-gray p-4 flex justify-between items-center" data-target="subtab8-content">
+                                    <h4 class="text-lg font-semibold font-vazirmatn">تعامل با شرکت‌های فناوری و نوآوری</h4>
+                                    <i class="fas fa-chevron-down transform transition-transform duration-300 text-gray-600"></i>
+                                </div>
+                                <div id="subtab8-content" class="nested-accordion-content p-4 text-gray-700 text-right">
+                                    <p class="mb-2">تعامل با شرکت‌های فناوری و نوآوری</p>
+                                    <ul class="list-disc pr-5">
+                                        <li>سامانه شراکتی ارث‌کوپ از همکاری با پلتفرم‌های باز و منطبق با اصول شفافیت، حقوق بشر، آزادی دیجیتال و منافع عمومی استقبال می‌کند.</li>
+                                        <li>تمامی سامانه‌های نرم‌افزاری، قراردادهای هوشمند، شبکه‌های اجتماعی و سیستم‌های رأی‌گیری باید متن‌باز و قابل ممیزی عمومی باشند.</li>
+                                        <li>اطلاعات کاربران تنها برای اجرای حقوق مالکانه آن‌ها استفاده شده و حق حذف، مشاهده و انتقال اطلاعات تضمین شده است.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Sub-tab 9: خاتمه -->
+                            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                <div class="nested-accordion-header bg-light-gray p-4 flex justify-between items-center" data-target="subtab9-content">
+                                    <h4 class="text-lg font-semibold font-vazirmatn">خاتمه</h4>
+                                    <i class="fas fa-chevron-down transform transition-transform duration-300 text-gray-600"></i>
+                                </div>
+                                <div id="subtab9-content" class="nested-accordion-content p-4 text-gray-700 text-right">
+                                    <p class="mb-2">خاتمه</p>
+                                    <ul class="list-disc pr-5">
+                                        <li>این اساسنامه، میثاق همگانی ما ساکنان زمین برای تحقق عدالت ساختاری، هم‌زیستی پایدار و شکوفایی تمدن انسانی بر بستر سیاره است.</li>
+                                        <li>هر فرد انسانی با ثبت‌نام در سامانه جهانی، به‌طور خودکار عضو شرکت جهانی می‌شود و از حقوق، مسئولیت‌ها و سود مشارکتی برخوردار خواهد شد.</li>
+                                        <li>این اساسنامه در راستای اهداف و اصول اصلی و اساسی اش همواره به پیشنهاد هر یک از سهامداران و با تایید اکثریت آنان قابل ارتقاست.</li>
+                                    </ul>
+                                    <p class="mt-2">باشد که زمین در صلح و بهره‌مندی متقابل بچرخد.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back to Signup Button -->
+            <div class="mt-8 text-center">
+                <a href="signup.html" class="inline-block bg-purple-700 text-pure-white px-8 py-3 rounded-full shadow-md hover:bg-dark-purple transition duration-300 font-vazirmatn font-bold text-lg transform hover:scale-105">
+                    بازگشت و ادامه ثبت نام
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="bg-gentle-black text-pure-white py-12 px-6">
+    <div class="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 text-right">
+        <div class="col-span-1 md:col-span-1">
+            <div class="flex items-center space-x-2 rtl:space-x-reverse mb-4 justify-end md:justify-start">
+                <svg width="35" height="35" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" fill="#10b981" opacity="0.7"/>
+                    <path d="M12 2C10.5 4 8 6 8 9C8 12 12 14 12 14C12 14 16 12 16 9C16 6 13.5 4 12 2ZM12 14C12 14 10 16 10 18C10 20 12 22 12 22" fill="#047857"/>
+                </svg>
+                <span class="text-2xl font-bold font-vazirmatn">EarthCoop</span>
+            </div>
+            <p class="text-gray-400 text-sm font-vazirmatn">
+                یک تعاونی جهانی که افراد را توانمند می‌سازد تا به صورت جمعی آینده‌ای پایدار را از طریق مالکیت مشترک و اصول دموکراتیک بسازند.
+            </p>
+            <div class="flex space-x-4 rtl:space-x-reverse mt-6 justify-end md:justify-start">
+                <a href="#" class="text-gray-400 hover:text-pure-white transition duration-300"><i class="fab fa-facebook-f text-xl"></i></a>
+                <a href="#" class="text-gray-400 hover:text-pure-white transition duration-300"><i class="fab fa-twitter text-xl"></i></a>
+                <a href="#" class="text-gray-400 hover:text-pure-white transition duration-300"><i class="fab fa-linkedin-in text-xl"></i></a>
+                <a href="#" class="text-gray-400 hover:text-pure-white transition duration-300"><i class="fab fa-instagram text-xl"></i></a>
+            </div>
+        </div>
+
+        <div>
+            <h3 class="text-lg font-semibold mb-4 text-earth-green font-vazirmatn">لینک‌های سریع</h3>
+            <ul class="space-y-2 font-vazirmatn">
+                <li><a href="main.html" class="text-gray-400 hover:text-pure-white transition duration-300">خانه</a></li>
+                <li><a href="about.html" class="text-gray-400 hover:text-pure-white transition duration-300">درباره ما</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">شبکه ما</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">پروژه‌ها</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">اقتصاد</a></li>
+            </ul>
+        </div>
+
+        <div>
+            <h3 class="text-lg font-semibold mb-4 text-ocean-blue font-vazirmatn">پشتیبانی</h3>
+            <ul class="space-y-2 font-vazirmatn">
+                <li><a href="help2.html" class="text-gray-400 hover:text-pure-white transition duration-300">سوالات متداول</a></li>
+                <li><a href="contact.html" class="text-gray-400 hover:text-pure-white transition duration-300">تماس با ما</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-pure-white transition duration-300">حریم خصوصی</a></li>
+                <li><a href="terms-and-conditions.html" class="text-gray-400 hover:text-pure-white transition duration-300">شرایط خدمات</a></li>
+            </ul>
+        </div>
+
+        <div>
+            <h3 class="text-lg font-semibold mb-4 text-digital-gold font-vazirmatn">در تماس باشید</h3>
+            <p class="text-gray-400 mb-2 font-vazirmatn"><i class="fas fa-map-marker-alt ml-2"></i> دفتر مرکزی جهانی، EarthCoop</p>
+            <p class="text-gray-400 mb-2 font-vazirmatn"><i class="fas fa-envelope ml-2"></i> info@earthcoop.org</p>
+            <p class="text-gray-400 font-vazirmatn"><i class="fas fa-phone-alt ml-2"></i> +1 (123) 456-7890</p>
+        </div>
+    </div>
+    <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-500 text-sm font-vazirmatn">
+        &copy; 2025 EarthCoop. تمامی حقوق محفوظ است.
+    </div>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Mobile menu toggle logic
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        if (mobileMenuButton && mobileMenu) {
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+                mobileMenuButton.classList.toggle('open');
+            });
+        }
+
+        // Get all main accordion headers
+        const accordionHeaders = document.querySelectorAll('.accordion-header');
+
+        // Add click event listener to each main accordion header
+        accordionHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                const targetId = header.dataset.target; // Get the ID of the target content
+                const targetContent = document.getElementById(targetId); // Get the target content element
+                const icon = header.querySelector('i'); // Get the icon within the header
+
+                // Toggle the 'active' class on the content to show/hide it
+                targetContent.classList.toggle('active');
+                // Toggle the icon rotation
+                icon.classList.toggle('fa-chevron-down');
+                icon.classList.toggle('fa-chevron-up');
+
+                // Close other open main accordions
+                accordionHeaders.forEach(otherHeader => {
+                    const otherTargetId = otherHeader.dataset.target;
+                    const otherTargetContent = document.getElementById(otherTargetId);
+                    const otherIcon = otherHeader.querySelector('i');
+
+                    if (otherTargetId !== targetId && otherTargetContent.classList.contains('active')) {
+                        otherTargetContent.classList.remove('active');
+                        otherIcon.classList.remove('fa-chevron-up');
+                        otherIcon.classList.add('fa-chevron-down');
+                    }
+                });
+            });
+        });
+
+        // Get all nested accordion headers
+        const nestedAccordionHeaders = document.querySelectorAll('.nested-accordion-header');
+
+        // Add click event listener to each nested accordion header
+        nestedAccordionHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                const targetId = header.dataset.target; // Get the ID of the target content
+                const targetContent = document.getElementById(targetId); // Get the target content element
+                const icon = header.querySelector('i'); // Get the icon within the header
+
+                // Toggle the 'active' class on the content to show/hide it
+                targetContent.classList.toggle('active');
+                // Toggle the icon rotation
+                icon.classList.toggle('fa-chevron-down');
+                icon.classList.toggle('fa-chevron-up');
+
+                // Close other open nested accordions within the same main tab
+                const parentAccordionContent = header.closest('.accordion-content');
+                if (parentAccordionContent) {
+                    parentAccordionContent.querySelectorAll('.nested-accordion-content.active').forEach(otherContent => {
+                        if (otherContent.id !== targetId) {
+                            otherContent.classList.remove('active');
+                            const otherHeader = otherContent.previousElementSibling;
+                            if (otherHeader) {
+                                const otherIcon = otherHeader.querySelector('i');
+                                otherIcon.classList.remove('fa-chevron-up');
+                                otherIcon.classList.add('fa-chevron-down');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

@@ -101,8 +101,13 @@
                             </li>
                             <hr style="margin: .5rem 0">
                             
-                            <li class="nav-item"><a class="nav-link" href="{{ route('logout') }}">
-                                <i class="bi bi-graph-up-arrow"></i><b>خروج از حساب کاربری</b></a>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="event.preventDefault(); document.getElementById('logout-form-navbar').submit();">
+                                    <i class="bi bi-graph-up-arrow"></i><b>خروج از حساب کاربری</b>
+                                </a>
+                                <form id="logout-form-navbar" action="{{ route('logout') }}" method="POST" class="d-none">
+                                    @csrf
+                                </form>
                             </li>
                             
                         </ul>

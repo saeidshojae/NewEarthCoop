@@ -11,7 +11,9 @@ class CreateInvitationCodesTable extends Migration
             $table->id();
             $table->string('code')->unique();
             $table->unsignedBigInteger('user_id')->nullable();
+            $table->unsignedBigInteger('used_by')->nullable();
             $table->boolean('used')->default(false);
+            $table->timestamp('expire_at')->nullable();
             $table->timestamps();
         });
     }

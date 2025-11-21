@@ -1,131 +1,246 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>تأیید ایمیل - EarthCoop</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    
+    <style>
+        :root {
+            --color-earth-green: #10b981;
+            --color-ocean-blue: #3b82f6;
+            --color-digital-gold: #f59e0b;
+            --color-pure-white: #ffffff;
+            --color-gentle-black: #1e293b;
+            --color-dark-green: #047857;
+        }
+        
+        * { font-family: 'Vazirmatn', 'Poppins', sans-serif; }
+        
+        body { background-color: #e2e8f0; }
+        
+        @keyframes bounce-custom {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        .animate-bounce-custom { animation: bounce-custom 3s infinite ease-in-out; }
+        
+        .form-card-gradient {
+            background: linear-gradient(145deg, var(--color-pure-white) 0%, #f0f4f7 100%);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+            border-radius: 18px;
+            position: relative;
+            border: 1px solid rgba(220, 220, 220, 0.3);
+        }
+        
+        .form-card-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, var(--color-earth-green), var(--color-ocean-blue), var(--color-digital-gold));
+            border-radius: 18px 18px 0 0;
+        }
+        
+        .verification-code input {
+            width: 3.5rem;
+            height: 3.5rem;
+            text-align: center;
+            font-size: 1.75rem;
+            font-weight: 700;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            background: white;
+        }
 
-@section('head-tag')
-<style>
-    .verification-container {
-        direction: rtl;
-        text-align: right;
-        margin-top: 2rem;
-    }
+        .verification-code input:focus {
+            border-color: var(--color-earth-green);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+            outline: none;
+            transform: scale(1.05);
+        }
 
-    .verification-code {
-        display: flex;
-        gap: 0.5rem;
-        justify-content: center;
-        margin: 2rem 0;
-    }
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--color-earth-green) 0%, var(--color-dark-green) 100%);
+            color: white;
+            font-weight: 700;
+            padding: 0.875rem 2.5rem;
+            border-radius: 12px;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            font-size: 1.125rem;
+        }
 
-    .verification-code input {
-        width: 3rem;
-        height: 3rem;
-        text-align: center;
-        font-size: 1.5rem;
-        border: 2px solid #dee2e6;
-        border-radius: 0.5rem;
-    }
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+        }
 
-    .verification-code input:focus {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        outline: none;
-    }
+        .btn-secondary-custom {
+            background: white;
+            color: var(--color-earth-green);
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            border-radius: 10px;
+            border: 2px solid var(--color-earth-green);
+            transition: all 0.3s ease;
+        }
 
-    .resend-code {
-        text-align: center;
-        margin-top: 1rem;
-    }
-</style>
-@endsection
+        .btn-secondary-custom:hover {
+            background: var(--color-earth-green);
+            color: white;
+        }
 
-@section('content')
-<div class="container verification-container" style='margin-top: 0'>
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header text-center bg-primary text-white">تأیید ایمیل</div>
+        .btn-secondary-custom:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f3f4f6;
+            color: #9ca3af;
+            border-color: #d1d5db;
+        }
+    </style>
+</head>
+<body class="font-vazirmatn leading-relaxed flex items-center justify-center min-h-screen p-4">
 
-                <div class="card-body">
-                    
+    <!-- Main Form Content -->
+    <div class="form-card-gradient w-full max-w-2xl mx-auto p-8 md:p-10">
+        <!-- Logo -->
+        <div class="flex items-center justify-center space-x-3 rtl:space-x-reverse mb-8">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="animate-bounce-custom">
+                <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" fill="#10b981" opacity="0.8"/>
+                <path d="M12 2C10.5 4 8 6 8 9C8 12 12 14 12 14C12 14 16 12 16 9C16 6 13.5 4 12 2ZM12 14C12 14 10 16 10 18C10 20 12 22 12 22" fill="#047857"/>
+            </svg>
+            <span class="text-4xl font-extrabold text-gentle-black" style="color: var(--color-gentle-black);">EarthCoop</span>
+        </div>
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h2 class="text-3xl md:text-4xl font-extrabold mb-3" style="color: var(--color-gentle-black);">
+                تأیید ایمیل
+            </h2>
+            <p class="text-lg text-gray-600">
+                کد تأیید به ایمیل شما ارسال شده است. لطفاً کد را وارد کنید:
+            </p>
+        </div>
+
         @if (session('success'))
-        <div class="alert alert-info">
-            {{ session('success') }}
-        </div>
-    @endif
-    
-                    <p class="text-center">کد تأیید به ایمیل شما ارسال شده است. لطفاً کد را وارد کنید:</p>
-                    
-                    <form action="{{ route('email.verify') }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="email" value="{{ $email }}">
-                        
-                        <div class="verification-code" style='flex-direction: row-reverse;'>
-                            <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                            <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                            <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                            <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                            <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                            <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                        </div>
-
-                        @error('verification_code')
-                            <div class="alert alert-danger text-center">{{ $message }}</div>
-                        @enderror
-
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-primary">تأیید</button>
-                        </div>
-                    </form>
-
-                    <div class="resend-code">
-    <form id="resend-form" action="{{ route('email.verification.resend') }}" method="POST">
-        @csrf
-        <input type="hidden" name="email" value="{{ $email }}">
-        <button type="submit" id="resend-button"
-            class=""
-            style="border: 1px solid #37c4b4; color: #37c4b4; text-decoration: none; border-radius: .3rem;">
-            ارسال مجدد کد
-        </button>
-    </form>
-    <div id="timer" style="margin-top: 0.5rem; color: #6c757d;"></div>
-</div>
-
-
-                </div>
+            <div class="mb-6 p-4 rounded-lg" style="background-color: rgba(16, 185, 129, 0.1); border: 1px solid var(--color-earth-green);">
+                <p class="text-center font-medium" style="color: var(--color-dark-green);">
+                    <i class="fas fa-check-circle ml-2"></i>
+                    {{ session('success') }}
+                </p>
             </div>
-        </div>
-    </div>
-</div>
-@php
-if(isset($_GET['email'])){
+        @endif
 
-$verification = \App\Models\EmailVerification::where('email', $_GET['email'])->first();
-$remainingSeconds = $verification && $verification->expires_at > now()
-    ? now()->diffInSeconds($verification->expires_at)
-    : 0;
-    
-    }else{
-    $remainingSeconds = 0;
+        <!-- Verification Form -->
+        <form action="{{ route('email.verify') }}" method="POST">
+            @csrf
+            <input type="hidden" name="email" value="{{ $email }}">
+            
+            <div class="verification-code flex justify-center gap-3 mb-6">
+                <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+            </div>
+
+            @error('verification_code')
+                <div class="mb-4 p-3 rounded-lg text-center" style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444;">
+                    <p class="text-red-600 font-medium">{{ $message }}</p>
+                </div>
+            @enderror
+
+            <div class="text-center mb-6">
+                <button type="submit" class="btn-primary-custom w-full md:w-auto">
+                    <i class="fas fa-check ml-2"></i>
+                    تأیید
+                </button>
+            </div>
+        </form>
+
+        <!-- Resend Section -->
+        <div class="text-center pt-6 border-t border-gray-200">
+            <form id="resend-form" action="{{ route('email.verification.resend') }}" method="POST" class="inline">
+                @csrf
+                <input type="hidden" name="email" value="{{ $email }}">
+                <button type="submit" id="resend-button" class="btn-secondary-custom">
+                    <i class="fas fa-redo-alt ml-2"></i>
+                    ارسال مجدد کد
+                </button>
+            </form>
+            <div id="timer" class="mt-3 text-gray-500 font-medium"></div>
+        </div>
+
+    </div>
+
+@php
+    if(isset($_GET['email'])){
+        $verification = \App\Models\EmailVerification::where('email', $_GET['email'])->first();
+        $remainingSeconds = $verification && $verification->expires_at > now()
+            ? now()->diffInSeconds($verification->expires_at)
+            : 0;
+    } else {
+        $remainingSeconds = 0;
     }
 @endphp
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const inputs = document.querySelectorAll('.verification-code input');
 
+    // Auto-focus on first input
+    if (inputs.length > 0) {
+        inputs[0].focus();
+    }
+
     inputs.forEach((input, index) => {
-        input.addEventListener('keyup', function(e) {
-            if (e.key >= 0 && e.key <= 9) {
+        // Handle input and move to next
+        input.addEventListener('input', function(e) {
+            if (this.value.length === 1) {
                 if (index < inputs.length - 1) {
                     inputs[index + 1].focus();
                 }
-            } else if (e.key === 'Backspace') {
+            }
+        });
+
+        // Handle keydown for backspace
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' && this.value === '') {
                 if (index > 0) {
                     inputs[index - 1].focus();
                 }
             }
         });
+
+        // Only allow numbers
+        input.addEventListener('keypress', function(e) {
+            if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
     });
 
-    // ✨ تایمر برای غیرفعال کردن ارسال مجدد
+    // Timer for resend button
     let remaining = {{ $remainingSeconds ?? 0 }};
     const resendButton = document.getElementById('resend-button');
     const timerDisplay = document.getElementById('timer');
@@ -135,7 +250,7 @@ document.addEventListener('DOMContentLoaded', function() {
             resendButton.disabled = true;
             const minutes = Math.floor(remaining / 60);
             const seconds = remaining % 60;
-            timerDisplay.textContent = `امکان ارسال مجدد تا ${minutes}:${seconds.toString().padStart(2, '0')} دیگر فعال می‌شود.`;
+            timerDisplay.innerHTML = `<i class="fas fa-clock ml-1"></i> امکان ارسال مجدد تا ${minutes}:${seconds.toString().padStart(2, '0')} دیگر فعال می‌شود.`;
             remaining--;
         } else {
             resendButton.disabled = false;
@@ -151,24 +266,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const inputs = document.querySelectorAll('.verification-code input');
-    
-    inputs.forEach((input, index) => {
-        input.addEventListener('keyup', function(e) {
-            if (e.key >= 0 && e.key <= 9) {
-                if (index < inputs.length - 1) {
-                    inputs[index + 1].focus();
-                }
-            } else if (e.key === 'Backspace') {
-                if (index > 0) {
-                    inputs[index - 1].focus();
-                }
-            }
-        });
-    });
-});
-</script>
-@endsection 
+</body>
+</html> 

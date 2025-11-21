@@ -1,10 +1,346 @@
-@extends('layouts.app')
-@section('head-tag')
-    <style>
+@extends('layouts.unified')
 
-        .group-avatar {
-        width: 2rem;
-        height: 2rem;
+@section('title', 'حساب کاربری شما - ' . config('app.name', 'EarthCoop'))
+
+@push('styles')
+<style>
+    /* Profile Section Styles from profile.html */
+    .user-profile-section {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .profile-header {
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+    .profile-header h1 {
+        font-size: 2.2rem;
+        color: var(--color-gentle-black);
+        margin-bottom: 10px;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .profile-picture-container {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--color-earth-green) 0%, var(--color-dark-green) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: white;
+        margin: 20px auto 0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.12);
+        border: 4px solid var(--color-earth-green);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .profile-picture-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .profile-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+        padding: 20px;
+        background-color: var(--color-light-gray);
+        border-radius: 1rem;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        background-color: var(--color-pure-white);
+        padding: 18px 20px;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        border: 1px solid #f1f5f9;
+        position: relative;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: var(--color-earth-green);
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+    }
+
+    .info-label i {
+        margin-left: 8px;
+        color: var(--color-dark-green);
+        font-size: 1.1em;
+    }
+
+    .info-value {
+        color: var(--color-gentle-black);
+        font-size: 1rem;
+        flex-grow: 1;
+    }
+
+    .info-actions {
+        display: flex;
+        gap: 8px;
+        position: absolute;
+        top: 15px;
+        left: 15px;
+    }
+
+    .action-button {
+        background-color: var(--color-light-gray);
+        border: none;
+        border-radius: 9999px;
+        width: 34px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.15s ease-out;
+        color: var(--color-earth-green);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        text-decoration: none;
+    }
+
+    .action-button:hover {
+        background-color: #e2e8f0;
+        color: var(--color-dark-green);
+        transform: scale(1.1);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .social-media-list,
+    .documents-list {
+        display: flex;
+        flex-wrap: wrap; 
+        gap: 10px;
+        margin-top: 10px;
+        padding: 0; 
+        border-radius: 0.375rem;
+    }
+
+    .social-media-item {
+        background-color: #e0f2fe;
+        color: var(--color-ocean-blue);
+        padding: 8px 12px;
+        border-radius: 9999px;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        border: 1px solid #bfdbfe;
+        transition: all 0.15s ease-out;
+    }
+
+    .social-media-item:hover {
+        background-color: #d0effd;
+        transform: translateY(-2px);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .documents-list {
+        flex-direction: column; 
+    }
+
+    .document-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background-color: #f1f5f9;
+        padding: 8px 12px;
+        border-radius: 0.375rem;
+        font-size: 0.9rem;
+        color: var(--color-gentle-black);
+        width: fit-content; 
+    }
+
+    .document-item i {
+        color: #64748b;
+    }
+
+    /* Groups Section Styles - حفظ منطق فعلی */
+    .groups-section {
+        width: 100%;
+        max-width: 800px;
+        margin: 40px auto 0; 
+        background-color: var(--color-pure-white);
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
+        padding: 25px;
+    }
+
+    .groups-section h2 {
+        font-size: 1.8rem;
+        color: var(--color-gentle-black);
+        margin-bottom: 20px;
+        text-align: center;
+        position: relative;
+        padding-bottom: 10px;
+    }
+
+    .groups-section h2::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 3px;
+        background: linear-gradient(90deg, var(--color-earth-green), var(--color-dark-green));
+        border-radius: 9999px;
+    }
+
+    /* Tab Buttons - حفظ منطق فعلی */
+    .tabs {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 25px;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 10px;
+    }
+
+    .tab {
+        background-color: #f1f5f9;
+        color: var(--color-gentle-black);
+        padding: 12px 20px;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        font-size: 0.95rem;
+        font-weight: 600; 
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        flex-grow: 1; 
+        min-width: 100px; 
+        text-align: center;
+    }
+
+    .tab:hover {
+        background-color: #e2e8f0;
+        color: var(--color-gentle-black);
+        transform: translateY(-2px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .tab.active {
+        background: linear-gradient(135deg, var(--color-earth-green) 0%, var(--color-dark-green) 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.12);
+        transform: translateY(-3px);
+    }
+
+    .tab-content {
+        display: none;
+        padding: 15px 0;
+        animation: fadeIn 0.5s ease-out; 
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    /* Sub-tabs - حفظ منطق فعلی */
+    .sub-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        direction: rtl;
+    }
+
+    .sub-tab {
+        padding: 0.5rem 1rem;
+        background-color: #eee;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: 0.3s;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        border: 1px solid #ddd;
+    }
+
+    .sub-tab:hover {
+        background-color: #e7f0ff;
+    }
+
+    .sub-tab.active,
+    .sub-tab.btn-primary {
+        background-color: var(--color-earth-green) !important;
+        color: #fff !important;
+        border-color: var(--color-earth-green) !important;
+    }
+
+    .sub-tab-content {
+        display: none;
+    }
+
+    .sub-tab-content:not(.d-none) {
+        display: block;
+    }
+
+    /* Group List Styles - حفظ منطق فعلی */
+    .tab-content-list {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        padding: 10px;
+    }
+
+    .tab-content-item {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1rem;
+        color: var(--color-gentle-black);
+        transition: all 0.15s ease-out;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        cursor: pointer;
+    }
+
+    .tab-content-item:hover {
+        background-color: #f1f5f9;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+        border-color: var(--color-earth-green);
+    }
+
+    .tab-content-item i {
+        color: var(--color-earth-green);
+        font-size: 1.2em;
+        flex-shrink: 0;
+    }
+
+    .group-avatar {
+        width: 3rem;
+        height: 3rem;
         border-radius: 50%;
         background-color: #ecf5ff;
         color: rgb(61, 131, 175);
@@ -13,614 +349,478 @@
         justify-content: center;
         font-weight: bold;
         font-size: 18px;
-        margin-left: 12px;
+        flex-shrink: 0;
+    }
+
+    .group-avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    /* Request Cards */
+    .request-card {
+        background-color: var(--color-pure-white);
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+    }
+
+    .request-card-header {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--color-gentle-black);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--color-earth-green);
+    }
+
+    /* Dark Mode Support */
+    body.dark-mode .user-profile-section,
+    body.dark-mode .groups-section,
+    body.dark-mode .info-item,
+    body.dark-mode .request-card {
+        background-color: #2d2d2d;
+        border-color: #404040;
+    }
+
+    body.dark-mode .profile-info-grid {
+        background-color: #3a3a3a;
+    }
+
+    body.dark-mode .tab {
+        background-color: #3a3a3a;
+        color: #e0e0e0;
+    }
+
+    body.dark-mode .sub-tab {
+        background-color: #3a3a3a;
+        color: #e0e0e0;
+        border-color: #555;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
         }
-        
-                .group-avatar img{
-                width: 2rem;
-    height: 2rem;
-    border-radius: 50rem;'
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
+    }
 
-        .group-info h4 {
-        margin: 0;
-        font-size: 16px;
-        font-weight: bold;
+    /* Responsive */
+    @media (max-width: 768px) {
+        .profile-info-grid {
+            grid-template-columns: 1fr;
         }
-
-        .group-info p {
-        margin: 2px 0 0;
-        font-size: 13px;
-        color: #ffffff;
-        text-align: right
+        .tabs {
+            flex-direction: column;
         }
-
-        .table-bordered i{
-            margin-right: .5rem
+        .tab {
+            width: 100%;
         }
-        
-        .btn-warning{
-                display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-        }
-        
-        .fas {
-                margin: 0 !important;
-
-        }
-
-
-  .tabs {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0;
-    border-bottom: 2px solid #ccc;
-    direction: rtl
-  }
-  a{
-    text-decoration: none;
-    color: #333
-  }
-  .tab {
-    padding: 0.7rem 1.5rem;
-    cursor: pointer;
-    font-weight: bold;
-    border-radius: 1rem 1rem 0 0;
-    background: #e0e0e0;
-    margin-left: 5px;
-    width: 25%;
-    text-align: center;
-    transition: background-color 0.3s ease;
-  }
-  .tab:hover {
-    background-color: #d0d0d0;
-  }
-  .tab.active {background: #d97930;
-    background: linear-gradient(90deg, rgb(210, 134, 75) 0%, rgba(239, 150, 81, 1) 100%);
-    color: white;
-  }
-  .tab-content {
-    direction: rtl;
-    display: none;
-    background: white;
-    padding: 1rem;
-    border-radius: 0 0 1rem 1rem;
-    box-shadow: 0 0 10px rgba(0,0,0,0.05);
-    transition: all 0.3s ease-in-out;
-  }
-  .groups-table
-  {
-    width: 100%;
-  }
-  .tab-content.active {
-    display: block;
-  }
-
-  .collapsible-group{
-    display: flex;
-    justify-content: space-between;
-    align-items: start
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  th, td {
-    border: 1px solid #ccc;
-    padding: 0.5rem;
-    text-align: center;
-  }
-  th {
-    background-color: #f1f1f1;
-  }
-  .collapsible-group {
-    display: none;
-    margin-bottom: 1rem;
-    transition: all 0.3s ease-in-out;
-  }
-  .table-bordered>:not(caption)>*{
-    border-width: .2rem !important
-  }
-  .toggle-header {
-    cursor: pointer;
-    background-color: #f1f1f1;
-    padding: 0.7rem 1rem;
-    border-radius: 0.5rem;
-    margin-top: 1rem;
-    font-weight: bold;
-  }
-
-  .toggle-header:hover {
-    background-color: #e0e0e0;
-  }
-
-  .arrow-icon {
-    transition: transform 0.3s ease;
-    margin-right: 8px;
-  }
-
-  .arrow-icon.rotate {
-    transform: rotate(180deg);
-  }
-
-  .toggle-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    background: #f1f1f1;
-    padding: 0.7rem 1rem;
-    border-radius: 0.5rem;
-    margin-top: 1rem;
-    font-weight: bold;
-  }
-  
-  @media screen and (max-width: 990px) {
-    .tabs{
-      flex-wrap: wrap
     }
-
-    .tab{
-      width: 100%;
-      border-radius: .5rem;
-      margin-bottom: 1rem
-    }
-
-    .collapsible-group{
-      flex-direction: column
-    }
-    .location-filters{
-      width: 100%;
-      margin-left: 0 !important;
-    }
-
-    .location-filter-wrapper{
-      width: 100%;
-      margin-bottom: 1rem
-    }
-    .location-filters .roww{
-      display: flex;
-      justify-content: space-between
-    }
-    .location-tab
-    {
-      width: 48%;
-    }
-  }
-  .location-filter-wrapper {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-}
-
-.sub-tabs, .location-filters {
-  display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-}
-
-.location-filters {
-  flex-direction: column;
-  margin-left: 1rem;
-}
-
-.sub-tab, .location-tab {
-  padding: 0.5rem 1rem;
-  background-color: #eee;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: 0.3s;
-  font-size: 0.85rem;
-  white-space: nowrap;
-  margin-bottom: .3rem
-}
-
-.sub-tab.active, .location-tab.active {
-  background-color: #4b94c7;
-  color: white;
-}
-    /* استایل زیرتب‌ها */
-    .sub-tabs .sub-tab {
-        padding: 0.25rem 0.5rem; /* کوچک‌تر */
-        font-size: 0.85rem; /* سایز فونت کمتر */
-        border-radius: 0.4rem;
-        transition: all 0.2s ease-in-out;
-        width: auto;
-    }
-
-    /* حالت انتخاب‌شده */
-    .sub-tabs .sub-tab.active {
-        background-color: #d97930 !important; /* آبی بوت‌استرپ */
-        color: #fff !important;
-        border-color: #0d6efd !important;
-        box-shadow: 0 0 4px rgba(0,0,0,0.2);
-    }
-
-    /* هاور زیباتر */
-    .sub-tabs .sub-tab:hover {
-        background-color: #e7f0ff;
-    }
-
 </style>
+@endpush
 
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-
-@endsection
 @section('content')
-<div class="container" style="direction: rtl; text-align: right;">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <!-- کارت اطلاعات کاربر -->
-            <div class="card">
-                <div class="card-header text-center bg-primary text-white">
-                    حساب کاربری شما
+<div class="container mx-auto px-4 py-6">
+    <!-- User Profile Section -->
+    <div class="user-profile-section">
+        <div class="profile-header">
+            <h1>حساب کاربری شما</h1>
+            <div class="profile-picture-container">
+                {!! $user->profile() !!}
+            </div>
+            
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                <a href="{{ route('profile.edit') }}" 
+                   class="bg-earth-green text-pure-white px-6 py-2 rounded-full shadow-md hover:bg-dark-green transition duration-300 font-medium transform hover:scale-105">
+                    <i class="fas fa-edit ml-2"></i>ویرایش اطلاعات
+                </a>
+                <a href="{{ url('/profile-member/' . auth()->user()->id) }}" 
+                   class="bg-ocean-blue text-pure-white px-6 py-2 rounded-full shadow-md hover:bg-dark-blue transition duration-300 font-medium transform hover:scale-105">
+                    <i class="fas fa-eye ml-2"></i>پیش نمایش پروفایل من
+                </a>
+            </div>
+        </div>
+
+        @if(session('success'))
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline">{{ session('success') }}</span>
+            </div>
+        @endif
+
+        <!-- Chat Requests -->
+        @if($chatRequests->isNotEmpty())
+            <div class="request-card">
+                <div class="request-card-header">
+                    <i class="fas fa-comments ml-2" style="color: var(--color-earth-green);"></i>
+                    درخواست‌های چت
                 </div>
-                <div class="card-body">
-                    <div class="text-center mb-4" style="display: flex; justify-content: center;"> 
-                        <!-- تصویر پروفایل -->
-                        {!! $user->profile() !!}
-                    </div>
-                    
-                                            <div style='display: flex;'>
-                                                <a href="{{ route('profile.edit') }}" class="btn btn-primary">ویرایش اطلاعات</a>
-                    <a class='btn' href='{{ url('/profile-member/' . auth()->user()->id) }}'>پیش نمایش پروفایل من</a>
-                                            </div><br>
-
-                    
-                    @if(session('success'))
-                        <div class="alert alert-success">{{ session('success') }}</div>
-                    @endif
-
-                            @if($chatRequests->isNotEmpty())
-
-                    <!-- نمایش درخواست‌های چت -->
-                    <div class="card mb-3">
-                        <div class="card-header bg-primary text-white">
-                            درخواست‌های چت
-                        </div>
-                        <div class="card-body">
-                            @if($chatRequests->isNotEmpty())
-                                <div class="list-group">
-                                    @foreach($chatRequests as $request)
-                                        <div class="list-group-item">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <h6 class="mb-1">{{ $request->sender->fullName() }}</h6>
-                                                    <small class="text-muted">{{ verta($request->created_at)->format('Y-m-d H:i') }}</small>
-                                                </div>
-                                                <div class="d-flex gap-2">
-                                                    <form action="{{ route('chat-requests.accept', $request->id) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-success btn-sm">
-                                                            <i class="fas fa-check"></i> پذیرفتن
-                                                        </button>
-                                                    </form>
-                                                    <form action="{{ route('chat-requests.reject', $request->id) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-danger btn-sm">
-                                                            <i class="fas fa-times"></i> رد کردن
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @else
-                                <div class="alert alert-info mb-0">
-                                    <i class="fas fa-info-circle"></i> درخواست چت جدیدی وجود ندارد
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                    
-                    @endif
-
-                    @foreach ($candidates as $candidate)
-                        @php
-                            $role = \App\Models\Vote::where('candidate_id', $candidate->user_id)->where('election_id', $candidate->election_id)->first();
-                        @endphp
-                        <div class="row">
-                            <h5 style="padding: 1rem; text-align: center;    border-top: 1px solid var(--bs-secondary-bg);
-                            border-right: 1px solid var(--bs-secondary-bg);
-                            border-left: 1px solid var(--bs-secondary-bg);
-                            margin: 0;">شما به عنوان {{ $role->position == 0 ? 'بازرس' : 'مدیر' }} در گروه {{ $candidate->election->group->name }} پذیرفته شدید</h5>
-                            <table class="table table-bordered">
-                                
-                                <tr>
-                                    <td>
-                                        <a href="{{ route('profile.accept.candidate', ['accept', 'id' => $candidate->id]) }}" style="width: 100%" class="btn btn-success">میپذیرم</a>
-                                    </td>
-                                    <th>
-                                        <a href="{{ route('profile.accept.candidate', ['reject', 'id' => $candidate->id]) }}" style="width: 100%" class="btn btn-danger">نمی پذیرم</a>
-                                    </th>
-                                </tr>
-                            </table>
+                <div class="space-y-3">
+                    @foreach($chatRequests as $request)
+                        <div class="flex justify-between items-center p-3 bg-light-gray rounded-lg">
+                            <div>
+                                <h6 class="font-semibold text-gentle-black">{{ $request->sender->fullName() }}</h6>
+                                <small class="text-gray-500">{{ verta($request->created_at)->format('Y-m-d H:i') }}</small>
+                            </div>
+                            <div class="flex gap-2">
+                                <form action="{{ route('chat-requests.accept', $request->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition">
+                                        <i class="fas fa-check ml-2"></i>پذیرفتن
+                                    </button>
+                                </form>
+                                <form action="{{ route('chat-requests.reject', $request->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
+                                        <i class="fas fa-times ml-2"></i>رد کردن
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     @endforeach
-
-                        @if($joinGroupRequests->isNotEmpty())
-
-
-                <div class="card mb-3">
-                    <div class="card-header bg-primary text-white">
-                        درخواست‌های افزودن به گروه
-                    </div>
-                    <div class="card-body">
-                        @if($joinGroupRequests->isNotEmpty())
-                            <div class="list-group">
-                                @foreach ($joinGroupRequests as $request)
-                                <div class="row">
-                                    <h5 style="padding: 1rem; text-align: center; 
-                                            border-top: 1px solid var(--bs-secondary-bg);
-                                            border-right: 1px solid var(--bs-secondary-bg);
-                                            border-left: 1px solid var(--bs-secondary-bg);
-                                            margin: 0;">
-                                       شما درخواست پیوستن به گروه {{ $request->group->name }} دریافت کرده اید.
-                                    </h5>
-                                    <table class="table table-bordered">
-                                        <tr>
-                                            <td>
-                                                <a href="{{ route('profile.join.group', ['1', 'id' => $request->id]) }}" 
-                                                style="width: 100%" class="btn btn-success">میپذیرم</a>
-                                            </td>
-                                            <th>
-                                                <a href="{{ route('profile.join.group', ['0', 'id' => $request->id]) }}" 
-                                                style="width: 100%" class="btn btn-danger">نمی‌پذیرم</a>
-                                            </th>
-                                        </tr>
-                                    </table>
-                                </div>
-                            @endforeach
-                            </div>
-                        @else
-                            <div class="alert alert-info mb-0">
-                                <i class="fas fa-info-circle"></i> درخواست افزودن به گروهی وجود ندارد
-                            </div>
-                        @endif
-                    </div>
                 </div>
+            </div>
+        @endif
 
-                                            @endif
+        <!-- Candidates -->
+        @foreach ($candidates as $candidate)
+            @php
+                $role = \App\Models\Vote::where('candidate_id', $candidate->user_id)->where('election_id', $candidate->election_id)->first();
+            @endphp
+            <div class="request-card">
+                <h5 class="text-center mb-4 font-semibold">
+                    شما به عنوان {{ $role->position == 0 ? 'بازرس' : 'مدیر' }} در گروه {{ $candidate->election->group->name }} پذیرفته شدید
+                </h5>
+                <div class="flex gap-3">
+                    <a href="{{ route('profile.accept.candidate', ['accept', 'id' => $candidate->id]) }}" 
+                       class="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg text-center hover:bg-green-600 transition">
+                        می‌پذیرم
+                    </a>
+                    <a href="{{ route('profile.accept.candidate', ['reject', 'id' => $candidate->id]) }}" 
+                       class="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg text-center hover:bg-red-600 transition">
+                        نمی‌پذیرم
+                    </a>
+                </div>
+            </div>
+        @endforeach
 
-                    <table class="table table-bordered">
-                        <tr>
-                            <th>نام:</th>
-                            <td>{{ Auth::user()->fullName() }}</td>
-                            <td><a href="{{ route('profile.show.info', ['field' => 'name']) }}" class="btn btn-warning"><i class="{{ Auth::user()->show_name == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i></a></td>
-                        </tr>
-                        <tr>
-                            <th>ایمیل:</th>
-                            <td>{{ Auth::user()->email }}</td>
-                            <td><a href="{{ route('profile.show.info', ['field' => 'email']) }}" class="btn btn-warning"><i class="{{ Auth::user()->show_email == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i></a></td>
-                        </tr>
+        <!-- Join Group Requests -->
+        @if($joinGroupRequests->isNotEmpty())
+            <div class="request-card">
+                <div class="request-card-header">
+                    <i class="fas fa-user-plus ml-2" style="color: var(--color-earth-green);"></i>
+                    درخواست‌های افزودن به گروه
+                </div>
+                <div class="space-y-3">
+                    @foreach ($joinGroupRequests as $request)
+                        <div class="p-4 bg-light-gray rounded-lg">
+                            <h5 class="text-center mb-4 font-semibold">
+                                شما درخواست پیوستن به گروه {{ $request->group->name }} دریافت کرده‌اید.
+                            </h5>
+                            <div class="flex gap-3">
+                                <a href="{{ route('profile.join.group', ['1', 'id' => $request->id]) }}" 
+                                   class="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg text-center hover:bg-green-600 transition">
+                                    می‌پذیرم
+                                </a>
+                                <a href="{{ route('profile.join.group', ['0', 'id' => $request->id]) }}" 
+                                   class="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg text-center hover:bg-red-600 transition">
+                                    نمی‌پذیرم
+                                </a>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
-                        <tr>
-                            <th>شماره تماس:</th>
-                            <td>{{ Auth::user()->phone }}</td>
-                            <td><a href="{{ route('profile.show.info', ['field' => 'phone']) }}" class="btn btn-warning"><i class="{{ Auth::user()->show_phone == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i></a></td>
-                        </tr>
-                        <tr>
-                            <th>تاریخ تولد:</th>
-                            <td>{{ verta(Auth::user()->birth_date)->format('Y-m-d') }}</td>
-                            <td><a href="{{ route('profile.show.info', ['field' => 'birthdate']) }}" class="btn btn-warning"><i class="{{ Auth::user()->show_birthdate == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i></a></td>
-                        </tr>
+        <!-- Profile Info Grid -->
+        <div class="profile-info-grid">
+            <!-- Name -->
+            <div class="info-item">
+                <div class="info-actions">
+                    <a href="{{ route('profile.show.info', ['field' => 'name']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                        <i class="{{ Auth::user()->show_name == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
+                    </a>
+                </div>
+                <span class="info-label"><i class="fas fa-signature"></i>نام:</span>
+                <span class="info-value">{{ Auth::user()->fullName() }}</span>
+            </div>
 
-                        <tr>
-                            <th>جنسیت:</th>
-                            <td>{{ Auth::user()->gender == 'male' ? 'مرد' : 'زن' }}</td>
-                            <td><a href="{{ route('profile.show.info', ['field' => 'gender']) }}" class="btn btn-warning"><i class="{{ Auth::user()->show_gender == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i></a></td>
-                        </tr>
-                        <tr>
-                            <th>کد ملی:</th>
-                            <td>{{ Auth::user()->national_id }}</td>
-                            <td><a href="{{ route('profile.show.info', ['field' => 'national_id']) }}" class="btn btn-warning"><i class="{{ Auth::user()->show_national_id == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i></a></td>
-                        </tr>
-                        <tr>
-                            <th>بیوگرافی:</th>
-                            <td>{{ Auth::user()->biografie == null ? '-' : Auth::user()->biografie }}</td>
-                            @if (Auth::user()->biografie == null)
-                                
-                            @else
-                                <td><a href="{{ route('profile.show.info', ['field' => 'biografie']) }}" class="btn btn-warning"><i class="{{ Auth::user()->show_biografie == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i></a></td>
-                            @endif
-                        </tr>
-                        <tr>
-                            <th>مدارک:</th>
-                            <td style='    display: flex;
-    align-items: center;
-    justify-content: space-between;'>@if(Auth::user()->documents == null) - @else 
-                                @foreach(explode(',', auth()->user()->documents) as $file)
-                                   @if(explode('.', $file)[1] == 'png' OR explode('.', $file)[1] == 'jpg' Or explode('.', $file)[1] == 'jpeg')
-                                                                            <div>
+            <!-- Email -->
+            <div class="info-item">
+                <div class="info-actions">
+                    <a href="{{ route('profile.show.info', ['field' => 'email']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                        <i class="{{ Auth::user()->show_email == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
+                    </a>
+                </div>
+                <span class="info-label"><i class="fas fa-at"></i>ایمیل:</span>
+                <span class="info-value">{{ Auth::user()->email }}</span>
+            </div>
 
-                                            <img src='{{ asset('images/users/documents/' . $file) }}' width='100'>
-                                            <a href="{{ asset('images/users/documents/' . $file) }}" class='btn btn-warning' style='margin: 0;
-    margin-top: .5rem;' download><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
-  <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
-  <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/>
-</svg></a>
-</div>
-                                        @else
-                                                                            <div>
+            <!-- Phone -->
+            <div class="info-item">
+                <div class="info-actions">
+                    <a href="{{ route('profile.show.info', ['field' => 'phone']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                        <i class="{{ Auth::user()->show_phone == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
+                    </a>
+                </div>
+                <span class="info-label"><i class="fas fa-phone"></i>شماره تماس:</span>
+                <span class="info-value">{{ Auth::user()->phone }}</span>
+            </div>
 
-                                            <img src='https://www.svgrepo.com/show/452084/pdf.svg' width='100'>
-                                            <a href="{{ asset('images/users/documents/' . $file) }}" class='btn btn-warning' style='margin: 0;
-    margin-top: .5rem;' download><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
-  <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
-  <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/>
-</svg></a>
-</div>
-                                        @endif
-                                @endforeach
-                            @endif</td>
-                            
-                            @if (Auth::user()->documents == null)
-                                
-                            @else
-                            <td><a href="{{ route('profile.show.info', ['field' => 'documents']) }}" class="btn btn-warning"><i class="{{ Auth::user()->show_documents == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i></a></td>
-                            @endif
-                        </tr>
-                        <tr>
-                            <th>تاریخ ثبت نام:</th>
-                            <td>{{ verta(Auth::user()->created_at)->format('Y-m-d') }}</td>
-                            <td><a href="{{ route('profile.show.info', ['field' => 'created_at']) }}" class="btn btn-warning"><i class="{{ Auth::user()->show_birthdate == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i></a></td>
-                        </tr>
-                        <tr>
-                            <th>گروه ها:</th>
-                            <td>{{ Auth::user()->groups->count() . ' گروه ' }}</td>
-                            <td><a href="{{ route('profile.show.info', ['field' => 'groups']) }}" class="btn btn-warning"><i class="{{ Auth::user()->show_groups == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i></a></td>
-                        </tr>
-                        
-                        <tr>
-                            <th>شبکه های اجتماعی:</th>
-                             @php
+            <!-- Birthdate -->
+            <div class="info-item">
+                <div class="info-actions">
+                    <a href="{{ route('profile.show.info', ['field' => 'birthdate']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                        <i class="{{ Auth::user()->show_birthdate == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
+                    </a>
+                </div>
+                <span class="info-label"><i class="fas fa-calendar-alt"></i>تاریخ تولد:</span>
+                <span class="info-value">{{ verta(Auth::user()->birth_date)->format('Y-m-d') }}</span>
+            </div>
+
+            <!-- Gender -->
+            <div class="info-item">
+                <div class="info-actions">
+                    <a href="{{ route('profile.show.info', ['field' => 'gender']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                        <i class="{{ Auth::user()->show_gender == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
+                    </a>
+                </div>
+                <span class="info-label"><i class="fas fa-venus-mars"></i>جنسیت:</span>
+                <span class="info-value">{{ Auth::user()->gender == 'male' ? 'مرد' : 'زن' }}</span>
+            </div>
+
+            <!-- National ID -->
+            <div class="info-item">
+                <div class="info-actions">
+                    <a href="{{ route('profile.show.info', ['field' => 'national_id']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                        <i class="{{ Auth::user()->show_national_id == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
+                    </a>
+                </div>
+                <span class="info-label"><i class="fas fa-id-card"></i>کد ملی:</span>
+                <span class="info-value">{{ Auth::user()->national_id }}</span>
+            </div>
+
+            <!-- Biography -->
+            <div class="info-item" style="grid-column: 1 / -1;">
+                <div class="info-actions">
+                    @if (Auth::user()->biografie != null)
+                        <a href="{{ route('profile.show.info', ['field' => 'biografie']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                            <i class="{{ Auth::user()->show_biografie == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
+                        </a>
+                    @endif
+                </div>
+                <span class="info-label"><i class="fas fa-book"></i>بیوگرافی:</span>
+                <span class="info-value">{{ Auth::user()->biografie == null ? '-' : Auth::user()->biografie }}</span>
+            </div>
+
+            <!-- Documents -->
+            <div class="info-item" style="grid-column: 1 / -1;">
+                <div class="info-actions">
+                    @if (Auth::user()->documents != null)
+                        <a href="{{ route('profile.show.info', ['field' => 'documents']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                            <i class="{{ Auth::user()->show_documents == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
+                        </a>
+                    @endif
+                </div>
+                <span class="info-label"><i class="fas fa-file-invoice"></i>مدارک:</span>
+                <div class="documents-list info-value">
+                    @if(Auth::user()->documents == null)
+                        <span>-</span>
+                    @else
+                        @foreach(explode(',', auth()->user()->documents) as $file)
+                            @php
+                                $extension = explode('.', $file)[1] ?? '';
+                                $isImage = in_array(strtolower($extension), ['png', 'jpg', 'jpeg']);
+                            @endphp
+                            <div class="document-item">
+                                @if($isImage)
+                                    <i class="fas fa-file-image"></i>
+                                    <img src="{{ asset('images/users/documents/' . $file) }}" width="50" class="rounded">
+                                @else
+                                    <i class="fas fa-file-pdf"></i>
+                                @endif
+                                <span>{{ $file }}</span>
+                                <a href="{{ asset('images/users/documents/' . $file) }}" download class="text-earth-green hover:text-dark-green">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </div>
+                        @endforeach
+                    @endif
+                </div>
+            </div>
+
+            <!-- Created At -->
+            <div class="info-item">
+                <div class="info-actions">
+                    <a href="{{ route('profile.show.info', ['field' => 'created_at']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                        <i class="{{ Auth::user()->show_created_at == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
+                    </a>
+                </div>
+                <span class="info-label"><i class="fas fa-calendar-check"></i>تاریخ ثبت نام:</span>
+                <span class="info-value">{{ verta(Auth::user()->created_at)->format('Y-m-d') }}</span>
+            </div>
+
+            <!-- Groups Count -->
+            <div class="info-item">
+                <div class="info-actions">
+                    <a href="{{ route('profile.show.info', ['field' => 'groups']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                        <i class="{{ Auth::user()->show_groups == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
+                    </a>
+                </div>
+                <span class="info-label"><i class="fas fa-users-cog"></i>گروه‌ها:</span>
+                <span class="info-value">{{ Auth::user()->groups->count() }} گروه</span>
+            </div>
+
+            <!-- Social Networks -->
+            <div class="info-item" style="grid-column: 1 / -1;">
+                <div class="info-actions">
+                    <a href="{{ route('profile.show.info', ['field' => 'social']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                        <i class="{{ Auth::user()->show_social_networks == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
+                    </a>
+                </div>
+                <span class="info-label"><i class="fas fa-share-alt"></i>شبکه‌های اجتماعی:</span>
+                <div class="social-media-list info-value">
+                    @php
                         $storedLinks = $user->social_networks ?? [];
                         if (is_string($storedLinks)) {
                             $storedLinks = json_decode($storedLinks, true);
                         }
                         $socialLinks = old('options', $storedLinks);
                     @endphp
-                           
-                        
-                            <td style='    max-width: 1rem;'> 
-                                <table class="table table-bordered table-striped">
-    <tbody>
-        @forelse($socialLinks as $index => $link)
-            <tr>
-                <td style="width: 5%; text-align: center;">{{ $index + 1 }}</td>
-                <td>
-                    <a href="{{ $link }}" target="_blank" style="text-decoration: none; color: #333;">
-                        {{ $link }}
-                    </a>
-                </td>
-            </tr>
-        @empty
-            <tr>
-                <td colspan="2" class="text-center text-muted">هیچ لینک اجتماعی ثبت نشده است.</td>
-            </tr>
-        @endforelse
-    </tbody>
-</table>
-
-                            </td>
-                            <td><a href="{{ route('profile.show.info', ['field' => 'social']) }}" class="btn btn-warning"><i class="{{ Auth::user()->show_social_networks == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i></a></td>
-                        </tr>
-                    </table>
-                    
-                </div> 
+                    @forelse($socialLinks as $index => $link)
+                        <span class="social-media-item">
+                            <i class="fas fa-link"></i>
+                            <a href="{{ $link }}" target="_blank" style="text-decoration: none; color: inherit;">{{ $link }}</a>
+                        </span>
+                    @empty
+                        <span class="text-gray-500">هیچ لینک اجتماعی ثبت نشده است.</span>
+                    @endforelse
+                </div>
             </div>
+        </div>
+    </div>
 
-                        <!-- کارت فعالیت‌های کاربر -->
-
-<br>
-
-@php
-    // برچسب‌های زیرتب آدرس
-$levelTabs = [
-    'global'       => 'جهانی',
-    'continent'    => 'قاره‌ای',
-    'country'      => 'کشوری',
-    'province'     => 'استانی',
-    'county'       => 'شهرستانی',
-    'section'      => 'بخشی',
-    'city'         => 'شهری/ دهستانی',
-    'region'       => 'منطقه‌ای/ روستایی',
-    'neighborhood' => 'محله‌ای',
-];
-
-@endphp
-
-<div class="tabs">
-    <div class="tab active" data-tab="generalGroups">گروه‌های مجمع عمومی</div>
-    <div class="tab" data-tab="specialityGroups">گروه‌های شغلی و صنفی</div>
-    <div class="tab" data-tab="experienceGroups">گروه‌های علمی و تجربی</div>
-    <div class="tab" data-tab="ageGroups">گروه‌های سنی</div>
-    <div class="tab" data-tab="genderGroups">گروه‌های جنسیتی</div>
-</div>
-
-{{-- گروه‌های مجمع عمومی --}}
-<div class="tab-content active" id="generalGroups">
-    @include('partials.group_list', ['groups' => $generalGroups, 'user' => $user])
-</div>
-
-{{-- گروه‌های شغلی و صنفی --}}
-<div class="tab-content" id="specialityGroups">
-    @if($specialityGroups->isNotEmpty())
+    <!-- Groups Section - حفظ منطق فعلی -->
+    <div class="groups-section">
+        <h2>گروه‌های همکاری</h2>
+        
         @php
-            $groupsByLevel = $specialityGroups->groupBy('location_level');
-            $firstSpecActive = null;
+            // برچسب‌های زیرتب آدرس - حفظ منطق فعلی
+            $levelTabs = [
+                'global'       => 'جهانی',
+                'continent'    => 'قاره‌ای',
+                'country'      => 'کشوری',
+                'province'     => 'استانی',
+                'county'       => 'شهرستانی',
+                'section'      => 'بخشی',
+                'city'         => 'شهری/ دهستانی',
+                'region'       => 'منطقه‌ای/ روستایی',
+                'neighborhood' => 'محله‌ای',
+            ];
         @endphp
 
-        <div class="sub-tabs d-flex flex-wrap gap-2 mb-3" dir="rtl">
-            @foreach($levelTabs as $lvl => $label)
-                @php
-                    $hasAny = isset($groupsByLevel[$lvl]) && $groupsByLevel[$lvl]->isNotEmpty();
-                    if ($hasAny && is_null($firstSpecActive)) $firstSpecActive = "spec-lvl-$lvl";
-                @endphp
-                @if($hasAny)
-                    <button class="sub-tab btn btn-sm btn-outline-primary" data-subtab="spec-lvl-{{ $lvl }}">{{ $label }}</button>
-                @endif
-            @endforeach
+        <!-- Tab Buttons - حفظ منطق فعلی -->
+        <div class="tabs">
+            <div class="tab active" data-tab="generalGroups">گروه‌های مجمع عمومی</div>
+            <div class="tab" data-tab="specialityGroups">گروه‌های شغلی و صنفی</div>
+            <div class="tab" data-tab="experienceGroups">گروه‌های علمی و تجربی</div>
+            <div class="tab" data-tab="ageGroups">گروه‌های سنی</div>
+            <div class="tab" data-tab="genderGroups">گروه‌های جنسیتی</div>
         </div>
 
-        @foreach($levelTabs as $lvl => $label)
-            @php $collection = $groupsByLevel[$lvl] ?? collect(); @endphp
-            @if($collection->isNotEmpty())
-                <div class="sub-tab-content {{ $firstSpecActive === "spec-lvl-$lvl" ? '' : 'd-none' }}" id="spec-lvl-{{ $lvl }}">
-                    @include('partials.group_list', ['groups' => $collection, 'user' => $user])
-                </div>
-            @endif
-        @endforeach
-    @endif
-</div>
-
-{{-- گروه‌های علمی و تجربی --}}
-<div class="tab-content" id="experienceGroups">
-    @if($experienceGroups->isNotEmpty())
-        @php
-            $groupsByLevel = $experienceGroups->groupBy('location_level');
-            $firstExpActive = null;
-        @endphp
-
-        <div class="sub-tabs d-flex flex-wrap gap-2 mb-3" dir="rtl">
-            @foreach($levelTabs as $lvl => $label)
-                @php
-                    $hasAny = isset($groupsByLevel[$lvl]) && $groupsByLevel[$lvl]->isNotEmpty();
-                    if ($hasAny && is_null($firstExpActive)) $firstExpActive = "exp-lvl-$lvl";
-                @endphp
-                @if($hasAny)
-                    <button class="sub-tab btn btn-sm btn-outline-primary" data-subtab="exp-lvl-{{ $lvl }}">{{ $label }}</button>
-                @endif
-            @endforeach
+        <!-- Tab Contents - حفظ منطق فعلی -->
+        {{-- گروه‌های مجمع عمومی --}}
+        <div class="tab-content active" id="generalGroups">
+            @include('partials.group_list', ['groups' => $generalGroups, 'user' => $user])
         </div>
 
-        @foreach($levelTabs as $lvl => $label)
-            @php $collection = $groupsByLevel[$lvl] ?? collect(); @endphp
-            @if($collection->isNotEmpty())
-                <div class="sub-tab-content {{ $firstExpActive === "exp-lvl-$lvl" ? '' : 'd-none' }}" id="exp-lvl-{{ $lvl }}">
-                    @include('partials.group_list', ['groups' => $collection, 'user' => $user])
+        {{-- گروه‌های شغلی و صنفی --}}
+        <div class="tab-content" id="specialityGroups">
+            @if($specialityGroups->isNotEmpty())
+                @php
+                    $groupsByLevel = $specialityGroups->groupBy('location_level');
+                    $firstSpecActive = null;
+                @endphp
+
+                <div class="sub-tabs d-flex flex-wrap gap-2 mb-3" dir="rtl">
+                    @foreach($levelTabs as $lvl => $label)
+                        @php
+                            $hasAny = isset($groupsByLevel[$lvl]) && $groupsByLevel[$lvl]->isNotEmpty();
+                            if ($hasAny && is_null($firstSpecActive)) $firstSpecActive = "spec-lvl-$lvl";
+                        @endphp
+                        @if($hasAny)
+                            <button class="sub-tab btn btn-sm btn-outline-primary" data-subtab="spec-lvl-{{ $lvl }}">{{ $label }}</button>
+                        @endif
+                    @endforeach
                 </div>
+
+                @foreach($levelTabs as $lvl => $label)
+                    @php $collection = $groupsByLevel[$lvl] ?? collect(); @endphp
+                    @if($collection->isNotEmpty())
+                        <div class="sub-tab-content {{ $firstSpecActive === "spec-lvl-$lvl" ? '' : 'd-none' }}" id="spec-lvl-{{ $lvl }}">
+                            @include('partials.group_list', ['groups' => $collection, 'user' => $user])
+                        </div>
+                    @endif
+                @endforeach
             @endif
-        @endforeach
-    @endif
+        </div>
+
+        {{-- گروه‌های علمی و تجربی --}}
+        <div class="tab-content" id="experienceGroups">
+            @if($experienceGroups->isNotEmpty())
+                @php
+                    $groupsByLevel = $experienceGroups->groupBy('location_level');
+                    $firstExpActive = null;
+                @endphp
+
+                <div class="sub-tabs d-flex flex-wrap gap-2 mb-3" dir="rtl">
+                    @foreach($levelTabs as $lvl => $label)
+                        @php
+                            $hasAny = isset($groupsByLevel[$lvl]) && $groupsByLevel[$lvl]->isNotEmpty();
+                            if ($hasAny && is_null($firstExpActive)) $firstExpActive = "exp-lvl-$lvl";
+                        @endphp
+                        @if($hasAny)
+                            <button class="sub-tab btn btn-sm btn-outline-primary" data-subtab="exp-lvl-{{ $lvl }}">{{ $label }}</button>
+                        @endif
+                    @endforeach
+                </div>
+
+                @foreach($levelTabs as $lvl => $label)
+                    @php $collection = $groupsByLevel[$lvl] ?? collect(); @endphp
+                    @if($collection->isNotEmpty())
+                        <div class="sub-tab-content {{ $firstExpActive === "exp-lvl-$lvl" ? '' : 'd-none' }}" id="exp-lvl-{{ $lvl }}">
+                            @include('partials.group_list', ['groups' => $collection, 'user' => $user])
+                        </div>
+                    @endif
+                @endforeach
+            @endif
+        </div>
+
+        {{-- گروه‌های سنی --}}
+        <div class="tab-content" id="ageGroups">
+            @include('partials.group_list', ['groups' => $ageGroups, 'user' => $user])
+        </div>
+
+        {{-- گروه‌های جنسیتی --}}
+        <div class="tab-content" id="genderGroups">
+            @include('partials.group_list', ['groups' => $genderGroups, 'user' => $user])
+        </div>
+    </div>
 </div>
 
-{{-- گروه‌های سنی --}}
-<div class="tab-content" id="ageGroups">
-    @include('partials.group_list', ['groups' => $ageGroups, 'user' => $user])
-</div>
-
-{{-- گروه‌های جنسیتی --}}
-<div class="tab-content" id="genderGroups">
-    @include('partials.group_list', ['groups' => $genderGroups, 'user' => $user])
-</div>
-
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // تب‌های اصلی
+    // تب‌های اصلی - حفظ منطق فعلی
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.tab').forEach(i => i.classList.remove('active'));
@@ -630,7 +830,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // زیرتب‌ها
+    // زیرتب‌ها - حفظ منطق فعلی
     document.querySelectorAll('.sub-tabs').forEach(subTabsWrap => {
         const subTabBtns = subTabsWrap.querySelectorAll('.sub-tab');
         const parentContent = subTabsWrap.closest('.tab-content');
@@ -638,9 +838,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         subTabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
-                subTabBtns.forEach(b => b.classList.remove('btn-primary'));
+                subTabBtns.forEach(b => b.classList.remove('btn-primary', 'active'));
                 contents.forEach(cnt => cnt.classList.add('d-none'));
-                btn.classList.add('btn-primary');
+                btn.classList.add('btn-primary', 'active');
                 const target = parentContent.querySelector('#' + btn.getAttribute('data-subtab'));
                 if (target) target.classList.remove('d-none');
             });
@@ -649,53 +849,29 @@ document.addEventListener('DOMContentLoaded', () => {
         // فعال‌سازی پیش‌فرض اولین زیرتب
         if (subTabBtns.length) {
             const first = subTabBtns[0];
-            first.classList.add('btn-primary');
+            first.classList.add('btn-primary', 'active');
             const firstContent = parentContent.querySelector('#' + first.getAttribute('data-subtab'));
             if (firstContent) firstContent.classList.remove('d-none');
         }
     });
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
+
+    // Handler اضافی برای زیرتب‌ها - حفظ منطق فعلی
     document.querySelectorAll('.sub-tab').forEach(stab => {
         stab.addEventListener('click', () => {
             const parent = stab.closest('.tab-content');
 
             // حذف active از همه دکمه‌ها
-            parent.querySelectorAll('.sub-tab').forEach(btn => btn.classList.remove('active'));
+            parent.querySelectorAll('.sub-tab').forEach(btn => btn.classList.remove('active', 'btn-primary'));
 
             // مخفی کردن همه محتواها
             parent.querySelectorAll('.sub-tab-content').forEach(cnt => cnt.classList.add('d-none'));
 
             // فعال کردن دکمه و نمایش محتوای مربوطه
-            stab.classList.add('active');
+            stab.classList.add('active', 'btn-primary');
             document.getElementById(stab.getAttribute('data-subtab')).classList.remove('d-none');
         });
     });
 });
 </script>
-
-            <!-- کارت ارسال کد دعوت -->
-            {{-- <div class="card mt-4">
-                <div class="card-header bg-success text-white">
-                    ارسال کد دعوت
-                </div>
-                <div class="card-body">
-                    <form action="{{ route('profile.send.invitation') }}" method="POST">
-                        @csrf
-                        <div class="mb-3">
-                            <label for="invite_email" class="form-label">ایمیل دعوت:</label>
-                            <input type="email" name="invite_email" id="invite_email" class="form-control @error('invite_email') is-invalid @enderror" required>
-                            @error('invite_email')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <button type="submit" class="btn btn-primary">ارسال دعوت</button>
-                    </form>
-                </div>
-            </div> --}}
-        </div>
-    </div>
-</div>
+@endpush
 @endsection

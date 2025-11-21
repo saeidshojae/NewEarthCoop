@@ -60,12 +60,21 @@ class EmailVerificationController extends Controller
         $user = User::where('email', $email)->first();
         $user->email_verified_at = Carbon::now();
         $user->save();
+
+        // award reputation for email verification
+        try {
+            app(\App\Services\ReputationService::class)->applyAction($user, 'email_verified', ['email' => $email], null, 'auth');
+        } catch (\Throwable $e) {
+            \Log::error('Reputation applyAction failed (email_verified): ' . $e->getMessage());
+        }
         
         // حذف کد تأیید
         $verification->delete();
         
+        // Login و هدایت مستقیم به Step1 با پیام تبریک
+        auth()->login($user);
         return redirect()->route('register.step1')
-                        ->with('success', 'سهامدار عزیز، تبریک! شما با موفقیت به EarthCoop پیوستید. دنیای همکاری های بزرگ در انتظار شماست. لطفا دقایقی وقت بگذارید و در سه مرحله اطلاعات هویتی، اطلاعات صنفی و تخصصی، و اطلاعات مکانی خود را وارد و عضویت خود را فعال نمایید.');
+                        ->with('congratulations', true);
     }
     
  public function resend(Request $request)

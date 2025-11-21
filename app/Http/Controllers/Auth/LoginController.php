@@ -65,6 +65,22 @@ class LoginController extends Controller
         return '/home';
     }
 
+    /**
+     * The user has been authenticated.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $user
+     * @return mixed
+     */
+    protected function authenticated(Request $request, $user)
+    {
+        // ذخیره IP و تاریخ آخرین ورود
+        $user->update([
+            'last_login_ip' => $request->ip(),
+            'last_login_at' => now(),
+        ]);
+    }
+
     public function logout(Request $request)
     {
         $this->guard()->logout();

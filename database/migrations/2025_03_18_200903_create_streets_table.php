@@ -13,10 +13,18 @@ return new class extends Migration
      */
     public function up()
     {
+        if (Schema::hasTable('streets')) {
+            return;
+        }
         Schema::create('streets', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->foreignId('neighborhood_id')->constrained('neighborhoods')->onDelete('cascade')->onUpdate('cascade');
+            if (Schema::hasTable('neighborhoods')) {
+                $table->foreignId('neighborhood_id')->constrained('neighborhoods')->onDelete('cascade')->onUpdate('cascade');
+            } else {
+                $table->unsignedBigInteger('neighborhood_id')->nullable();
+                $table->index('neighborhood_id');
+            }
             $table->tinyInteger('status')->default(0);
             $table->timestamps();
         });

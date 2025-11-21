@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Group;
 use App\Models\GroupUser;
 use App\Models\User;
+use App\Models\ReportedMessage;
 use Illuminate\Support\Facades\DB;
 use PhpParser\Node\Stmt\GroupUse;
 
@@ -143,5 +144,209 @@ public function addUsersToGroup(Request $request)
 
     return response()->json(['message' => 'Users added successfully']);
 }
+
+    /**
+     * تغییر نقش کاربر بین ناظر (0) و فعال (1)
+     * فقط برای مدیران (role 3)
+     */
+    public function toggleUserRole(Group $group, User $user)
+    {
+        // بررسی اینکه کاربر فعلی مدیر است
+        $managerRole = GroupUser::where('group_id', $group->id)
+            ->where('user_id', auth()->id())
+            ->value('role');
+        
+        if ($managerRole !== 3) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'شما دسترسی لازم را ندارید.'
+            ], 403);
+        }
+
+        // بررسی اینکه کاربر در گروه است
+        $groupUser = GroupUser::where('user_id', $user->id)
+            ->where('group_id', $group->id)
+            ->first();
+
+        if (!$groupUser) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'کاربر در این گروه یافت نشد.'
+            ], 404);
+        }
+
+        // فقط بین ناظر (0) و فعال (1) تغییر می‌دهد
+        if ($groupUser->role == 0) {
+            $groupUser->role = 1;
+            $newRole = 'فعال';
+            $oldRole = 'ناظر';
+        } elseif ($groupUser->role == 1) {
+            $groupUser->role = 0;
+            $newRole = 'ناظر';
+            $oldRole = 'فعال';
+        } else {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'فقط می‌توان نقش کاربران ناظر و فعال را تغییر داد.'
+            ], 400);
+        }
+
+        $groupUser->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "نقش کاربر {$user->fullName()} از {$oldRole} به {$newRole} تغییر پیدا کرد.",
+            'new_role' => $groupUser->role,
+            'new_role_label' => $newRole
+        ]);
+    }
+
+    /**
+     * دریافت لیست اعضای گروه برای مدیریت
+     * فقط برای مدیران (role 3)
+     */
+    public function getMembers($group)
+    {
+        // اگر route model binding کار نکرد، گروه را دستی پیدا کن
+        if (!($group instanceof Group)) {
+            $group = Group::find($group);
+            if (!$group) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'گروه یافت نشد.'
+                ], 404);
+            }
+        }
+        
+        // بررسی اینکه کاربر فعلی مدیر است
+        $managerRole = GroupUser::where('group_id', $group->id)
+            ->where('user_id', auth()->id())
+            ->value('role');
+        
+        if ($managerRole !== 3) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'شما دسترسی لازم را ندارید.'
+            ], 403);
+        }
+
+        $members = $group->users()
+            ->wherePivotIn('role', [0, 1]) // فقط ناظر و فعال
+            ->select('users.id', 'users.first_name', 'users.last_name', 'users.email')
+            ->withPivot('role', 'status')
+            ->orderBy('group_user.role', 'desc') // فعال‌ها اول
+            ->orderBy('users.first_name', 'asc')
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->fullName(),
+                    'email' => $user->email,
+                    'role' => (int) $user->pivot->role,
+                    'role_label' => $user->pivot->role == 0 ? 'ناظر' : 'فعال',
+                    'status' => (int) $user->pivot->status,
+                ];
+            });
+
+        return response()->json([
+            'status' => 'success',
+            'members' => $members
+        ]);
+    }
+
+    public function getStats(Group $group)
+    {
+        // بررسی اینکه کاربر فعلی مدیر است
+        $managerRole = GroupUser::where('group_id', $group->id)
+            ->where('user_id', auth()->id())
+            ->value('role');
+        
+        if ($managerRole !== 3) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'شما دسترسی لازم را ندارید.'
+            ], 403);
+        }
+
+        // آمار اعضا
+        $membersStats = [
+            'total' => $group->users()->count(),
+            'active' => $group->users()->wherePivot('role', 1)->count(),
+            'observer' => $group->users()->wherePivot('role', 0)->count(),
+            'manager' => $group->users()->wherePivot('role', 3)->count(),
+        ];
+
+        // آمار پیام‌ها
+        $messagesQuery = $group->messages();
+        $messagesStats = [
+            'total' => $messagesQuery->count(),
+            'today' => $messagesQuery->whereDate('created_at', today())->count(),
+            'this_week' => $messagesQuery->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+            'this_month' => $messagesQuery->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)->count(),
+        ];
+
+        // آمار پست‌ها
+        $postsQuery = $group->blogs();
+        $postsStats = [
+            'total' => $postsQuery->count(),
+            'this_month' => $postsQuery->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)->count(),
+            'with_images' => $postsQuery->whereNotNull('image')->count(),
+        ];
+
+        // آمار نظرسنجی‌ها
+        $pollsQuery = $group->polls()->where('main_type', 1);
+        $pollsStats = [
+            'total' => $pollsQuery->count(),
+            'active' => $pollsQuery->where('end_time', '>', now())->count(),
+            'expired' => $pollsQuery->where('end_time', '<=', now())->count(),
+        ];
+
+        // آمار انتخابات
+        $electionsQuery = $group->polls()->where('main_type', 0);
+        $electionsStats = [
+            'total' => $electionsQuery->count(),
+            'active' => $electionsQuery->where('end_time', '>', now())->count(),
+            'closed' => $electionsQuery->where('end_time', '<=', now())->count(),
+        ];
+
+        // آمار گزارش‌ها
+        $reportsQuery = \App\Models\ReportedMessage::where('group_id', $group->id);
+        $reportsStats = [
+            'pending' => $reportsQuery->where('status', 'pending_group_manager')->count(),
+            'resolved' => $reportsQuery->where('status', 'resolved_by_group_manager')->count(),
+            'escalated' => $reportsQuery->where('escalated_to_admin', true)->count(),
+        ];
+
+        // فعال‌ترین اعضا (بر اساس تعداد پیام‌ها)
+        $mostActiveMembers = $group->users()
+            ->select('users.id', 'users.first_name', 'users.last_name')
+            ->withCount(['messages' => function ($query) use ($group) {
+                $query->where('group_id', $group->id);
+            }])
+            ->orderBy('messages_count', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'name' => $user->fullName(),
+                    'message_count' => $user->messages_count ?? 0,
+                ];
+            });
+
+        return response()->json([
+            'status' => 'success',
+            'stats' => [
+                'members' => $membersStats,
+                'messages' => $messagesStats,
+                'posts' => $postsStats,
+                'polls' => $pollsStats,
+                'elections' => $electionsStats,
+                'reports' => $reportsStats,
+                'most_active_members' => $mostActiveMembers,
+            ]
+        ]);
+    }
 
 }

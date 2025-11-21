@@ -1,0 +1,55 @@
+/* User Dropdown Responsive Styles */
+
+/* Mobile Optimizations */
+@media (max-width: 640px) {
+    [x-data*="userDropdownOpen"] > div[x-show] {
+        width: 90vw !important;
+        max-width: 280px !important;
+        right: -1rem !important;
+        left: auto !important;
+    }
+    
+    [x-data*="userDropdownOpen"] > div[x-show] a,
+    [x-data*="userDropdownOpen"] > div[x-show] h6 {
+        padding: 0.75rem 1rem !important;
+        font-size: 0.9rem !important;
+    }
+    
+    [x-data*="userDropdownOpen"] > div[x-show] a i {
+        font-size: 1rem !important;
+    }
+}
+
+/* Small Mobile */
+@media (max-width: 375px) {
+    [x-data*="userDropdownOpen"] > div[x-show] {
+        width: calc(100vw - 2rem) !important;
+        max-width: none !important;
+        right: -0.5rem !important;
+    }
+}
+
+/* Touch Optimization */
+@media (hover: none) and (pointer: coarse) {
+    [x-data*="userDropdownOpen"] > div[x-show] a {
+        min-height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+}
+
+/* Dark Mode Mobile */
+.dark-mode [x-data*="userDropdownOpen"] > div[x-show]::-webkit-scrollbar-track {
+    background: #334155 !important;
+}
+
+.dark-mode [x-data*="userDropdownOpen"] > div[x-show]::-webkit-scrollbar-thumb {
+    background: #10b981 !important;
+}
+
+/* Prevent body scroll when dropdown is open on mobile */
+@media (max-width: 768px) {
+    body:has([x-data*="userDropdownOpen"][x-show]) {
+        overflow: hidden;
+    }
+}

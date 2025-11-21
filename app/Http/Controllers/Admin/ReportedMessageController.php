@@ -10,7 +10,10 @@ class ReportedMessageController extends Controller
 {
     public function index()
     {
-        $reports = ReportedMessage::with(['message', 'reporter'])
+        // فقط گزارش‌های ارجاع شده به ادمین را نمایش می‌دهد
+        $reports = ReportedMessage::with(['message.user', 'reporter', 'group', 'reviewedByManager'])
+            ->where('escalated_to_admin', true)
+            ->orderBy('escalated_at', 'desc')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 

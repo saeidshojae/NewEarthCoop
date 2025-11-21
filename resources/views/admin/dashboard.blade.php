@@ -1,258 +1,314 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
-@section('content')
-<div class="container py-4" dir="rtl">
-    <h2 class="text-center fw-bold mb-4"><a href='{{ route('admin.dashboard') }}' style='text-decoration: none'>پنل مدیریت</a></h2>
+@section('title', 'داشبورد مدیریت - ' . config('app.name', 'EarthCoop'))
+@section('page-title', 'داشبورد مدیریت')
+@section('page-description', 'مدیریت سیستم EarthCoop')
 
-    @if(session('success'))
-        <div class="alert alert-success text-center">{{ session('success') }}</div>
-    @endif
-
-    <div class="row g-4">
-        
-       @if(isset($_GET['general']))
-
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.invitation_codes.index') }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-success hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-success fw-bold">🎟️ مدیریت کدهای دعوت</h5>
-                        <p class="card-text text-muted">ایجاد، مشاهده و مدیریت کدهای دعوت کاربران</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-        
-                <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.invitation_codes.index', ['invation']) }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-success hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-success fw-bold">️ درخواست های کد دعوت</h5>
-                        <p class="card-text text-muted">ایجاد، مشاهده و مدیریت کدهای دعوت کاربران</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-      <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.category.index') }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-success hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-success fw-bold">️ مدیریت دسته بندی</h5>
-                        <p class="card-text text-muted">ایجاد، مشاهده و مدیریت کدهای دعوت کاربران</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.activate.index') }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-primary hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-primary fw-bold">🔑 مدیریت فعال‌سازی‌ها</h5>
-                        <p class="card-text text-muted">تنظیم دسترسی‌ها و کدهای فعال‌سازی</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-        
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.group.setting.index') }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-secondary hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-secondary fw-bold">تنظیمات انتخابات</h5>
-                        <p class="card-text text-muted">مدیریت سطح، بازرسان و مدیران گروه‌ها</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-        
-        @elseif(isset($_GET['activate']))
-        
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.active.address') }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-secondary hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-secondary fw-bold">📍 تأیید آدرس‌های جدید</h5>
-                        <p class="card-text text-muted">بازبینی و تأیید آدرس‌های کاربران</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.active.experience') }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-dark hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-dark fw-bold">🛠️ تأیید صنف و تجربیات</h5>
-                        <p class="card-text text-muted">مدیریت تخصص‌ها و صنف‌های تازه ثبت‌شده</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        @elseif(isset($_GET['content']))
-        
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.announcement.index') }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm hover-shadow" style="border: 1px solid rgb(97, 64, 174)">
-                    <div class="card-body text-center">
-                        <h5 class="card-title fw-bold" style="color: rgb(97, 64, 174)">📆 مدیریت اطلاعیه ها</h5>
-                        <p class="card-text text-muted">تنظیم پیام و سرتیتر اطلاعیه</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.rule.index') }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-warning hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-warning fw-bold">📜 مدیریت اساسنامه</h5>
-                        <p class="card-text text-muted">تنظیم و مدیریت متن قوانین سامانه</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-        
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.pages.index') }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-secondary hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-secondary fw-bold">💬 مدیریت صفحات</h5>
-                        <p class="card-text text-muted">مدیریت صفحات سامانه</p>
-                    </div>
-                </div>
-            </a>
-        </div>  
-        
-          <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.welcome-page') }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-secondary hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-secondary fw-bold">💬 صفحه خوش آمدید</h5>
-                        <p class="card-text text-muted">مدیریت صفحه خوش آمدید</p>
-                    </div>
-                </div>
-            </a>
-        </div>  
-        
-          <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.welcome-page', ['home']) }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-secondary hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-secondary fw-bold">💬 صفحه هوم</h5>
-                        <p class="card-text text-muted">مدیریت صفحه هوم</p>
-                    </div>
-                </div>
-            </a>
-        </div>  
-        
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.najm-page') }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-secondary hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-secondary fw-bold">نجم بهار</h5>
-                        <p class="card-text text-muted">مدیریت نجم بهار</p>
-                    </div>
-                </div>
-            </a>
-        </div>  
-        
-        
-        @else
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.dashboard', ['general']) }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-success hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-success fw-bold">⚙️ تنظیمات سیستمی</h5>
-                        <p class="card-text text-muted">مدیریت کد های دعوت، مدیریت فعالسازی و تنظیمات گروه ها </p>
-                    </div>
-                </div>
-            </a>
-        </div>
-        
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.dashboard', ['activate']) }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-info hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-info fw-bold">➕️ مدیریت گزینه های جدید منوها</h5>
-                        <p class="card-text text-muted">فعالسازی آدرس ها و صنف های جدید</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-        
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.dashboard', ['content']) }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-primary hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-primary fw-bold">📄 مدیریت محتوای صفحات</h5>
-                        <p class="card-text text-muted">تغییرات مربوط به محتوای صفحات</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-        
-
-
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.users.index') }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-danger hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-danger fw-bold">👥 مدیریت کاربران</h5>
-                        <p class="card-text text-muted">مشاهده، حذف و بررسی کاربران سیستم</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.group.index') }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-warning hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-warning fw-bold">📂 مدیریت گروه‌ها</h5>
-                        <p class="card-text text-muted">مدیریت ساختار، اعضا و اطلاعات گروه‌ها</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.reports.index') }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-secondary hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-secondary fw-bold">🚨 گزارشات پیام‌ها</h5>
-                        <p class="card-text text-muted">مدیریت گزارشات پیام‌ها</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ route('admin.stock.index') }}" class="text-decoration-none">
-                <div class="card h-100 shadow-sm border-primary hover-shadow">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-primary fw-bold">📈 مدیریت سهام و حراج</h5>
-                        <p class="card-text text-muted">مدیریت سهام استارتاپ و حراج‌های سهام</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        @endif
-        
-        
-
-    </div>
-</div>
-
+@push('styles')
 <style>
-    .hover-shadow:hover {
-        transform: translateY(-4px);
-        transition: 0.2s ease-in-out;
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    .dashboard-container {
+        direction: rtl;
+    }
+    
+    .dashboard-section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    
+    @media (min-width: 768px) {
+        .dashboard-section-title {
+            font-size: 1.5rem;
+        }
+    }
+    
+    @media (prefers-color-scheme: dark) {
+        .dashboard-section-title {
+            color: #f1f5f9;
+            border-bottom-color: #334155;
+        }
+        
+        .dashboard-container {
+            color: #f1f5f9;
+        }
     }
 </style>
+@endpush
+
+@section('content')
+<div class="dashboard-container">
+    <!-- Najm Hoda Card -->
+    <div class="mb-8">
+        <div class="najm-hoda-card">
+            <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+                <div class="flex-1 text-center md:text-right">
+                    <div class="flex items-center justify-center md:justify-start gap-4 mb-4">
+                        <div class="najm-hoda-icon">🌟</div>
+                        <div>
+                            <h3 class="najm-hoda-title">نجم‌هدا - دستیار هوش مصنوعی</h3>
+                            <p class="najm-hoda-subtitle">نرم افزار جامع مدیریت هوشمند دنیای ارثکوپ</p>
+                        </div>
+                    </div>
+                    <p class="text-white mb-4 text-sm md:text-lg leading-relaxed">
+                        دستیار هوشمند با 5 عامل تخصصی آماده کمک به شما است: 
+                        <span class="block sm:inline">مهندس 🔧 | خلبان ✈️ | مهماندار 👨‍✈️ | راهنما 📖 | معمار 🏗️</span>
+                    </p>
+                    <div class="najm-hoda-features">
+                        <span class="najm-hoda-badge">چت مستقیم</span>
+                        <span class="najm-hoda-badge">تحلیل و آمار</span>
+                        <span class="najm-hoda-badge">بازخورد کاربران</span>
+                        <span class="najm-hoda-badge">ساخت عامل جدید</span>
+                    </div>
+                </div>
+                <div class="flex-shrink-0 w-full md:w-auto">
+                    <div class="najm-hoda-buttons">
+                        <a href="{{ route('admin.najm-hoda.index') }}" class="najm-hoda-btn najm-hoda-btn-primary">
+                            <i class="fas fa-tachometer-alt"></i>
+                            داشبورد نجم‌هدا
+                        </a>
+                        <a href="{{ route('admin.najm-hoda.chat') }}" class="najm-hoda-btn najm-hoda-btn-outline">
+                            <i class="fas fa-comment-dots"></i>
+                            چت مستقیم
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @if(request()->has('general'))
+            <!-- General Settings -->
+            <a href="{{ route('admin.invitation_codes.index') }}" class="admin-card-link">
+                <div class="admin-card admin-card-success">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <h3 class="admin-card-title">مدیریت کدهای دعوت</h3>
+                    <p class="admin-card-description">ایجاد، مشاهده و مدیریت کدهای دعوت کاربران</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('admin.invitation_codes.index', ['invation']) }}" class="admin-card-link">
+                <div class="admin-card admin-card-success">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-envelope-open-text"></i>
+                    </div>
+                    <h3 class="admin-card-title">درخواست‌های کد دعوت</h3>
+                    <p class="admin-card-description">مشاهده و مدیریت درخواست‌های کد دعوت</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('admin.category.index') }}" class="admin-card-link">
+                <div class="admin-card admin-card-success">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-folder"></i>
+                    </div>
+                    <h3 class="admin-card-title">مدیریت دسته‌بندی</h3>
+                    <p class="admin-card-description">ایجاد، مشاهده و مدیریت دسته‌بندی‌ها</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('admin.activate.index') }}" class="admin-card-link">
+                <div class="admin-card admin-card-primary">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <h3 class="admin-card-title">مدیریت فعال‌سازی‌ها</h3>
+                    <p class="admin-card-description">تنظیم دسترسی‌ها و کدهای فعال‌سازی</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('admin.group.setting.index') }}" class="admin-card-link">
+                <div class="admin-card admin-card-secondary">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-vote-yea"></i>
+                    </div>
+                    <h3 class="admin-card-title">تنظیمات انتخابات</h3>
+                    <p class="admin-card-description">مدیریت سطح، بازرسان و مدیران گروه‌ها</p>
+                </div>
+            </a>
+            
+        @elseif(request()->has('activate'))
+            <!-- Activation Management -->
+            <a href="{{ route('admin.active.address') }}" class="admin-card-link">
+                <div class="admin-card admin-card-secondary">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <h3 class="admin-card-title">تأیید آدرس‌های جدید</h3>
+                    <p class="admin-card-description">بازبینی و تأیید آدرس‌های کاربران</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('admin.active.experience') }}" class="admin-card-link">
+                <div class="admin-card admin-card-warning">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <h3 class="admin-card-title">تأیید صنف و تجربیات</h3>
+                    <p class="admin-card-description">مدیریت تخصص‌ها و صنف‌های تازه ثبت‌شده</p>
+                </div>
+            </a>
+            
+        @elseif(request()->has('content'))
+            <!-- Content Management -->
+            <a href="{{ route('admin.announcement.index') }}" class="admin-card-link">
+                <div class="admin-card admin-card-purple">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-bullhorn"></i>
+                    </div>
+                    <h3 class="admin-card-title">مدیریت اطلاعیه‌ها</h3>
+                    <p class="admin-card-description">تنظیم پیام و سرتیتر اطلاعیه</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('admin.rule.index') }}" class="admin-card-link">
+                <div class="admin-card admin-card-warning">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-scroll"></i>
+                    </div>
+                    <h3 class="admin-card-title">مدیریت اساسنامه</h3>
+                    <p class="admin-card-description">تنظیم و مدیریت متن قوانین سامانه</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('admin.pages.index') }}" class="admin-card-link">
+                <div class="admin-card admin-card-secondary">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h3 class="admin-card-title">مدیریت صفحات</h3>
+                    <p class="admin-card-description">مدیریت صفحات سامانه</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('admin.blog.dashboard') }}" class="admin-card-link">
+                <div class="admin-card admin-card-info">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-blog"></i>
+                    </div>
+                    <h3 class="admin-card-title">مدیریت وبلاگ</h3>
+                    <p class="admin-card-description">مدیریت مقالات، دسته‌بندی‌ها و نظرات وبلاگ</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('admin.welcome-page') }}" class="admin-card-link">
+                <div class="admin-card admin-card-secondary">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-hand-sparkles"></i>
+                    </div>
+                    <h3 class="admin-card-title">صفحه خوش آمدید</h3>
+                    <p class="admin-card-description">مدیریت صفحه خوش آمدید</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('admin.welcome-page', ['home']) }}" class="admin-card-link">
+                <div class="admin-card admin-card-secondary">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <h3 class="admin-card-title">صفحه هوم</h3>
+                    <p class="admin-card-description">مدیریت صفحه هوم</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('admin.najm-page') }}" class="admin-card-link">
+                <div class="admin-card admin-card-secondary">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h3 class="admin-card-title">نجم بهار</h3>
+                    <p class="admin-card-description">مدیریت نجم بهار</p>
+                </div>
+            </a>
+            
+        @else
+            <!-- Main Dashboard -->
+            <a href="{{ route('admin.dashboard', ['general']) }}" class="admin-card-link">
+                <div class="admin-card admin-card-success">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <h3 class="admin-card-title">تنظیمات سیستمی</h3>
+                    <p class="admin-card-description">مدیریت کدهای دعوت، مدیریت فعال‌سازی و تنظیمات گروه‌ها</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('admin.dashboard', ['activate']) }}" class="admin-card-link">
+                <div class="admin-card admin-card-info">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3 class="admin-card-title">مدیریت گزینه‌های جدید منوها</h3>
+                    <p class="admin-card-description">فعال‌سازی آدرس‌ها و صنف‌های جدید</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('admin.content.index') }}" class="admin-card-link">
+                <div class="admin-card admin-card-primary">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h3 class="admin-card-title">مدیریت محتوا</h3>
+                    <p class="admin-card-description">مدیریت اطلاعیه‌ها، صفحات استاتیک، اساسنامه، صفحه خوش‌آمد، صفحه هوم و نجم بهار</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('admin.users.index') }}" class="admin-card-link">
+                <div class="admin-card admin-card-danger">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="admin-card-title">مدیریت کاربران</h3>
+                    <p class="admin-card-description">مشاهده، حذف و بررسی کاربران سیستم</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('admin.groups.index') }}" class="admin-card-link">
+                <div class="admin-card admin-card-warning">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-users-cog"></i>
+                    </div>
+                    <h3 class="admin-card-title">مدیریت گروه‌ها</h3>
+                    <p class="admin-card-description">مدیریت ساختار، اعضا و اطلاعات گروه‌ها</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('admin.reports.index') }}" class="admin-card-link">
+                <div class="admin-card admin-card-secondary">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-flag"></i>
+                    </div>
+                    <h3 class="admin-card-title">گزارشات پیام‌ها</h3>
+                    <p class="admin-card-description">مدیریت گزارشات پیام‌ها</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('admin.stock.index') }}" class="admin-card-link">
+                <div class="admin-card admin-card-primary">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="admin-card-title">مدیریت سهام و حراج</h3>
+                    <p class="admin-card-description">مدیریت سهام استارتاپ و حراج‌های سهام</p>
+                </div>
+            </a>
+            
+            <a href="{{ route('admin.blog.dashboard') }}" class="admin-card-link">
+                <div class="admin-card admin-card-info">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-blog"></i>
+                    </div>
+                    <h3 class="admin-card-title">مدیریت وبلاگ</h3>
+                    <p class="admin-card-description">مدیریت مقالات، دسته‌بندی‌ها و نظرات وبلاگ</p>
+                </div>
+            </a>
+        @endif
+    </div>
+</div>
 @endsection

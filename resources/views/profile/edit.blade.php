@@ -1,203 +1,986 @@
-@extends('layouts.app')
+@extends('layouts.unified')
 
-@section('title', 'ویرایش پروفایل')
+@section('title', 'ویرایش پروفایل - ' . config('app.name', 'EarthCoop'))
 
-@section('head-tag')
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/persian-datepicker@1.2.0/dist/css/persian-datepicker.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
-    <style>
-        .toggle-box {
-            border: 2px solid #518476;
-            border-radius: 8px;
-            padding: 1rem;
-            margin: 1rem 0;
-            background-color: #fff
+@push('styles')
+<link rel="stylesheet" href="https://unpkg.com/persian-datepicker@1.2.0/dist/css/persian-datepicker.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+<style>
+    /* ==================== Profile Edit Page Styles ==================== */
+    
+    /* Progress Stepper */
+    .edit-stepper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3rem;
+        position: relative;
+        padding: 0 2rem;
+    }
+
+    .stepper-line {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--color-earth-green) 0%, var(--color-dark-green) 100%);
+        z-index: 0;
+        transform: translateY(-50%);
+        transition: all 0.5s ease;
+    }
+
+    .stepper-item {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .stepper-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--color-earth-green) 0%, var(--color-dark-green) 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .stepper-item.completed .stepper-circle {
+        background: linear-gradient(135deg, var(--color-earth-green) 0%, var(--color-dark-green) 100%);
+        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.5);
+        transform: scale(1.1);
+    }
+
+    .stepper-item.completed .stepper-circle::after {
+        content: '✓';
+        position: absolute;
+        font-size: 1.5rem;
+    }
+
+    .stepper-item.active .stepper-circle {
+        background: linear-gradient(135deg, var(--color-ocean-blue) 0%, var(--color-dark-blue) 100%);
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5);
+        animation: pulse-glow 2s infinite;
+    }
+
+    .stepper-item:not(.active):not(.completed) .stepper-circle {
+        background: #e5e7eb;
+        color: #9ca3af;
+        box-shadow: none;
+    }
+
+    .stepper-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--color-gentle-black);
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .stepper-item.active .stepper-label {
+        color: var(--color-ocean-blue);
+        font-weight: 700;
+    }
+
+    @keyframes pulse-glow {
+        0%, 100% {
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5);
+        }
+        50% {
+            box-shadow: 0 4px 30px rgba(59, 130, 246, 0.8);
+        }
+    }
+
+    /* Form Sections */
+    .edit-section {
+        background: var(--color-pure-white);
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: slideInUp 0.6s ease-out forwards;
+    }
+
+    .edit-section.active {
+        border-color: var(--color-earth-green);
+        box-shadow: 0 8px 30px rgba(16, 185, 129, 0.15);
+    }
+
+    @keyframes slideInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .edit-section:nth-child(1) { animation-delay: 0.1s; }
+    .edit-section:nth-child(2) { animation-delay: 0.2s; }
+    .edit-section:nth-child(3) { animation-delay: 0.3s; }
+    .edit-section:nth-child(4) { animation-delay: 0.4s; }
+    .edit-section:nth-child(5) { animation-delay: 0.5s; }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--color-light-gray);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .section-header:hover {
+        border-bottom-color: var(--color-earth-green);
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--color-gentle-black);
+    }
+
+    .section-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--color-earth-green) 0%, var(--color-dark-green) 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .section-toggle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--color-light-gray);
+        color: var(--color-gentle-black);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .section-header:hover .section-toggle {
+        background: var(--color-earth-green);
+        color: white;
+        transform: rotate(180deg);
+    }
+
+    .section-content {
+        display: none;
+        animation: fadeInDown 0.5s ease-out;
+    }
+
+    .section-content.active {
+        display: block;
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Grid Layout */
+    .grid {
+        display: grid;
+    }
+
+    .grid-cols-1 {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    @media (min-width: 768px) {
+        .md\:grid-cols-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    .gap-6 {
+        gap: 1.5rem;
+    }
+
+    .gap-2 {
+        gap: 0.5rem;
+    }
+
+    /* Flex Utilities */
+    .flex {
+        display: flex;
+    }
+
+    .justify-center {
+        justify-content: center;
+    }
+
+    .justify-between {
+        justify-content: space-between;
+    }
+
+    .items-center {
+        align-items: center;
+    }
+
+    .inline-block {
+        display: inline-block;
+    }
+
+    /* Text Utilities */
+    .text-center {
+        text-align: center;
+    }
+
+    .text-sm {
+        font-size: 0.875rem;
+    }
+
+    .text-lg {
+        font-size: 1.125rem;
+    }
+
+    .text-3xl {
+        font-size: 1.875rem;
+    }
+
+    .text-4xl {
+        font-size: 2.25rem;
+    }
+
+    .font-bold {
+        font-weight: 700;
+    }
+
+    .font-semibold {
+        font-weight: 600;
+    }
+
+    .text-gray-500 {
+        color: #6b7280;
+    }
+
+    .text-gray-600 {
+        color: #4b5563;
+    }
+
+    .text-red-500 {
+        color: #ef4444;
+    }
+
+    .text-green-500 {
+        color: #10b981;
+    }
+
+    .text-ocean-blue {
+        color: var(--color-ocean-blue);
+    }
+
+    .hover\:text-dark-blue:hover {
+        color: var(--color-dark-blue);
+    }
+
+    .hover\:underline:hover {
+        text-decoration: underline;
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .no-underline {
+        text-decoration: none;
+    }
+
+    /* Spacing */
+    .mt-1 {
+        margin-top: 0.25rem;
+    }
+
+    .mt-2 {
+        margin-top: 0.5rem;
+    }
+
+    .mt-3 {
+        margin-top: 0.75rem;
+    }
+
+    .mt-6 {
+        margin-top: 1.5rem;
+    }
+
+    .mt-8 {
+        margin-top: 2rem;
+    }
+
+    .mb-2 {
+        margin-bottom: 0.5rem;
+    }
+
+    .mb-4 {
+        margin-bottom: 1rem;
+    }
+
+    .mb-6 {
+        margin-bottom: 1.5rem;
+    }
+
+    .ml-2 {
+        margin-left: 0.5rem;
+    }
+
+    .ml-3 {
+        margin-left: 0.75rem;
+    }
+
+    .px-4 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .py-3 {
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+    }
+
+    .py-8 {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+
+    .px-4 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    /* List Utilities */
+    .list-disc {
+        list-style-type: disc;
+    }
+
+    .list-inside {
+        list-style-position: inside;
+    }
+
+    /* Background Colors */
+    .bg-green-100 {
+        background-color: #dcfce7;
+    }
+
+    .bg-red-100 {
+        background-color: #fee2e2;
+    }
+
+    .border-green-400 {
+        border-color: #4ade80;
+    }
+
+    .border-red-400 {
+        border-color: #f87171;
+    }
+
+    .text-green-700 {
+        color: #15803d;
+    }
+
+    .text-red-700 {
+        color: #b91c1c;
+    }
+
+    .rounded-lg {
+        border-radius: 0.5rem;
+    }
+
+    /* Form Fields */
+    .form-group-enhanced {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label-enhanced {
+        display: block;
+        font-weight: 600;
+        color: var(--color-gentle-black);
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .form-label-enhanced i {
+        color: var(--color-earth-green);
+        margin-left: 0.5rem;
+    }
+
+    .form-input-enhanced {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: var(--color-pure-white);
+        color: var(--color-gentle-black);
+    }
+
+    .form-input-enhanced:focus {
+        outline: none;
+        border-color: var(--color-earth-green);
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .form-input-enhanced:disabled {
+        background: #f3f4f6;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    /* Submit Button */
+    .submit-btn-enhanced {
+        background: linear-gradient(135deg, var(--color-earth-green) 0%, var(--color-dark-green) 100%);
+        color: white;
+        padding: 1rem 2.5rem;
+        border: none;
+        border-radius: 0.75rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .submit-btn-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+
+    .submit-btn-enhanced:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .submit-btn-enhanced:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+    }
+
+    .submit-btn-enhanced:active {
+        transform: translateY(-1px);
+    }
+
+    /* Warning Messages */
+    .warning-box {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border: 2px solid #f59e0b;
+        border-radius: 0.75rem;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .warning-box i {
+        font-size: 1.5rem;
+        color: #f59e0b;
+    }
+
+    .warning-box strong {
+        color: #92400e;
+    }
+
+    /* Avatar Upload */
+    .avatar-upload-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding: 2rem;
+        border: 2px dashed var(--color-earth-green);
+        border-radius: 1rem;
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .avatar-upload-container:hover {
+        border-color: var(--color-dark-green);
+        background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+        transform: scale(1.02);
+    }
+
+    .avatar-preview {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid var(--color-earth-green);
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+    }
+
+    /* Dynamic Inputs */
+    .dynamic-input-group {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .dynamic-input-group .form-input-enhanced {
+        flex: 1;
+    }
+
+    .remove-btn {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        border: none;
+        padding: 0.875rem 1.25rem;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+    }
+
+    .remove-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    .add-btn {
+        background: linear-gradient(135deg, var(--color-ocean-blue) 0%, var(--color-dark-blue) 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        margin-top: 0.5rem;
+    }
+
+    .add-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Documents List */
+    .documents-list-enhanced {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .document-item-enhanced {
+        background: var(--color-light-gray);
+        border: 2px solid #e5e7eb;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .document-item-enhanced:hover {
+        border-color: var(--color-earth-green);
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Location Path Display */
+    .location-path-display {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border: 2px solid var(--color-ocean-blue);
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        min-height: 60px;
+    }
+
+    .location-breadcrumb {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: white;
+        border-radius: 0.5rem;
+        color: var(--color-ocean-blue);
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .location-breadcrumb:hover {
+        background: var(--color-ocean-blue);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .location-breadcrumb i {
+        color: var(--color-earth-green);
+    }
+
+    .location-breadcrumb:hover i {
+        color: white;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .edit-stepper {
+            flex-direction: column;
+            gap: 1rem;
+            padding: 0;
         }
 
-        .toggle-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .toggle-content {
+        .stepper-line {
             display: none;
-            margin-top: 1rem;
         }
 
-        .toggle-icon {
-            transition: transform 0.3s ease;
+        .edit-section {
+            padding: 1.5rem;
         }
 
-        .open .toggle-icon {
-            transform: rotate(180deg);
+        .section-title {
+            font-size: 1.2rem;
         }
+    }
 
-        .open .toggle-content {
-            display: block;
-        }
+    /* Dark Mode Support */
+    body.dark-mode .edit-section {
+        background-color: #2d2d2d;
+        border-color: #404040;
+    }
 
-        input, select, textarea {
-            background-color: #fff !important;
-        }
-        .select2-selection__clear{
-            display: none;
-        }
-        
-        .btn:hover{
-            background-color: #37c4b4 !important
-        }
+    body.dark-mode .form-input-enhanced {
+        background-color: #3a3a3a;
+        border-color: #555;
+        color: #e0e0e0;
+    }
 
-    </style>
-@endsection
+    body.dark-mode .section-title {
+        color: #e0e0e0;
+    }
+
+    body.dark-mode .stepper-item:not(.active):not(.completed) .stepper-circle {
+        background: #404040;
+        color: #9ca3af;
+    }
+</style>
+@endpush
 
 @section('content')
-    <div class="container mt-5" style="direction: rtl; text-align: right;">
-        <h1 class="mb-4 text-center">ویرایش اطلاعات پروفایل</h1>
-                    <a class='btn' style='margin: 0' href='{{ url('/profile-member/' . auth()->user()->id) }}'>پیش نمایش پروفایل من</a>
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        {{-- فرم اطلاعات کاربر --}}
-        @include('profile.partials.general')
-
-        {{-- فرم تغییر رمز --}}
-        @include('profile.partials.password')
-
-        {{-- فرم شبکه اجتماعی --}}
-        @include('profile.partials.social')
-
-        {{-- فرم انتخاب صنف و تخصص --}}
-        @include('profile.partials.occupation')
-
-        {{-- فرم موقعیت مکانی --}}
-        @include('profile.partials.location')
-
-        {{-- مدال‌ها --}}
-        @include('partials.location_modals')
-        @include('partials.add_location_modal', ['type' => 'region', 'label' => 'منطقه'])
-        @include('partials.add_location_modal', ['type' => 'neighborhood', 'label' => 'محله'])
-        @include('partials.add_location_modal', ['type' => 'street', 'label' => 'خیابان'])
-        @include('partials.add_location_modal', ['type' => 'alley', 'label' => 'کوچه'])
-
-        {{-- مدال برش تصویر --}}
-        @include('profile.partials.cropper_modal')
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gentle-black mb-4" style="color: var(--color-gentle-black);">
+            <i class="fas fa-user-edit ml-3" style="color: var(--color-earth-green);"></i>
+            ویرایش پروفایل
+        </h1>
+        <p class="text-gray-600 text-lg">به‌روزرسانی اطلاعات حساب کاربری خود</p>
     </div>
-@endsection
-@section('scripts')
+
+    @if(session('success'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6" role="alert">
+            <i class="fas fa-check-circle ml-2"></i>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6" role="alert">
+            <strong class="font-bold">خطا:</strong>
+            <ul class="list-disc list-inside mt-2">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <!-- Progress Stepper -->
+    <div class="edit-stepper">
+        <div class="stepper-line"></div>
+        <div class="stepper-item active" data-step="general">
+            <div class="stepper-circle">1</div>
+            <span class="stepper-label">اطلاعات کلی</span>
+        </div>
+        <div class="stepper-item" data-step="password">
+            <div class="stepper-circle">2</div>
+            <span class="stepper-label">رمز عبور</span>
+        </div>
+        <div class="stepper-item" data-step="social">
+            <div class="stepper-circle">3</div>
+            <span class="stepper-label">شبکه‌های اجتماعی</span>
+        </div>
+        <div class="stepper-item" data-step="occupation">
+            <div class="stepper-circle">4</div>
+            <span class="stepper-label">صنف و تخصص</span>
+        </div>
+        <div class="stepper-item" data-step="location">
+            <div class="stepper-circle">5</div>
+            <span class="stepper-label">موقعیت مکانی</span>
+        </div>
+    </div>
+
+    <!-- Form Sections -->
+    <!-- Section 1: General Information -->
+    <div class="edit-section active" id="section-general">
+        <div class="section-header" onclick="toggleSection('general')">
+            <div class="section-title">
+                <div class="section-icon">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div>
+                    <div>اطلاعات کلی من</div>
+                    <small class="text-gray-500">وضعیت: <span class="font-semibold {{ $user->status == 0 ? 'text-red-500' : 'text-green-500' }}">{{ $user->status == 0 ? 'غیر فعال' : 'فعال' }}</span></small>
+                </div>
+            </div>
+            <div class="section-toggle">
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+        <div class="section-content active">
+            @include('profile.partials.general')
+        </div>
+    </div>
+
+    <!-- Section 2: Password -->
+    <div class="edit-section" id="section-password">
+        <div class="section-header" onclick="toggleSection('password')">
+            <div class="section-title">
+                <div class="section-icon" style="background: linear-gradient(135deg, var(--color-ocean-blue) 0%, var(--color-dark-blue) 100%);">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div>رمز حساب من</div>
+            </div>
+            <div class="section-toggle">
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+        <div class="section-content">
+            @include('profile.partials.password')
+        </div>
+    </div>
+
+    <!-- Section 3: Social Networks -->
+    <div class="edit-section" id="section-social">
+        <div class="section-header" onclick="toggleSection('social')">
+            <div class="section-title">
+                <div class="section-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+                    <i class="fas fa-share-alt"></i>
+                </div>
+                <div>شبکه‌های اجتماعی</div>
+            </div>
+            <div class="section-toggle">
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+        <div class="section-content">
+            @include('profile.partials.social')
+        </div>
+    </div>
+
+    <!-- Section 4: Occupation -->
+    <div class="edit-section" id="section-occupation">
+        <div class="section-header" onclick="toggleSection('occupation')">
+            <div class="section-title">
+                <div class="section-icon" style="background: linear-gradient(135deg, var(--color-digital-gold) 0%, #d97706 100%);">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div>صنف و تخصص</div>
+            </div>
+            <div class="section-toggle">
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+        <div class="section-content">
+            @include('profile.partials.occupation')
+        </div>
+    </div>
+
+    <!-- Section 5: Location -->
+    <div class="edit-section" id="section-location">
+        <div class="section-header" onclick="toggleSection('location')">
+            <div class="section-title">
+                <div class="section-icon" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div>ویرایش موقعیت مکانی</div>
+            </div>
+            <div class="section-toggle">
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+        <div class="section-content">
+            @include('profile.partials.location')
+        </div>
+    </div>
+</div>
+
+@include('profile.partials.cropper_modal')
+
+@push('scripts')
 <script>
   window.profileData = {
       oldOccupational: @json(old('occupational_fields', [])),
       oldExperience: @json(old('experience_fields', []))
   };
   
-</script>
-<script>
-   oldOccupational = {!! json_encode(old('occupational_fields', [])) !!};
-   oldExperience = {!! json_encode(old('experience_fields', [])) !!};
+  oldOccupational = {!! json_encode(old('occupational_fields', [])) !!};
+  oldExperience = {!! json_encode(old('experience_fields', [])) !!};
 </script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js" defer></script>
-<script src="https://unpkg.com/persian-date@1.1.0/dist/persian-date.min.js" defer></script>
-<script src="https://unpkg.com/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js" defer></script>
-<script>
-    function toggleBox(element) {
-        const box = element.closest('.toggle-box');
-        const content = box.querySelector('.toggle-content');
-        const icon = element.querySelector('.toggle-icon');
-
-        if (content.style.display === 'none' || getComputedStyle(content).display === 'none') {
-            content.style.display = 'block';
-            icon.classList.remove('fa-chevron-down');
-            icon.classList.add('fa-chevron-up');
-        } else {
-            content.style.display = 'none';
-            icon.classList.remove('fa-chevron-up');
-            icon.classList.add('fa-chevron-down');
-        }
-    }
-
-    // اختیاری: بستن همه toggle-box ها در شروع
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.toggle-content').forEach(function (content) {
-            content.style.display = 'none';
-        });
-    });
-</script>
-
-<script>
-
-document.addEventListener('DOMContentLoaded', function () {
-  
-    // مدیریت باز و بسته شدن toggle-box ها
-    document.querySelectorAll('.toggle-header').forEach(header => {
-        header.addEventListener('click', function () {
-            const parent = header.closest('.toggle-box');
-            parent.classList.toggle('open');
-        });
-    });
-
-    // فعال‌سازی select2
-    $('.location-select, select').select2({
-        width: '100%',
-        placeholder: 'انتخاب کنید',
-        allowClear: true
-    });
-
-    // فعال‌سازی تقویم شمسی
-    $('#birth_date').persianDatepicker({
-        initialValueType: 'gregorian',
-        format: 'YYYY-MM-DD',
-        autoClose: true,
-        toolbox: {
-            calendarSwitch: {
-                enabled: false
-            }
-        }
-    });
-});
-</script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js"></script>
+<script src="https://unpkg.com/persian-date@1.1.0/dist/persian-date.min.js"></script>
+<script src="https://unpkg.com/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 
 <script>
   window.userAddress = {
-      continent_id: '{{ $user->address->continent_id }}',
-      country_id: '{{ $user->address->country_id }}',
-      province_id: '{{ $user->address->province_id }}',
-      county_id: '{{ $user->address->county_id }}',
-      section_id: '{{ $user->address->section_id }}',
-      city_id: '{{ $user->address->city_id == null ? 'rural_' . $user->address->rural_id : 'city_' . $user->address->city_id }}',
-      region_id: '{{ $user->address->region_id }}',
-      neighborhood_id: '{{ $user->address->neighborhood_id }}',
-      street_id: '{{ $user->address->street_id }}',
-      alley_id: '{{ $user->address->alley_id }}'
+      continent_id: '{{ $user->address->continent_id ?? '' }}',
+      country_id: '{{ $user->address->country_id ?? '' }}',
+      province_id: '{{ $user->address->province_id ?? '' }}',
+      county_id: '{{ $user->address->county_id ?? '' }}',
+      section_id: '{{ $user->address->section_id ?? '' }}',
+      city_id: '{{ $user->address->city_id ? 'city_' . $user->address->city_id : ($user->address->rural_id ? 'rural_' . $user->address->rural_id : '') }}',
+      rural_id: '{{ $user->address->rural_id ?? '' }}',
+      village_id: '{{ $user->address->village_id ?? '' }}',
+      region_id: '{{ $user->address->region_id ?? '' }}',
+      neighborhood_id: '{{ $user->address->neighborhood_id ?? '' }}',
+      street_id: '{{ $user->address->street_id ?? '' }}',
+      alley_id: '{{ $user->address->alley_id ?? '' }}'
   };
+</script>
 
-  </script>
+<script>
+    // Section Toggle Function
+    function toggleSection(sectionId) {
+        const section = document.getElementById(`section-${sectionId}`);
+        const content = section.querySelector('.section-content');
+        const toggle = section.querySelector('.section-toggle i');
+        const stepperItem = document.querySelector(`[data-step="${sectionId}"]`);
+        
+        // Toggle content
+        content.classList.toggle('active');
+        section.classList.toggle('active');
+        
+        // Rotate icon
+        if (content.classList.contains('active')) {
+            toggle.style.transform = 'rotate(180deg)';
+            stepperItem?.classList.add('active');
+            // Scroll to section
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            toggle.style.transform = 'rotate(0deg)';
+        }
+    }
 
+    // Stepper Click Handler
+    document.querySelectorAll('.stepper-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const stepId = this.getAttribute('data-step');
+            const section = document.getElementById(`section-${stepId}`);
+            
+            // Open the section
+            const content = section.querySelector('.section-content');
+            if (!content.classList.contains('active')) {
+                toggleSection(stepId);
+            }
+            
+            // Scroll to section
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
 
-<script src="{{ asset('js/register_step2.js') }}" defer></script>
-<script src="{{ asset('js/edit_location.js') }}" defer></script>
-<script src="{{ asset('js/cropper_avatar.js') }}" defer></script>
-<script src="{{ asset('js/profile_forms.js') }}" defer></script>
+    // Initialize Select2
+    $(document).ready(function() {
+        $('.location-select, select').select2({
+            width: '100%',
+            placeholder: 'انتخاب کنید',
+            allowClear: true
+        });
+
+        // Initialize Persian Datepicker
+        $('#birth_date').persianDatepicker({
+            initialValueType: 'gregorian',
+            format: 'YYYY-MM-DD',
+            autoClose: true,
+            toolbox: {
+                calendarSwitch: {
+                    enabled: false
+                }
+            }
+        });
+    });
+
+    // Update stepper progress based on form completion
+    function updateStepperProgress() {
+        // This can be enhanced to check form completion status
+        document.querySelectorAll('.stepper-item').forEach((item, index) => {
+            if (index < 1) {
+                item.classList.add('completed');
+            }
+        });
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Open first section by default
+        toggleSection('general');
+        
+        // Update stepper
+        updateStepperProgress();
+    });
+</script>
+
+<script src="{{ asset('js/register_step2.js') }}"></script>
+<script src="{{ asset('js/edit_location.js') }}"></script>
+<script src="{{ asset('js/cropper_avatar.js') }}"></script>
+<script src="{{ asset('js/profile_forms.js') }}"></script>
+@endpush
 @endsection

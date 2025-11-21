@@ -14,4 +14,14 @@ class StockTransaction extends Model
         'type', // buy/sell
         'info',
     ];
+
+    public function auction()
+    {
+        return $this->belongsTo(Auction::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class);
+    }
 }

@@ -9,7 +9,12 @@ class PinnedMessage extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['message_id', 'group_id', 'pinned_by'];
+    protected $fillable = ['message_id', 'group_id', 'pinned_by', 'announcement_id'];
+
+    public function announcement()
+    {
+        return $this->belongsTo(Announcement::class);
+    }
 
     public function message()
     {

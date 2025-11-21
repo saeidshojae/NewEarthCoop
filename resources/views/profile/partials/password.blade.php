@@ -1,43 +1,64 @@
+<form action="{{ route('profile.update.password') }}" method="POST">
+    @csrf
+    @method('PUT')
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Current Password -->
+        <div class="form-group-enhanced">
+            <label class="form-label-enhanced">
+                <i class="fas fa-lock"></i>
+                رمز فعلی
+            </label>
+            <input type="password" 
+                   name="current_password" 
+                   placeholder="رمز عبور فعلی خود را وارد کنید" 
+                   class="form-input-enhanced" 
+                   @error('current_password') style="border-color: #ef4444;" @enderror
+                   required>
+            @error('current_password')
+                <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
+            @enderror
+        </div>
 
-<div class="toggle-box">
-    <div class="toggle-header" onclick="toggleBox(this)">
-        <span>رمز حساب من</span>
-        <i class="fas fa-chevron-down toggle-icon" id="toggleIcon"></i>
-    </div>
-    <div class="toggle-content" id="toggleContent">
-        <hr>
-        <form action="{{ route('profile.update.password') }}" method="POST">
-        @csrf
-        @method('PUT')
-        
-        <div class="row">
-            <div class="form-group col-12">
-                <label for="">رمز فعلی</label>
-                <input type="password" name="current_password" placeholder="رمز عبور فعلی خود را وارد کنید" class="form-control" @error('current_password') is-invalid @enderror>
-                @error('current_password')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-        </div><br>
+        <!-- New Password -->
+        <div class="form-group-enhanced">
+            <label class="form-label-enhanced">
+                <i class="fas fa-key"></i>
+                رمز جدید
+            </label>
+            <input type="password" 
+                   name="password" 
+                   placeholder="رمز عبور جدید خود را وارد کنید" 
+                   class="form-input-enhanced" 
+                   @error('password') style="border-color: #ef4444;" @enderror
+                   required>
+            @error('password')
+                <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
+            @enderror
+        </div>
 
-        <div class="row">
-            <div class="form-group col-lg-6 col-md-12 col-12">
-                <label for="">رمز جدید</label>
-                <input type="password" name="password" placeholder="رمز عبور جدید خود را وارد کنید" class="form-control" @error('password') is-invalid @enderror>
-                @error('password')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-            <div class="form-group col-lg-6 col-md-12 col-12">
-                <label for="">تکرار رمز عبور جدید</label>
-                <input type="password" name="password_confirmation" placeholder="تکرار رمز عبور جدید فعلی خود را وارد کنید" class="form-control" @error('password_confirmation') is-invalid @enderror>
-                @error('password_confirmation')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-        </div><br>
+        <!-- Confirm Password -->
+        <div class="form-group-enhanced md:col-span-2">
+            <label class="form-label-enhanced">
+                <i class="fas fa-lock"></i>
+                تکرار رمز عبور جدید
+            </label>
+            <input type="password" 
+                   name="password_confirmation" 
+                   placeholder="تکرار رمز عبور جدید را وارد کنید" 
+                   class="form-input-enhanced" 
+                   @error('password_confirmation') style="border-color: #ef4444;" @enderror
+                   required>
+            @error('password_confirmation')
+                <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
+            @enderror
+        </div>
+    </div>
 
-        <input type="submit" value="ذخیره تغییرات" class="btn btn-primary" style="background-color: #518dbdcc !important;">
-        </form>
+    <div class="flex justify-center mt-8">
+        <button type="submit" class="submit-btn-enhanced">
+            <i class="fas fa-save ml-2"></i>
+            ذخیره تغییرات رمز عبور
+        </button>
     </div>
-    </div>
+</form>

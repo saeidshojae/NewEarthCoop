@@ -150,23 +150,33 @@ function submitVote(el) {
 }
 
 $(document).ready(function() {
+  // Select2 برای options (نه manager_vote و inspector_vote که در election_modal مدیریت می‌شوند)
+  if ($('#options').length && !$('#options').data('select2')) {
+    $('#options').select2({
+      placeholder: "انتخاب کنید",
+      dir: "rtl",
+      tags: 'true'
+    });
+  }
+  
+  // Select2 برای manager_vote و inspector_vote فقط اگر در election modal نباشند
+  // یا اگر تابع updateElectionSelect2 موجود نباشد
+  if (!$('#electionVotingOverlay').length || typeof updateElectionSelect2 === 'undefined') {
+    if ($('#manager_vote').length && !$('#manager_vote').data('select2')) {
   $('#manager_vote').select2({
     multiple: true,
-
     placeholder: "انتخاب کنید",
     dir: "rtl",
   });
+    }
+    if ($('#inspector_vote').length && !$('#inspector_vote').data('select2')) {
   $('#inspector_vote').select2({
     multiple: true,
-
     placeholder: "انتخاب کنید",
     dir: "rtl",
   });
-  $('#options').select2({
-    placeholder: "انتخاب کنید",
-    dir: "rtl",
-    tags: 'true'
-  });
+    }
+  }
 
   $('#electionForm').on('submit', function (e) {
     const inspectorSelectedCount = $('#inspector_vote').val()?.length || 0;
@@ -195,15 +205,58 @@ $(document).ready(function() {
 });
 
 function openElectionBox(){
-  document.querySelector('.election-box').style='display: flex'
-  document.querySelector('#back').style='display: block'
-  closeGroupInfo()
+  const overlay = document.getElementById('electionVotingOverlay');
+  if (overlay) {
+    // Move overlay to body if not already there
+    if (overlay.parentElement !== document.body) {
+      document.body.appendChild(overlay);
+    }
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    // Scroll to top of overlay
+    overlay.scrollTop = 0;
+    
+    // Trigger event برای بروزرسانی Select2 بعد از باز شدن مدال
+    setTimeout(function() {
+      if (typeof window.updateElectionSelect2 === 'function') {
+        window.updateElectionSelect2();
+      }
+      // Dispatch custom event برای اطلاع سایر کدها
+      try {
+        const event = new Event('electionModalOpened');
+        window.dispatchEvent(event);
+      } catch(e) {
+        // Fallback for older browsers
+        try {
+          var event = document.createEvent('Event');
+          event.initEvent('electionModalOpened', true, true);
+          window.dispatchEvent(event);
+        } catch(e2) {
+          console.error('Error dispatching event:', e2);
+        }
+      }
+    }, 600);
+  }
+  closeGroupInfo();
 }
 
 function closeElectionBox(){
-  document.querySelector('.election-box').style='display: none'
-  document.querySelector('#back').style='display: none'
+  const overlay = document.getElementById('electionVotingOverlay');
+  if (overlay) {
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+  }
 }
+
+// Close election modal on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const overlay = document.getElementById('electionVotingOverlay');
+    if (overlay && overlay.style.display === 'flex') {
+      closeElectionBox();
+    }
+  }
+});
 
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('.reaction-buttons').forEach(container => {
@@ -262,31 +315,155 @@ function sendReaction(blogId, type, container) {
 
 
 function openGroupInfo() {
-  if (window.innerWidth < 768) {
-    document.getElementById('groupInfoPanel').style.right = '0';
+  const panel = document.getElementById('groupInfoPanel');
+  const backdrop = document.getElementById('groupInfoBackdrop');
+  if (!panel) return;
+
+  if (window.innerWidth < 1024) {
+    panel.classList.add('is-open');
+    if (backdrop) {
+      backdrop.classList.remove('hidden');
+      backdrop.classList.add('group-info-backdrop--visible');
+    }
   }
 }
 
 function closeGroupInfo() {
-  if (window.innerWidth < 768) {
-    document.getElementById('groupInfoPanel').style.right = '-100%';
-  } else {
-    document.getElementById('groupInfoPanel').style.right = '0';
+  const panel = document.getElementById('groupInfoPanel');
+  const backdrop = document.getElementById('groupInfoBackdrop');
+  if (!panel) return;
+
+  panel.classList.remove('is-open');
+  if (backdrop) {
+    backdrop.classList.add('hidden');
+    backdrop.classList.remove('group-info-backdrop--visible');
   }
 }
 
+document.getElementById('groupInfoBackdrop')?.addEventListener('click', closeGroupInfo);
+window.addEventListener('resize', () => {
+  if (window.innerWidth >= 1024) {
+    closeGroupInfo();
+  }
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    closeGroupInfo();
+  }
+});
 
+document.addEventListener('DOMContentLoaded', () => {
+  const menus = Array.from(document.querySelectorAll('[data-action-menu]'));
+
+  const closeAllMenus = (except = null) => {
+    menus.forEach(menu => {
+      if (menu !== except) {
+        menu.classList.remove('is-open');
+        menu.querySelector('.action-menu__toggle')?.setAttribute('aria-expanded', 'false');
+      }
+    });
+  };
+
+  menus.forEach(menu => {
+    const toggle = menu.querySelector('.action-menu__toggle');
+    const list = menu.querySelector('.action-menu__list');
+
+    toggle?.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const isOpen = menu.classList.contains('is-open');
+      closeAllMenus();
+      if (!isOpen) {
+        menu.classList.add('is-open');
+        toggle.setAttribute('aria-expanded', 'true');
+      }
+    });
+
+    list?.querySelectorAll('button, a').forEach(item => {
+      item.addEventListener('click', () => closeAllMenus());
+    });
+  });
+
+  document.addEventListener('click', event => {
+    const clickedInside = menus.some(menu => menu.contains(event.target));
+    if (!clickedInside) {
+      closeAllMenus();
+    }
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      closeAllMenus();
+    }
+  });
+});
+
+
+// Handle modal click - close if clicked outside dialog
+window.handleModalClick = function(event, modalId) {
+    // اگر روی خود dialog یا داخل dialog کلیک شده، نباید بسته شود
+    const dialog = event.currentTarget.querySelector('.modal-shell__dialog');
+    if (dialog && (event.target === dialog || dialog.contains(event.target))) {
+        return;
+    }
+    
+    // اگر روی backdrop یا خارج از dialog کلیک شده، modal را ببند
+    if (modalId === 'postFormBox') {
+        window.cancelPostForm();
+    } else if (modalId === 'pollOptionsBox') {
+        window.cancelPollForm();
+    } else if (modalId === 'manageMembersModal') {
+        if (typeof window.closeManageMembersModal === 'function') {
+            window.closeManageMembersModal();
+        }
+    } else if (modalId === 'manageReportsModal') {
+        if (typeof window.closeManageReportsModal === 'function') {
+            window.closeManageReportsModal();
+        }
+    } else if (modalId === 'groupSettingsModal') {
+        if (typeof window.closeGroupSettingsModal === 'function') {
+            window.closeGroupSettingsModal();
+        }
+    }
+};
+
+// Make functions available in global scope
+window.openBlogBox = function(){
+    // حذف element #back اگر وجود دارد
+    const back = document.querySelector('#back');
+    if (back) {
+        back.style.display = 'none';
+    }
+    
+    const postFormBox = document.querySelector('#postFormBox');
+    if (postFormBox) {
+        postFormBox.style.display = 'flex';
+        postFormBox.style.setProperty('display', 'flex', 'important');
+    }
+};
+
+window.openPollBox = function(){
+    // حذف element #back اگر وجود دارد
+    const back = document.querySelector('#back');
+    if (back) {
+        back.style.display = 'none';
+    }
+    
+    const pollOptionsBox = document.querySelector('#pollOptionsBox');
+    if (pollOptionsBox) {
+        pollOptionsBox.style.display = 'flex';
+        pollOptionsBox.style.setProperty('display', 'flex', 'important');
+    }
+};
+
+// Also keep them in local scope for backward compatibility
 function openBlogBox(){
-    document.querySelector('#back').style='display: block'
-    document.querySelector('#postFormBox').style='display: block'
-  }
+    window.openBlogBox();
+}
 
-  
-
-  function openPollBox(){
-    document.querySelector('#back').style='display: block'
-    document.querySelector('#pollOptionsBox').style='display: block'
-  }
+function openPollBox(){
+    window.openPollBox();
+}
 
   function openElection2Box(){
     document.querySelector('#back').style='display: block'
@@ -337,14 +514,42 @@ function openBlogBox(){
   
   
   
+  // Make cancelPostForm available in global scope
+  window.cancelPostForm = function(){
+    const postFormBox = document.querySelector('#postFormBox');
+    if (postFormBox) {
+        postFormBox.style.display = 'none';
+        postFormBox.style.setProperty('display', 'none', 'important');
+    }
+    // Also try to hide #back if it exists
+    const back = document.querySelector('#back');
+    if (back) {
+        back.style.display = 'none';
+    }
+  };
+  
+  // Also keep it in local scope for backward compatibility
   function cancelPostForm(){
-    document.querySelector('#back').style='display: none'
-    document.querySelector('#postFormBox').style='display: none'
+    window.cancelPostForm();
   }
 
+  // Make cancelPollForm available in global scope
+  window.cancelPollForm = function(){
+    const pollOptionsBox = document.querySelector('#pollOptionsBox');
+    if (pollOptionsBox) {
+        pollOptionsBox.style.display = 'none';
+        pollOptionsBox.style.setProperty('display', 'none', 'important');
+    }
+    // Also try to hide #back if it exists
+    const back = document.querySelector('#back');
+    if (back) {
+        back.style.display = 'none';
+    }
+  };
+  
+  // Also keep it in local scope for backward compatibility
   function cancelPollForm(){
-    document.querySelector('#back').style='display: none'
-    document.querySelector('#pollOptionsBox').style='display: none'
+    window.cancelPollForm();
   }
   
   function cancelelectionForm(){
@@ -417,7 +622,53 @@ function openBlogBox(){
 document.addEventListener('DOMContentLoaded', function() {
     const chatBox = document.getElementById('chat-box');
     const form = document.getElementById('chatForm');
-    
+    const voiceFileInput = document.getElementById('voice-file-input');
+    const voiceFilePreview = document.getElementById('voice-file-preview');
+    const voiceFileName = document.getElementById('voice-file-name');
+    const voiceFileSize = document.getElementById('voice-file-size');
+    const voiceFileRemove = document.getElementById('voice-file-remove');
+
+    // Format file size helper
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 بایت';
+        const k = 1024;
+        const sizes = ['بایت', 'کیلوبایت', 'مگابایت', 'گیگابایت'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    const updateVoiceFilePreview = (file) => {
+        if (!voiceFilePreview) return;
+
+        if (file) {
+            if (voiceFileName) {
+                voiceFileName.textContent = file.name;
+            }
+            if (voiceFileSize) {
+                voiceFileSize.textContent = formatFileSize(file.size);
+            }
+            voiceFilePreview.style.display = 'flex';
+            voiceFilePreview.style.setProperty('display', 'flex', 'important');
+        } else {
+            voiceFilePreview.style.display = 'none';
+            voiceFilePreview.style.setProperty('display', 'none', 'important');
+            if (voiceFileName) voiceFileName.textContent = '';
+            if (voiceFileSize) voiceFileSize.textContent = '';
+        }
+    };
+
+    voiceFileInput?.addEventListener('change', () => {
+        updateVoiceFilePreview(voiceFileInput.files?.[0] || null);
+    });
+
+    voiceFileRemove?.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (voiceFileInput) {
+            voiceFileInput.value = '';
+        }
+        updateVoiceFilePreview(null);
+    });
+
     if (form) {
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -427,6 +678,38 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (parentId) {
                 formData.append('parent_id', parentId);
+            }
+
+            // اگر فایل صوتی انتخاب شده و message خالی است، یک مقدار پیش‌فرض اضافه کن
+            const hasVoiceFile = voiceFileInput && voiceFileInput.files && voiceFileInput.files.length > 0;
+            const messageEditor = CKEDITOR.instances['message_editor'];
+            let messageText = '';
+            
+            if (messageEditor) {
+                messageText = messageEditor.getData().trim();
+                // حذف HTML tags برای بررسی خالی بودن
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = messageText;
+                const plainText = tempDiv.textContent || tempDiv.innerText || '';
+                messageText = plainText.trim();
+            } else {
+                const messageTextarea = document.getElementById('message_editor');
+                if (messageTextarea) {
+                    messageText = messageTextarea.value.trim();
+                }
+            }
+
+            // اگر فایل صوتی انتخاب شده و message خالی است
+            if (hasVoiceFile && !messageText) {
+                if (messageEditor) {
+                    messageEditor.setData('🎤 پیام صوتی');
+                } else {
+                    const messageTextarea = document.getElementById('message_editor');
+                    if (messageTextarea) {
+                        messageTextarea.value = '🎤 پیام صوتی';
+                    }
+                }
+                formData.set('message', '🎤 پیام صوتی');
             }
             
             try {
@@ -462,6 +745,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (responseData.status === 'success') {
                     appendMessage(responseData.message);
                     form.reset();
+                    
+                    // Clear voice file input and preview
+                    if (voiceFileInput) {
+                        voiceFileInput.value = '';
+                    }
+                    updateVoiceFilePreview(null);
+                    
+                    // Clear CKEditor if exists
+                    const messageEditor = CKEDITOR.instances['message_editor'];
+                    if (messageEditor) {
+                        messageEditor.setData('');
+                    }
+                    
                     // Clear parent_id after successful submission
                     document.getElementById('parent_id').value = '';
                     // Hide reply indicator
@@ -536,11 +832,41 @@ function appendMessage(message) {
                     </div>
                 ` : ''}
                 ${message.voice_message ? `
-                    <div class="voice-message">
-                        <audio controls style="width: 100%;">
-                            <source src="${message.voice_message}" type="audio/wav">
-                            مرورگر شما از پخش صدا پشتیبانی نمی‌کند.
-                        </audio>
+                    <div class="voice-message-container" style="
+                        margin-top: 12px;
+                        padding: 12px;
+                        background: ${message.user_id == authUserId ? '#e3f2fd' : '#f5f5f5'};
+                        border-radius: 12px;
+                        border: 1px solid ${message.user_id == authUserId ? '#90caf9' : '#e0e0e0'};
+                        direction: ltr;
+                    ">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="
+                                width: 40px;
+                                height: 40px;
+                                border-radius: 50%;
+                                background: ${message.user_id == authUserId ? '#2196f3' : '#757575'};
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                color: white;
+                                flex-shrink: 0;
+                            ">
+                                <i class="fas fa-microphone" style="font-size: 18px;"></i>
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-size: 12px; color: #666; margin-bottom: 4px;">
+                                    <i class="fas fa-headphones"></i> پیام صوتی
+                                </div>
+                                <audio controls style="width: 100%; height: 40px;" preload="metadata">
+                                    <source src="${message.voice_message}" type="${message.file_type || 'audio/webm'}">
+                                    <source src="${message.voice_message}" type="audio/webm">
+                                    <source src="${message.voice_message}" type="audio/ogg">
+                                    <source src="${message.voice_message}" type="audio/mpeg">
+                                    مرورگر شما از پخش صدا پشتیبانی نمی‌کند.
+                                </audio>
+                            </div>
+                        </div>
                     </div>
                 ` : ''}
                 ${message.message ? `<p>${message.message}</p>` : ''}
@@ -921,23 +1247,7 @@ function reportMessage(messageId) {
 
 function deletePost(postId) {
     if (confirm('آیا از حذف این پست اطمینان دارید؟')) {
-        $.ajax({
-            url: `/blog/${postId}`,
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            success: function(response) {
-                if (response.status === 'success') {
-                    location.reload();
-                } else {
-                    alert(response.message || 'خطا در حذف پست');
-                }
-            },
-            error: function() {
-                alert('خطا در ارتباط با سرور');
-            }
-        });
+        window.location.href = `/groups/post/delete/${postId}`;
     }
 }
 
@@ -1198,3 +1508,4 @@ function submitReport() {
         alert('خطا در ارسال گزارش');
     });
 }
+

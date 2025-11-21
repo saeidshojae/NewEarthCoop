@@ -29,7 +29,15 @@ class BlogController extends Controller
             $inputs['img'] = $name;
         }
 
-        Blog::create($inputs);
+        $blog = Blog::create($inputs);
+
+        // award points for creating a post (configurable rule)
+        try {
+            $service = app(\App\Services\ReputationService::class);
+            $service->applyAction(auth()->user(), 'post_created', ['blog_id' => $blog->id], $blog->id, 'groups');
+        } catch (\Throwable $e) {
+            // ignore reputation failures
+        }
 
         return redirect()->back()->with('success', 'پست شما با موفقیت ارسال شد!');
     }

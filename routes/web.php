@@ -16,7 +16,14 @@ use App\Http\Controllers\Admin\GroupManagementController;
 use App\Http\Controllers\Admin\GroupSettingController;
 use App\Http\Controllers\Admin\InvitationCodeController;
 use App\Http\Controllers\Admin\RuleController;
+use App\Http\Controllers\Admin\NajmBaharController;
+use App\Http\Controllers\Admin\WelcomePageController;
+use App\Http\Controllers\Admin\SystemSettingsController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\NajmHodaController as AdminNajmHodaController;
+use App\Http\Controllers\Admin\FaqQuestionController as AdminFaqQuestionController;
+use App\Http\Controllers\Admin\EmailController;
+use App\Http\Controllers\Admin\SystemEmailController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Group\ElectionController;
 use App\Http\Controllers\Group\GroupController;
@@ -29,6 +36,9 @@ use App\Http\Controllers\Group\ReactionController;
 use App\Modules\Stock\Controllers\StockController;
 use App\Modules\Stock\Controllers\AuctionController;
 use App\Modules\Stock\Controllers\BidController;
+use App\Modules\Blog\Controllers\BlogController as ModuleBlogController;
+use App\Modules\Blog\Controllers\AdminBlogController;
+use App\Http\Controllers\LocaleController;
 
 use App\Http\Controllers\Auth\Register\StartController;
 use App\Http\Controllers\Auth\Register\Step1Controller;
@@ -41,11 +51,14 @@ use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Controllers\ChatRequestController;
+use App\Http\Controllers\ContactController;
 use App\Http\Middleware\UpdateLastSeenOnLogout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Admin\ReportedMessageController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\PageController;
+use App\Http\Controllers\Admin\ContentManagementController;
 use App\Models\Blog;
 use App\Models\Region;
 use App\Models\Rural;
@@ -66,6 +79,14 @@ use App\Models\Continent;
 
 /*
 |--------------------------------------------------------------------------
+| Language Routes
+|--------------------------------------------------------------------------
+*/
+Route::get('/lang/{locale}', [LocaleController::class, 'change'])->name('locale.change');
+Route::get('/lang/current', [LocaleController::class, 'current'])->name('locale.current');
+
+/*
+|--------------------------------------------------------------------------
 | Static pages
 |--------------------------------------------------------------------------
 */
@@ -82,7 +103,7 @@ Route::post('/terms', [TermController::class, 'store'])->name('terms.store');
 
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.process');
-Route::get('/logout', [LoginController::class, 'logout'])->name('logout')->middleware(UpdateLastSeenOnLogout::class);
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware(UpdateLastSeenOnLogout::class);
 
 // درخواست ارسال OTP
 Route::get('/forgot-password', [LoginController::class, 'forgotView'])->name('password.reset.view');
@@ -120,6 +141,17 @@ Route::middleware(EnsureEmailIsVerified::class)->group(function () {
     Route::post('/register/step3', [Step3Controller::class, 'process'])->name('register.step3.process');
 });
 
+// Admin Support Chat routes
+Route::middleware([\App\Http\Middleware\AdminMiddleware::class])->prefix('admin/support-chat')->name('admin.support-chat.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Admin\SupportChatController::class, 'index'])->name('index');
+    Route::get('/{chat}', [\App\Http\Controllers\Admin\SupportChatController::class, 'show'])->name('show');
+    Route::post('/{chat}/message', [\App\Http\Controllers\Admin\SupportChatController::class, 'sendMessage'])->name('message');
+    Route::post('/{chat}/assign', [\App\Http\Controllers\Admin\SupportChatController::class, 'assign'])->name('assign');
+    Route::post('/{chat}/convert-to-ticket', [\App\Http\Controllers\Admin\SupportChatController::class, 'convertToTicket'])->name('convert-to-ticket');
+    Route::post('/{chat}/close', [\App\Http\Controllers\Admin\SupportChatController::class, 'close'])->name('close');
+    Route::post('/auto-assign', [\App\Http\Controllers\Admin\SupportChatController::class, 'autoAssign'])->name('auto-assign');
+});
+
 // AJAX helpers (برای فیلدهای مکان و تخصص)
 Route::post('/get-children', [Step2Controller::class, 'getChildren'])->name('get.children');
 Route::post('/get-field-info', [Step2Controller::class, 'getFieldInfo']);
@@ -127,7 +159,9 @@ Route::post('/add-field', [Step2Controller::class, 'addField']);
 
 //get invation code
 Route::get('/invation-code', [InvitationController::class, 'get'])->name('invite');
-Route::post('/invation-code', [InvitationController::class, 'store'])->name('invite.store');
+Route::post('/invation-code', [InvitationController::class, 'store'])
+    ->middleware('throttle:3,60') // حداکثر 3 درخواست در 60 دقیقه
+    ->name('invite.store');
 
 //google login
 Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle'])->name('google.login');
@@ -138,6 +172,14 @@ Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallb
 | Authenticated Routes
 |--------------------------------------------------------------------------
 */
+
+    // لیست گروه‌ها و نمایش جزئیات
+    Route::get('/groups', [GroupController::class, 'index'])->name('groups.index');
+    
+    // Test Unified Layout - صفحه تست Layout یکپارچه
+    Route::get('/test-unified-layout', function() {
+        return view('test-unified-layout');
+    })->name('test.unified.layout');
 
 Route::middleware(Authenticate::class)->group(function () {
 
@@ -188,6 +230,31 @@ Route::middleware(Authenticate::class)->group(function () {
 
     Route::get('/profile/join-group/{type}', [ProfileController::class, 'profileJoinGroup'])->name('profile.join.group');
     
+    // User Tickets
+    Route::prefix('tickets')->name('user.tickets.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\UserTicketController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\UserTicketController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\UserTicketController::class, 'store'])->name('store');
+        Route::get('/{ticket}', [\App\Http\Controllers\UserTicketController::class, 'show'])->name('show');
+        Route::post('/{ticket}/comment', [\App\Http\Controllers\UserTicketController::class, 'comment'])->name('comment');
+    });
+    
+    // User Support Chat
+    Route::prefix('support-chat')->name('user.support-chat.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\User\SupportChatController::class, 'index'])->name('index');
+        Route::post('/{chat}/message', [\App\Http\Controllers\User\SupportChatController::class, 'sendMessage'])->name('message');
+        Route::get('/{chat}/messages', [\App\Http\Controllers\User\SupportChatController::class, 'getMessages'])->name('messages');
+        Route::post('/{chat}/convert-to-ticket', [\App\Http\Controllers\User\SupportChatController::class, 'convertToTicket'])->name('convert-to-ticket');
+        Route::post('/{chat}/close', [\App\Http\Controllers\User\SupportChatController::class, 'close'])->name('close');
+    });
+    
+    // Knowledge Base (Public)
+    Route::prefix('support/knowledge-base')->name('support.kb.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Support\KbController::class, 'index'])->name('index');
+        Route::get('/suggest', [\App\Http\Controllers\Support\KbController::class, 'suggest'])->name('suggest');
+        Route::get('/{slug}', [\App\Http\Controllers\Support\KbController::class, 'show'])->name('show');
+    });
+    
     
     /*
     |--------------------------------------------------------------------------
@@ -197,12 +264,20 @@ Route::middleware(Authenticate::class)->group(function () {
     
 
     // لیست گروه‌ها و نمایش جزئیات
-    Route::get('/groups', [GroupController::class, 'index'])->name('groups.index');
+    // Route::get('/groups', [GroupController::class, 'index'])->name('groups.index');
     Route::get('/groups/{group}', [GroupController::class, 'show'])->name('groups.show');
     Route::get('/groups/{group}/logout', [GroupController::class, 'logout'])->name('groups.logout');
     Route::get('/groups/{group}/relogout', [GroupController::class, 'relogout'])->name('groups.relogout');
     Route::get('/groups/{group}/open', [GroupController::class, 'open'])->name('groups.open');
     Route::put('/groups/{group}', [GroupController::class, 'update'])->name('groups.update');
+    Route::get('/groups/{group}/members', [GroupController::class, 'getMembers'])->name('groups.members');
+    Route::post('/groups/{group}/users/{user}/toggle-role', [GroupController::class, 'toggleUserRole'])->name('groups.members.toggle-role');
+    Route::get('/groups/{group}/stats', [GroupController::class, 'getStats'])->name('groups.stats');
+    
+    // مدیریت گزارش‌های پیام توسط مدیران گروه - فقط برای مدیران
+    Route::get('/groups/{group}/reports', [\App\Http\Controllers\Group\ReportController::class, 'index'])->name('groups.reports');
+    Route::get('/groups/{group}/reports/{report}', [\App\Http\Controllers\Group\ReportController::class, 'show'])->name('groups.reports.show');
+    Route::post('/groups/{group}/reports/{report}/review', [\App\Http\Controllers\Group\ReportController::class, 'review'])->name('groups.reports.review');
 
     // چت گروهی
     Route::get('/groups/chat/{group}', [ChatController::class, 'chat'])->name('groups.chat');
@@ -291,32 +366,93 @@ Route::middleware(Authenticate::class)->group(function () {
     Route::get('auctions', [\App\Modules\Stock\Controllers\AuctionController::class, 'index'])->name('auction.index');
     Route::get('auctions/{auction}', [\App\Modules\Stock\Controllers\AuctionController::class, 'show'])->name('auction.show');
     Route::post('auctions/{auction}/bid', [\App\Modules\Stock\Controllers\AuctionController::class, 'placeBid'])->name('auction.bid');
+
+    // دفتر سهام - صفحه اصلی بازار (داشبورد)
+    Route::get('stock-book', [\App\Modules\Stock\Controllers\StockController::class, 'book'])->name('stock.book');
+
+    // Bid edit/update/cancel for authenticated users
+        Route::get('bids/{bid}/edit', [\App\Modules\Stock\Controllers\BidController::class, 'edit'])->name('bid.edit');
+        Route::put('bids/{bid}', [\App\Modules\Stock\Controllers\BidController::class, 'update'])->name('bid.update');
+        Route::delete('bids/{bid}', [\App\Modules\Stock\Controllers\BidController::class, 'destroy'])->name('bid.destroy');
     
     Route::get('wallet', [\App\Modules\Stock\Controllers\WalletController::class, 'index'])->name('wallet.index');
     Route::get('holdings', [\App\Modules\Stock\Controllers\HoldingController::class, 'index'])->name('holding.index');
     Route::get('holdings/{stock}', [\App\Modules\Stock\Controllers\HoldingController::class, 'show'])->name('holding.show');
     
     Route::get('spring-accounts', function(){
-        $spring = \App\Models\Spring::where('user_id', auth()->user()->id)->where('status', '0')->first();
-
-        // if($spring == null){
-        //     return view('spring-accounts');
-        // }else{
-        //     return view('terms-spring');
-        // }
+        // بررسی وجود حساب نجم بهار برای کاربر
+        $spring = \App\Models\Spring::where('user_id', auth()->user()->id)->first();
         
-                    return view('terms-spring');
-
-
+        // اگر حساب وجود ندارد یا status = 0 (توافقنامه امضا نشده)
+        if(!$spring || $spring->status == 0) {
+            // دریافت توافقنامه‌های اصلی (بدون والد) از جدول جدید
+            $agreements = \App\Models\NajmBaharAgreement::whereNull('parent_id')
+                ->with('children')
+                ->orderBy('order')
+                ->orderBy('created_at', 'desc')
+                ->get();
+            
+            // اگر هیچ توافقنامه‌ای در جدول جدید وجود نداشت، از داده‌های قدیمی استفاده کن
+            if ($agreements->isEmpty()) {
+                $setting = \App\Models\Setting::find(1);
+                $oldAgreement = null;
+                if ($setting && !empty($setting->najm_summary)) {
+                    $oldAgreement = [
+                        'title' => 'توافقنامه نجم بهار',
+                        'content' => $setting->najm_summary,
+                        'children' => collect([])
+                    ];
+                }
+                return view('terms-spring', compact('oldAgreement'));
+            }
+            
+            $springAccount = $spring;
+            return view('terms-spring', compact('agreements', 'springAccount'));
+        }
+        
+        // اگر توافقنامه امضا شده، نمایش صفحه اصلی حساب
+        return view('spring-accounts');
     })->name('spring-accounts');
+
+    Route::get('spring-accounts/agreement', function () {
+        // دریافت توافقنامه‌های اصلی (بدون والد) از جدول جدید
+        $agreements = \App\Models\NajmBaharAgreement::whereNull('parent_id')
+            ->with('children')
+            ->orderBy('order')
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        // اگر هیچ توافقنامه‌ای در جدول جدید وجود نداشت، از داده‌های قدیمی استفاده کن
+        if ($agreements->isEmpty()) {
+            $setting = \App\Models\Setting::find(1);
+            $oldAgreement = null;
+            if ($setting && !empty($setting->najm_summary)) {
+                $oldAgreement = [
+                    'title' => 'توافقنامه نجم بهار',
+                    'content' => $setting->najm_summary,
+                    'children' => collect([])
+                ];
+            }
+            return view('terms-spring', compact('oldAgreement'));
+        }
+        
+        $springAccount = \App\Models\Spring::where('user_id', auth()->id())->first();
+        return view('terms-spring', compact('agreements', 'springAccount'));
+    })->name('spring-accounts.agreement');
     
     Route::post('/najm/confirm', function(){
         $spring = \App\Models\Spring::where('user_id', auth()->user()->id)->where('status', '0')->first();
-        $spring->status =1;
+        
+        // اگر حساب پیدا نشد، خطا
+        if(!$spring) {
+            return redirect()->route('spring-accounts')->with('error', 'حساب نجم بهار شما یافت نشد.');
+        }
+        
+        // تایید توافقنامه
+        $spring->status = 1;
         $spring->save();
         
-        return redirect()->route('spring-accounts');
-    
+        return redirect()->route('spring-accounts')->with('success', 'توافقنامه با موفقیت امضا شد.');
     })->name('najm.confirm');
 
 });
@@ -330,9 +466,128 @@ Route::middleware(Authenticate::class)->group(function () {
 Route::middleware(AdminMiddleware::class)->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // مدیریت محتوا
+    Route::middleware('permission:blog.view-dashboard')->get('content', [ContentManagementController::class, 'index'])->name('content.index');
+    
+    // تنظیمات سیستمی
+    Route::get('system-settings', [SystemSettingsController::class, 'index'])->name('system-settings.index');
+    // Reputation admin
+    Route::get('system-settings/reputation', [\App\Http\Controllers\Admin\ReputationController::class, 'index'])->name('reputation.index');
+    Route::post('system-settings/reputation', [\App\Http\Controllers\Admin\ReputationController::class, 'update'])->name('reputation.update');
+
+    // نجم‌هدا - مدیریت هوش مصنوعی
+    Route::middleware('permission:najm-hoda.view-dashboard')->prefix('najm-hoda')->name('najm-hoda.')->group(function () {
+        Route::get('/', [AdminNajmHodaController::class, 'index'])->name('index');
+        Route::middleware('permission:najm-hoda.view-conversations')->group(function () {
+            Route::get('/conversations', [AdminNajmHodaController::class, 'conversations'])->name('conversations');
+            Route::get('/conversations/{conversation}', [AdminNajmHodaController::class, 'showConversation'])->name('conversations.show');
+        });
+        Route::get('/analytics', [AdminNajmHodaController::class, 'analytics'])->name('analytics');
+        Route::get('/feedbacks', [AdminNajmHodaController::class, 'feedbacks'])->name('feedbacks');
+        Route::middleware('permission:najm-hoda.manage-settings')->group(function () {
+            Route::get('/settings', [AdminNajmHodaController::class, 'settings'])->name('settings');
+            Route::post('/settings', [AdminNajmHodaController::class, 'updateSettings'])->name('settings.update');
+        });
+        Route::get('/chat', [AdminNajmHodaController::class, 'chat'])->name('chat');
+        Route::post('/chat', [AdminNajmHodaController::class, 'sendMessage'])->name('chat.send');
+        Route::get('/create-agent', [AdminNajmHodaController::class, 'createAgent'])->name('create-agent');
+        Route::post('/design-agent', [AdminNajmHodaController::class, 'designAgent'])->name('design-agent');
+        Route::post('/save-agent', [AdminNajmHodaController::class, 'saveAgent'])->name('save-agent');
+        Route::get('/logs', [AdminNajmHodaController::class, 'logs'])->name('logs');
+        Route::delete('/logs', [AdminNajmHodaController::class, 'clearLogs'])->name('logs.clear');
+        
+        // Code Scanner
+        Route::middleware('permission:najm-hoda.use-code-scanner')->group(function () {
+            Route::get('/code-scanner', [AdminNajmHodaController::class, 'codeScanner'])->name('code-scanner');
+            Route::post('/code-scanner/scan', [AdminNajmHodaController::class, 'scanProject'])->name('code-scanner.scan');
+            Route::get('/code-scanner/results', [AdminNajmHodaController::class, 'scanProject'])->name('code-scanner.results');
+            Route::post('/code-scanner/analyze-file', [AdminNajmHodaController::class, 'analyzeFile'])->name('code-scanner.analyze-file');
+            Route::post('/code-scanner/suggestion', [AdminNajmHodaController::class, 'getSuggestion'])->name('code-scanner.suggestion');
+        });
+        
+        // Auto-Fixer Settings
+        Route::get('/auto-fixer-settings', [AdminNajmHodaController::class, 'autoFixerSettings'])->name('auto-fixer-settings');
+        Route::get('/auto-fixer/settings', [AdminNajmHodaController::class, 'getAutoFixerSettings'])->name('auto-fixer.settings.get');
+        Route::post('/auto-fixer/settings', [AdminNajmHodaController::class, 'saveAutoFixerSettings'])->name('auto-fixer.settings.save');
+        Route::post('/auto-fixer/test-run', [AdminNajmHodaController::class, 'testAutoFixer'])->name('auto-fixer.test');
+        Route::post('/auto-fixer/clean-backups', [AdminNajmHodaController::class, 'cleanBackups'])->name('auto-fixer.clean-backups');
+        Route::get('/auto-fixer/logs', [AdminNajmHodaController::class, 'getAutoFixerLogs'])->name('auto-fixer.logs');
+        Route::post('/auto-fixer/rollback', [AdminNajmHodaController::class, 'rollback'])->name('auto-fixer.rollback');
+    });
+
+    // Support tickets management
+    Route::middleware('permission:tickets.manage')->prefix('tickets')->name('tickets.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\TicketController::class, 'index'])->name('index');
+        Route::get('/export', [\App\Http\Controllers\Admin\TicketController::class, 'export'])->name('export');
+        Route::post('/bulk-action', [\App\Http\Controllers\Admin\TicketController::class, 'bulkAction'])->name('bulk-action');
+        Route::get('/{ticket}', [\App\Http\Controllers\Admin\TicketController::class, 'show'])->name('show');
+        Route::post('/{ticket}/assign', [\App\Http\Controllers\Admin\TicketController::class, 'assign'])->name('assign');
+        Route::post('/{ticket}/reply', [\App\Http\Controllers\Admin\TicketController::class, 'reply'])->name('reply');
+        Route::post('/{ticket}/close', [\App\Http\Controllers\Admin\TicketController::class, 'close'])->name('close');
+    });
+
+    // Email management
+    Route::prefix('emails')->name('emails.')->group(function () {
+        Route::get('/', [EmailController::class, 'index'])->name('index');
+        Route::get('/create', [EmailController::class, 'create'])->name('create');
+        Route::post('/', [EmailController::class, 'store'])->name('store');
+        Route::get('/send', [EmailController::class, 'showSendForm'])->name('send');
+        Route::post('/send-template', [EmailController::class, 'sendTemplate'])->name('send-template');
+        Route::post('/send-custom', [EmailController::class, 'sendCustom'])->name('send-custom');
+        Route::get('/{email}/edit', [EmailController::class, 'edit'])->name('edit');
+        Route::put('/{email}', [EmailController::class, 'update'])->name('update');
+        Route::delete('/{email}', [EmailController::class, 'destroy'])->name('destroy');
+        Route::post('/{email}/preview', [EmailController::class, 'preview'])->name('preview');
+    });
+
+    // System emails management
+    Route::prefix('system-emails')->name('system-emails.')->group(function () {
+        Route::get('/', [SystemEmailController::class, 'index'])->name('index');
+        Route::get('/create', [SystemEmailController::class, 'create'])->name('create');
+        Route::post('/', [SystemEmailController::class, 'store'])->name('store');
+        Route::get('/{systemEmail}/edit', [SystemEmailController::class, 'edit'])->name('edit');
+        Route::put('/{systemEmail}', [SystemEmailController::class, 'update'])->name('update');
+        Route::delete('/{systemEmail}', [SystemEmailController::class, 'destroy'])->name('destroy');
+        Route::post('/{systemEmail}/set-default', [SystemEmailController::class, 'setDefault'])->name('set-default');
+    });
 
     // مدیریت گروه‌ها
-    Route::get('groups/{group}/manage', [GroupManagementController::class, 'manage'])->name('groups.manage');
+    Route::middleware('permission:groups.view')->prefix('groups')->name('groups.')->group(function () {
+        Route::get('/', [AdminGroupController::class, 'index'])->name('index');
+        Route::get('/{group}/manage', [GroupManagementController::class, 'manage'])->name('manage');
+        
+        Route::middleware('permission:groups.manage-members')->group(function () {
+            Route::put('/manage/change-roles/{group}', function(Request $request, \App\Models\Group $group){
+                $validated = $request->validate([
+                    'users' => 'required|array|min:1',
+                    'users.*' => 'exists:users,id',
+                    'main_role' => 'required|in:0,1,2,3',
+                ]);
+                
+                // فقط نقش کاربران انتخاب شده را تغییر می‌دهیم
+                foreach ($validated['users'] as $userId) {
+                    $group->users()->updateExistingPivot($userId, [
+                        'role' => $validated['main_role'],
+                        'main_role' => $validated['main_role']
+                    ]);
+                }
+                
+                return back()->with('success', 'نقش‌های کاربران با موفقیت تغییر کرد');
+            })->name('changeRoles');
+            Route::put('/{group}/users/{user}/role', [GroupManagementController::class, 'updateRole'])->name('updateRole');
+        });
+        
+        Route::middleware('permission:groups.manage-settings')->group(function () {
+            Route::put('/{group}', [AdminGroupController::class, 'update'])->name('update');
+            Route::delete('/{group}', [AdminGroupController::class, 'delete'])->name('delete');
+        });
+    });
+
+    Route::get('faq-questions', [AdminFaqQuestionController::class, 'index'])->name('faq.index');
+    Route::put('faq-questions/{question}', [AdminFaqQuestionController::class, 'update'])->name('faq.update');
+    Route::delete('faq-questions/{question}', [AdminFaqQuestionController::class, 'destroy'])->name('faq.destroy');
+    Route::post('faq-questions/bulk', [AdminFaqQuestionController::class, 'bulkAction'])->name('faq.bulk');
     
     Route::put('groups/manage/chage-roles/{group}', function(Request $request, \App\Models\Group $group){
         $validated = $request->validate([
@@ -351,10 +606,6 @@ Route::middleware(AdminMiddleware::class)->prefix('admin')->name('admin.')->grou
         return back()->with('success', 'نقش کاربران با موفقیت تغییر یافت.');    
     })->name('groups.change-roles');
     
-    Route::put('groups/{group}/users/{user}/role', [GroupManagementController::class, 'updateRole'])->name('groups.updateRole');
-    Route::put('groups/{group}', [AdminGroupController::class, 'update'])->name('groups.update');
-    Route::get('groups', [AdminGroupController::class, 'index'])->name('group.index');
-    Route::get('group-delete/{group}', [AdminGroupController::class, 'delete'])->name('group.delete');
 
     Route::put('group-post-update/{blog}', [AdminGroupController::class, 'postUpdate'])->name('group-post.update');
     Route::get('group-post-delete/{blog}', [AdminGroupController::class, 'postDelete'])->name('group.post.delete');
@@ -362,139 +613,107 @@ Route::middleware(AdminMiddleware::class)->prefix('admin')->name('admin.')->grou
     // کدهای دعوت
     Route::get('invitation-codes', [InvitationCodeController::class, 'index'])->name('invitation_codes.index');
     Route::post('invitation-codes', [InvitationCodeController::class, 'store'])->name('invitation_codes.store');
+    Route::post('invitation-codes/bulk', [InvitationCodeController::class, 'bulkAction'])->name('invitation_codes.bulk');
+    Route::post('invitation-codes/generate', [InvitationCodeController::class, 'generate'])->name('invitation_codes.generate');
+    Route::get('invitation-codes/export', [InvitationCodeController::class, 'exportCsv'])->name('invitation_codes.export');
+    Route::get('invitation-codes/logs', [InvitationCodeController::class, 'logs'])->name('invitation_codes.logs');
+    Route::get('invitation-codes/logs/export', [InvitationCodeController::class, 'exportLogs'])->name('invitation_codes.logs.export');
+    Route::post('invitation-codes/auto-invalidate', [InvitationCodeController::class, 'autoInvalidate'])->name('invitation_codes.auto_invalidate');
+
+    // درخواست‌های کد دعوت
+    Route::post('invitation-requests/{invitation}/approve', [InvitationCodeController::class, 'approveInvitation'])->name('invitation_requests.approve');
+    Route::post('invitation-requests/{invitation}/reject', [InvitationCodeController::class, 'rejectInvitation'])->name('invitation_requests.reject');
+    Route::post('invitation-requests/bulk', [InvitationCodeController::class, 'bulkRequests'])->name('invitation_requests.bulk');
 
     Route::get('/activate', [ActivateController::class, 'index'])->name('activate.index'); 
     Route::put('/activate', [ActivateController::class, 'update'])->name('activate.update');
 
-    
-    Route::get('/category', function(){
-        return view('admin.category.index');
-    })->name('category.index');
-    
-    Route::post('/category', function(Request $request){
-        $inputs = $request->validate([
-            'name' => 'required|max:255',
-            'groups' => 'required|array'
-        ]);
-        
-        $category = \App\Models\Category::create($inputs);
-        foreach($inputs['groups'] as $groupSettingId){
-            \App\Models\CategoryGroupSetting::create(['category_id' => $category->id, 'group_setting_id' => $groupSettingId]);
-        }
-        
-        return back();
-        
-    })->name('category.store');
-     
-    Route::get('/category-delete/{category}', function(\App\Models\Category $category){
-        $category->delete();
-                return back();
-
-    })->name('category.delete');
-    
-    Route::put('/category/{category}', function(\App\Models\Category $category, Request $request){
-        $inputs = $request->validate([
-            'name' => 'required|max:255',
-            'groups' => 'required|array'
-        ]);
-        
-        $category->update($inputs);
-        foreach(\App\Models\CategoryGroupSetting::where('category_id', $category->id)->get() as $gs){
-            $gs->delete();
-        }
-        
-        foreach($inputs['groups'] as $groupSettingId){
-            \App\Models\CategoryGroupSetting::create(['category_id' => $category->id, 'group_setting_id' => $groupSettingId]);
-        }
-        
-        return back();
-        
-    })->name('category.update');
+    Route::get('categories', [\App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('categories.index');
+    Route::post('categories', [\App\Http\Controllers\Admin\CategoryController::class, 'store'])->name('categories.store');
+    Route::put('categories/{category}', [\App\Http\Controllers\Admin\CategoryController::class, 'update'])->name('categories.update');
+    Route::delete('categories/{category}', [\App\Http\Controllers\Admin\CategoryController::class, 'destroy'])->name('categories.destroy');
     //اساسنامه
-    Route::get('rules', [RuleController::class, 'index'])->name('rule.index');
-    Route::post('rules', [RuleController::class, 'store'])->name('rule.store');
-    Route::get('rules/{term}', [RuleController::class, 'destroy'])->name('rule.destroy');
-    Route::put('rules/{term}', [RuleController::class, 'update'])->name('rule.update');
+    Route::get('rule', [RuleController::class, 'index'])->name('rule.index');
+    Route::get('rule/create', [RuleController::class, 'create'])->name('rule.create');
+    Route::post('rule', [RuleController::class, 'store'])->name('rule.store');
+    Route::get('rule/{rule}/edit', [RuleController::class, 'edit'])->name('rule.edit');
+    Route::put('rule/{rule}', [RuleController::class, 'update'])->name('rule.update');
+    Route::delete('rule/{rule}', [RuleController::class, 'destroy'])->name('rule.destroy');
     
+    // توافقنامه‌های نجم بهار
+    Route::get('najm-bahar', [NajmBaharController::class, 'index'])->name('najm-bahar.index');
+    Route::get('najm-bahar/create', [NajmBaharController::class, 'create'])->name('najm-bahar.create');
+    Route::post('najm-bahar', [NajmBaharController::class, 'store'])->name('najm-bahar.store');
+    Route::get('najm-bahar/{najmBahar}/edit', [NajmBaharController::class, 'edit'])->name('najm-bahar.edit');
+    Route::put('najm-bahar/{najmBahar}', [NajmBaharController::class, 'update'])->name('najm-bahar.update');
+    Route::delete('najm-bahar/{najmBahar}', [NajmBaharController::class, 'destroy'])->name('najm-bahar.destroy');
+    
+    // صفحه قدیمی نجم بهار (برای سازگاری با سیستم قدیمی)
     Route::get('/najm-page', function(){
-        return view('admin.najm.index'); 
+        return redirect()->route('admin.najm-bahar.index');
     })->name('najm-page');
     
-    Route::put('/najm-page', function(Request $request){
-        $inputs = $request->validate([
-            'najm_summary' => 'nullable', 
-        ]);
-        
-        $setting = \App\Models\Setting::find(1);
-        if(isset($inputs['najm_summary'])){
-            $setting->najm_summary = $inputs['najm_summary'];
-        }
-
-        $setting->save();
-        
-        return back();
-    })->name('update.najm');
-    
-    Route::get('/welcome-page', function(){
-        return view('admin.welcome.index'); 
-    })->name('welcome-page');
-    
-    Route::put('/welcome-page', function(Request $request){
-        $inputs = $request->validate([
-            'welcome_titre' => 'nullable|max:255', 
-            'welcome_content' => 'nullable', 
-            'home_titre' => 'nullable|max:255', 
-            'home_content' => 'nullable', 
-        ]);
-        
-        $setting = \App\Models\Setting::find(1);
-        if(isset($inputs['welcome_titre'])){
-            $setting->welcome_titre = $inputs['welcome_titre'];
-        }
-        if(isset($inputs['welcome_content'])){
-            $setting->welcome_content = $inputs['welcome_content'];
-        }
-        if(isset($inputs['home_titre'])){
-            $setting->home_titre = $inputs['home_titre'];
-        }
-                if(isset($inputs['home_content'])){
-            $setting->home_content = $inputs['home_content'];
-        }
-        $setting->save();
-        
-        return back();
-    })->name('update.welcome');
-    
-    
-    Route::post('/slider', function(Request $request){
-        $inputs = $request->validate([
-            'src' => 'required|file|mimes:png,jpg,jpeg,webp|max:2048',
-            'position' => 'required|numeric|in:0,1'
-        ]);
-        
-        if ($request->hasFile('src') && $request->file('src')->isValid()) {
-            $file = $request->file('src');
-            $name = time() . '.' . $file->getClientOriginalExtension();
-            $inputs['file_type'] = $file->getMimeType();
-            $file->move(public_path('images/sliders'), $name);
-            $inputs['src'] = $name;
-        }
-        
-        \App\Models\Slider::create($inputs);
-        return back();
-    })->name('slider.store');
-    
-        
-    Route::get('/slider-delete/{slider}', function(\App\Models\Slider $slider){
-        $slider->delete();
-        return back();
-    })->name('slider.delete');
+    // مدیریت صفحه خوش‌آمد و هوم
+    Route::get('/welcome-page', [WelcomePageController::class, 'index'])->name('welcome-page');
+    Route::put('/welcome-page', [WelcomePageController::class, 'update'])->name('welcome-page.update');
+    Route::post('/welcome-page/slider', [WelcomePageController::class, 'storeSlider'])->name('welcome-page.slider.store');
+    Route::delete('/welcome-page/slider/{slider}', [WelcomePageController::class, 'destroySlider'])->name('welcome-page.slider.destroy');
     
     //اساسنامه
-    Route::resource('users', UserController::class);
-    Route::get('users/{user}', [UserController::class, 'destroy'])->name('user.destroy');
+    // User routes - باید قبل از resource قرار بگیرند تا تداخل نداشته باشند
+    Route::middleware('permission:users.view')->prefix('users')->name('users.')->group(function () {
+        Route::get('/export/all', [UserController::class, 'exportUsers'])->name('export.all');
+        Route::get('/import', [UserController::class, 'showImport'])->name('import');
+        Route::post('/import', [UserController::class, 'import'])->name('import.store');
+        Route::get('/', [UserController::class, 'index'])->name('index');
+        Route::get('/{user}/details', [UserController::class, 'show'])->name('show');
+        Route::get('/{user}/transactions', [UserController::class, 'transactions'])->name('transactions');
+        
+        Route::middleware('permission:users.create')->group(function () {
+            Route::get('/create', [UserController::class, 'create'])->name('create');
+            Route::post('/', [UserController::class, 'store'])->name('store');
+        });
+        
+        Route::middleware('permission:users.edit')->group(function () {
+            Route::get('/{user}/edit', [UserController::class, 'edit'])->name('edit');
+            Route::put('/{user}', [UserController::class, 'update'])->name('update');
+        });
+        
+        Route::middleware('permission:users.manage-status')->group(function () {
+            Route::post('/bulk-action', [UserController::class, 'bulkAction'])->name('bulkAction');
+            Route::post('/{user}/status', [UserController::class, 'updateStatus'])->name('updateStatus');
+        });
+        
+        Route::middleware('permission:users.reset-password')->group(function () {
+            Route::post('/{user}/reset-password', [UserController::class, 'resetPassword'])->name('resetPassword');
+        });
+        
+        Route::middleware('permission:users.export')->group(function () {
+            Route::get('/export/all', [UserController::class, 'exportUsers'])->name('export.all');
+        });
+        
+        Route::middleware('permission:roles.manage')->group(function () {
+            Route::post('/{user}/assign-role', [UserController::class, 'assignRole'])->name('assignRole');
+        });
+        
+        Route::get('/{user}/send-message', [UserController::class, 'showSendMessage'])->name('sendMessage');
+        Route::post('/{user}/send-message', [UserController::class, 'sendMessage'])->name('sendMessage.store');
+        Route::post('/{user}/force-logout', [UserController::class, 'forceLogout'])->name('forceLogout');
+        
+        Route::middleware('permission:users.delete')->group(function () {
+            Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
+        });
+    });
+    
+    // مدیریت نقش‌ها و دسترسی‌ها
+    Route::middleware('permission:roles.manage')->group(function () {
+        Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class);
+        Route::resource('permissions', \App\Http\Controllers\Admin\PermissionController::class);
+    });
 
     Route::get('active-address', [AddressController::class, 'index'])->name('active.address');
+    Route::post('active-address', [AddressController::class, 'store'])->name('active.address.store');
+    Route::get('active-address/parents/{type}', [AddressController::class, 'getAvailableParents'])->name('active.address.parents');
     Route::get('active-address/edit/{id}', [AddressController::class, 'edit'])->name('active.address.edit');
     Route::put('active-address/{id}', [AddressController::class, 'update'])->name('active.address.update');
     Route::get('active-address/delete/{id}', [AddressController::class, 'delete'])->name('active.address.delete');
@@ -503,6 +722,8 @@ Route::middleware(AdminMiddleware::class)->prefix('admin')->name('admin.')->grou
 
 
     Route::get('active-experience', [ExperienceController::class, 'index'])->name('active.experience');
+    Route::post('active-experience', [ExperienceController::class, 'store'])->name('active.experience.store');
+    Route::get('active-experience/parents/{type}', [ExperienceController::class, 'getAvailableParents'])->name('active.experience.parents');
     Route::put('active-experience/{id}', [ExperienceController::class, 'update'])->name('active.experience.update');
     Route::get('active-experience/edit/{id}', [ExperienceController::class, 'edit'])->name('active.experience.edit');
     Route::get('active-experience/delete/{id}', [ExperienceController::class, 'delete'])->name('active.experience.delete');
@@ -515,6 +736,7 @@ Route::middleware(AdminMiddleware::class)->prefix('admin')->name('admin.')->grou
 
     Route::resource('announcement', AnnouncementController::class);
     Route::get('announcement/delete/{id}', [AnnouncementController::class, 'delete'])->name('announcement.delete');
+    Route::post('announcement/{announcement}/unpin', [AnnouncementController::class, 'unpin'])->name('announcement.unpin');
 
     // گزارش پیام‌ها
     Route::post('/messages/{message}/report', [MessageController::class, 'report'])->name('messages.report');
@@ -525,26 +747,175 @@ Route::middleware(AdminMiddleware::class)->prefix('admin')->name('admin.')->grou
     // Public page route
 });
 Route::get('pages/{slug}', [\App\Http\Controllers\PageController::class, 'show'])->name('pages.show');
+Route::post('/faq/questions', [\App\Http\Controllers\FaqQuestionController::class, 'store'])->name('questions.store');
+
+// Contact form (server-side ticket creation)
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+
+// Route تست ایمیل (فقط برای تست - بعداً حذف کنید)
+Route::get('/admin/test-email', function() {
+    if (!auth()->check() || !auth()->user()->hasRole('super_admin')) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+    
+    try {
+        $testEmail = request('email', 'test@example.com');
+        \Illuminate\Support\Facades\Mail::to($testEmail)->send(new \App\Mail\InvitationMail('TEST123', now()->addHours(72)));
+        return response()->json([
+            'success' => true,
+            'message' => 'Test email sent successfully (check your inbox or logs)',
+            'mail_config' => [
+                'driver' => config('mail.default'),
+                'host' => config('mail.mailers.smtp.host'),
+                'port' => config('mail.mailers.smtp.port'),
+                'from' => config('mail.from.address'),
+                'from_name' => config('mail.from.name'),
+            ]
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('Test email failed', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'mail_config' => [
+                'driver' => config('mail.default'),
+                'host' => config('mail.mailers.smtp.host'),
+                'from' => config('mail.from.address'),
+            ]
+        ], 500);
+    }
+})->middleware(['auth', 'admin'])->name('admin.test-email');
+
+// Route تست RBAC (فقط برای تست - بعداً حذف کنید)
+Route::get('/test-rbac', function() {
+    $user = auth()->user();
+    
+    if (!$user) {
+        return response()->json([
+            'error' => 'لطفا ابتدا وارد شوید'
+        ], 401);
+    }
+    
+    return response()->json([
+        'user' => [
+            'id' => $user->id,
+            'email' => $user->email,
+            'name' => $user->fullName(),
+            'is_admin' => $user->is_admin,
+        ],
+        'roles' => $user->roles->map(function($role) {
+            return [
+                'id' => $role->id,
+                'name' => $role->name,
+                'slug' => $role->slug,
+            ];
+        }),
+        'permissions' => $user->getAllPermissions()->map(function($permission) {
+            return [
+                'id' => $permission->id,
+                'name' => $permission->name,
+                'slug' => $permission->slug,
+                'module' => $permission->module,
+            ];
+        }),
+        'permission_checks' => [
+            'users.view' => $user->hasPermission('users.view'),
+            'users.create' => $user->hasPermission('users.create'),
+            'blog.view' => $user->hasPermission('blog.view'),
+            'blog.create' => $user->hasPermission('blog.create'),
+            'najm-hoda.view' => $user->hasPermission('najm-hoda.view'),
+        ],
+        'role_checks' => [
+            'super-admin' => $user->hasRole('super-admin'),
+            'user-manager' => $user->hasRole('user-manager'),
+            'content-manager' => $user->hasRole('content-manager'),
+        ],
+    ], 200, [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+})->middleware('auth')->name('test.rbac');
 
 // پنل ادمین - گزارش‌ها
-Route::middleware(AdminMiddleware::class)->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/reports', [ReportedMessageController::class, 'index'])->name('reports.index');
-    Route::post('/reports/{report}', [ReportedMessageController::class, 'update'])->name('reports.update');
-    Route::post('/reports/{report}', [ReportedMessageController::class, 'destroy'])->name('reports.destroy');
+Route::middleware([AdminMiddleware::class, 'permission:reports.view'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/reports', [\App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/{id}', [\App\Http\Controllers\Admin\ReportController::class, 'show'])->name('reports.show');
+    
+    Route::middleware('permission:reports.manage')->group(function () {
+        Route::put('/reports/{id}', [\App\Http\Controllers\Admin\ReportController::class, 'update'])->name('reports.update');
+        Route::post('/reports/bulk-action', [\App\Http\Controllers\Admin\ReportController::class, 'bulkAction'])->name('reports.bulk-action');
+        Route::delete('/reports/{id}', [\App\Http\Controllers\Admin\ReportController::class, 'destroy'])->name('reports.destroy');
+    });
 });
 
 // مدیریت سهام و حراج - ادمین
 Route::middleware(AdminMiddleware::class)->prefix('admin')->name('admin.')->group(function () {
-    Route::get('stock', [\App\Modules\Stock\Controllers\StockController::class, 'adminIndex'])->name('stock.index');
-    Route::get('stock/create', [\App\Modules\Stock\Controllers\StockController::class, 'adminCreate'])->name('stock.create');
-    Route::post('stock', [\App\Modules\Stock\Controllers\StockController::class, 'adminStore'])->name('stock.store');
+    // مدیریت سهام
+    Route::middleware('permission:stock.view-dashboard')->group(function () {
+        Route::get('stock', [\App\Modules\Stock\Controllers\StockController::class, 'adminIndex'])->name('stock.index');
+        Route::get('stock/shareholders', [\App\Modules\Stock\Controllers\StockController::class, 'shareholders'])->name('stock.shareholders');
+        
+        Route::middleware('permission:stock.edit')->group(function () {
+            Route::get('stock/create', [\App\Modules\Stock\Controllers\StockController::class, 'adminCreate'])->name('stock.create');
+            Route::post('stock', [\App\Modules\Stock\Controllers\StockController::class, 'adminStore'])->name('stock.store');
+            Route::get('stock/gift', [\App\Modules\Stock\Controllers\StockController::class, 'showGiftForm'])->name('stock.gift');
+            Route::post('stock/gift', [\App\Modules\Stock\Controllers\StockController::class, 'giftShares'])->name('stock.gift.store');
+        });
+    });
 
-    Route::get('auctions', [\App\Modules\Stock\Controllers\AuctionController::class, 'adminIndex'])->name('auction.index');
-    Route::get('auctions/create', [\App\Modules\Stock\Controllers\AuctionController::class, 'adminCreate'])->name('auction.create');
-    Route::post('auctions', [\App\Modules\Stock\Controllers\AuctionController::class, 'adminStore'])->name('auction.store');
-    Route::post('auctions/{auction}/start', [\App\Modules\Stock\Controllers\AuctionController::class, 'startAuction'])->name('auction.start');
-    Route::post('auctions/{auction}/close', [\App\Modules\Stock\Controllers\AuctionController::class, 'closeAuction'])->name('auction.close');
-    Route::post('wallet/credit', [\App\Modules\Stock\Controllers\WalletController::class, 'adminCredit'])->name('wallet.credit');
+    // مدیریت حراج‌ها
+    Route::middleware('permission:stock.view-dashboard')->prefix('auctions')->name('auction.')->group(function () {
+        Route::get('/', [\App\Modules\Stock\Controllers\AuctionController::class, 'adminIndex'])->name('index');
+        
+        Route::middleware('permission:stock.create')->group(function () {
+            Route::get('/create', [\App\Modules\Stock\Controllers\AuctionController::class, 'adminCreate'])->name('create');
+            Route::post('/', [\App\Modules\Stock\Controllers\AuctionController::class, 'adminStore'])->name('store');
+        });
+        
+        Route::middleware('permission:stock.edit')->group(function () {
+            Route::get('/{auction}/edit', [\App\Modules\Stock\Controllers\AuctionController::class, 'adminEdit'])->name('edit');
+            Route::put('/{auction}', [\App\Modules\Stock\Controllers\AuctionController::class, 'adminUpdate'])->name('update');
+            Route::post('/{auction}/start', [\App\Modules\Stock\Controllers\AuctionController::class, 'startAuction'])->name('start');
+            Route::post('/{auction}/close', [\App\Modules\Stock\Controllers\AuctionController::class, 'closeAuction'])->name('close');
+            Route::post('/{auction}/manual-settle', [\App\Modules\Stock\Controllers\AuctionController::class, 'manualSettleAuction'])->name('manual-settle');
+            Route::post('/bulk-action', [\App\Modules\Stock\Controllers\AuctionController::class, 'bulkAction'])->name('bulk-action');
+        });
+        
+        Route::middleware('permission:stock.delete')->group(function () {
+            Route::delete('/{auction}', [\App\Modules\Stock\Controllers\AuctionController::class, 'adminDestroy'])->name('destroy');
+        });
+        
+        Route::get('/{auction}', [\App\Modules\Stock\Controllers\AuctionController::class, 'adminShow'])->name('show');
+        Route::get('/{auction}/export', [\App\Modules\Stock\Controllers\AuctionController::class, 'export'])->name('export');
+    });
+    
+    // مدیریت کیف پول‌ها
+    Route::middleware('permission:stock.view-dashboard')->prefix('wallet')->name('wallet.')->group(function () {
+        Route::get('/', [\App\Modules\Stock\Controllers\WalletController::class, 'adminIndex'])->name('index');
+        Route::get('/{wallet}', [\App\Modules\Stock\Controllers\WalletController::class, 'adminShow'])->name('show');
+        
+        Route::middleware('permission:stock.edit')->group(function () {
+            Route::post('/credit', [\App\Modules\Stock\Controllers\WalletController::class, 'adminCredit'])->name('credit');
+            Route::post('/debit', [\App\Modules\Stock\Controllers\WalletController::class, 'adminDebit'])->name('debit');
+        });
+    });
+    
+    // مدیریت holdings
+    Route::middleware('permission:stock.view-dashboard')->prefix('holdings')->name('holdings.')->group(function () {
+        Route::get('/', [\App\Modules\Stock\Controllers\HoldingController::class, 'adminIndex'])->name('index');
+        Route::get('/{holding}', [\App\Modules\Stock\Controllers\HoldingController::class, 'adminShow'])->name('show');
+    });
+    
+    // گزارش‌گیری
+    Route::middleware('permission:stock.view-dashboard')->prefix('stock-reports')->name('stock-reports.')->group(function () {
+        Route::get('/auction-performance', [\App\Modules\Stock\Controllers\StockReportController::class, 'auctionPerformance'])->name('auction-performance');
+        Route::get('/investors', [\App\Modules\Stock\Controllers\StockReportController::class, 'investors'])->name('investors');
+        Route::get('/financial', [\App\Modules\Stock\Controllers\StockReportController::class, 'financial'])->name('financial');
+        
+        Route::get('/auction-performance/export', [\App\Modules\Stock\Controllers\StockReportController::class, 'exportAuctionPerformance'])->name('export-auction-performance');
+        Route::get('/investors/export', [\App\Modules\Stock\Controllers\StockReportController::class, 'exportInvestors'])->name('export-investors');
+        Route::get('/financial/export', [\App\Modules\Stock\Controllers\StockReportController::class, 'exportFinancial'])->name('export-financial');
+    });
 });
 
 
@@ -858,5 +1229,106 @@ if ($pid === null) {
         $msg = $e->getMessage() ?: 'خطا در ثبت مکان.';
         return response()->json(['message' => $msg], 422);
     }
+});
+
+/*
+|--------------------------------------------------------------------------
+| Blog Module Routes
+|--------------------------------------------------------------------------
+*/
+
+// Public Blog Routes
+Route::prefix('blog')->name('blog.')->group(function () {
+    Route::get('/', [ModuleBlogController::class, 'index'])->name('index');
+    Route::get('/search', [ModuleBlogController::class, 'search'])->name('search');
+    Route::get('/category/{slug}', [ModuleBlogController::class, 'category'])->name('category');
+    Route::get('/tag/{slug}', [ModuleBlogController::class, 'tag'])->name('tag');
+    Route::get('/{slug}', [ModuleBlogController::class, 'show'])->name('show');
+    
+    // Comments (requires auth)
+    Route::middleware(['auth'])->group(function () {
+        Route::post('/{post}/comment', [ModuleBlogController::class, 'storeComment'])->name('comment.store');
+    });
+});
+
+// Admin Blog Routes
+Route::middleware([\App\Http\Middleware\AdminMiddleware::class])->prefix('admin/blog')->name('admin.blog.')->group(function () {
+    // Dashboard
+    Route::middleware('permission:blog.view-dashboard')->get('/dashboard', [AdminBlogController::class, 'dashboard'])->name('dashboard');
+    
+    // Posts Management
+    Route::middleware('permission:blog.view-posts')->group(function () {
+        Route::get('/posts', [AdminBlogController::class, 'posts'])->name('posts');
+        Route::get('/posts/{post}/edit', [AdminBlogController::class, 'editPost'])->name('posts.edit');
+    });
+    
+    Route::middleware('permission:blog.create-posts')->group(function () {
+        Route::get('/posts/create', [AdminBlogController::class, 'createPost'])->name('posts.create');
+        Route::post('/posts', [AdminBlogController::class, 'storePost'])->name('posts.store');
+    });
+    
+    Route::middleware('permission:blog.edit-posts')->group(function () {
+        Route::put('/posts/{post}', [AdminBlogController::class, 'updatePost'])->name('posts.update');
+    });
+    
+    Route::middleware('permission:blog.delete-posts')->group(function () {
+        Route::delete('/posts/{post}', [AdminBlogController::class, 'deletePost'])->name('posts.delete');
+    });
+    
+    // Categories Management
+    Route::middleware('permission:blog.manage-categories')->group(function () {
+        Route::get('/categories', [AdminBlogController::class, 'categories'])->name('categories');
+        Route::get('/categories/create', [AdminBlogController::class, 'createCategory'])->name('categories.create');
+        Route::post('/categories', [AdminBlogController::class, 'storeCategory'])->name('categories.store');
+        Route::get('/categories/{category}/edit', [AdminBlogController::class, 'editCategory'])->name('categories.edit');
+        Route::put('/categories/{category}', [AdminBlogController::class, 'updateCategory'])->name('categories.update');
+        Route::delete('/categories/{category}', [AdminBlogController::class, 'deleteCategory'])->name('categories.delete');
+    });
+    
+    // Tags Management
+    Route::middleware('permission:blog.manage-tags')->group(function () {
+        Route::get('/tags', [AdminBlogController::class, 'tags'])->name('tags');
+        Route::post('/tags', [AdminBlogController::class, 'storeTag'])->name('tags.store');
+        Route::put('/tags/{tag}', [AdminBlogController::class, 'updateTag'])->name('tags.update');
+        Route::delete('/tags/{tag}', [AdminBlogController::class, 'deleteTag'])->name('tags.delete');
+    });
+    
+    // Comments Management
+    Route::middleware('permission:blog.manage-comments')->group(function () {
+        Route::get('/comments', [AdminBlogController::class, 'comments'])->name('comments');
+        Route::post('/comments/{comment}/approve', [AdminBlogController::class, 'approveComment'])->name('comments.approve');
+        Route::post('/comments/{comment}/reject', [AdminBlogController::class, 'rejectComment'])->name('comments.reject');
+        Route::delete('/comments/{comment}', [AdminBlogController::class, 'deleteComment'])->name('comments.delete');
+    });
+});
+
+// Knowledge Base (KB) Admin Routes
+Route::middleware([\App\Http\Middleware\AdminMiddleware::class])->prefix('admin/kb')->name('admin.kb.')->group(function () {
+    // Articles
+    Route::middleware('permission:kb.view')->group(function () {
+        Route::get('/articles', [\App\Http\Controllers\Admin\KbArticleController::class, 'index'])->name('articles.index');
+        Route::get('/articles/create', [\App\Http\Controllers\Admin\KbArticleController::class, 'create'])->name('articles.create');
+        Route::post('/articles', [\App\Http\Controllers\Admin\KbArticleController::class, 'store'])->name('articles.store');
+        Route::get('/articles/{article}/edit', [\App\Http\Controllers\Admin\KbArticleController::class, 'edit'])->name('articles.edit');
+        Route::put('/articles/{article}', [\App\Http\Controllers\Admin\KbArticleController::class, 'update'])->name('articles.update');
+        Route::post('/articles/{article}/toggle', [\App\Http\Controllers\Admin\KbArticleController::class, 'toggleStatus'])->name('articles.toggle');
+        Route::delete('/articles/{article}', [\App\Http\Controllers\Admin\KbArticleController::class, 'destroy'])->name('articles.destroy');
+    });
+
+    // Categories
+    Route::middleware('permission:kb.manage')->group(function () {
+        Route::get('/categories', [\App\Http\Controllers\Admin\KbCategoryController::class, 'index'])->name('categories.index');
+        Route::post('/categories', [\App\Http\Controllers\Admin\KbCategoryController::class, 'store'])->name('categories.store');
+        Route::put('/categories/{category}', [\App\Http\Controllers\Admin\KbCategoryController::class, 'update'])->name('categories.update');
+        Route::delete('/categories/{category}', [\App\Http\Controllers\Admin\KbCategoryController::class, 'destroy'])->name('categories.destroy');
+    });
+
+    // Tags
+    Route::middleware('permission:kb.manage')->group(function () {
+        Route::get('/tags', [\App\Http\Controllers\Admin\KbTagController::class, 'index'])->name('tags.index');
+        Route::post('/tags', [\App\Http\Controllers\Admin\KbTagController::class, 'store'])->name('tags.store');
+        Route::put('/tags/{tag}', [\App\Http\Controllers\Admin\KbTagController::class, 'update'])->name('tags.update');
+        Route::delete('/tags/{tag}', [\App\Http\Controllers\Admin\KbTagController::class, 'destroy'])->name('tags.destroy');
+    });
 });
 

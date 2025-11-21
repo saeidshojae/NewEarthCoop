@@ -16,6 +16,11 @@ class InvitationController extends Controller
 
     public function store(Request $request)
     {
+        // Honeypot: اگر فیلد مخفی پر شده باشد، درخواست را نادیده می‌گیریم
+        if ($request->filled('website')) {
+            return redirect()->route('welcome')->with('success', 'درخواست شما دریافت شد و بزودی بررسی می‌شود.');
+        }
+
         $inputs = $request->validate([
             'email' => 'required|email|unique:invitations,email|regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/',
             'message' => 'nullable|string|max:500',
@@ -23,9 +28,11 @@ class InvitationController extends Controller
         ]);
 
         $inputs['code'] = Str::random(5);
+        // 0 = pending, 1 = issued, 2 = rejected (ستون status در DB عددی است)
+        $inputs['status'] = 0;
 
         Invitation::create($inputs);
 
-        return redirect('/')->with('success', 'ازینکه برای پیوستن به زیست بوم همکاری های جهانی Earth Coop مشتاقید بسیار خوشحالیم، درخواست شما دریافت شد و بزودی برسی میشود');
+        return redirect()->route('welcome')->with('success', 'درخواست کد دعوت شما با موفقیت ثبت شد. ما درخواست شما را بررسی خواهیم کرد و در صورت تأیید، کد دعوت به ایمیل شما ارسال خواهد شد.');
     }
 }

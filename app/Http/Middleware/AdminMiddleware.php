@@ -8,10 +8,17 @@ class AdminMiddleware
 {
     public function handle($request, Closure $next)
     {
-        if (!Auth::check() || !Auth::user()->is_admin) {
-            return redirect('/home');
+        if (!Auth::check()) {
+            return redirect('/home')->with('error', 'لطفا ابتدا وارد شوید');
         }
 
-        return $next($request);
+        $user = Auth::user();
+
+        // اگر Super Admin است یا دارای نقش ادمین است، اجازه دسترسی دارد
+        if ($user->is_admin || $user->hasRole('super-admin') || $user->roles()->count() > 0) {
+            return $next($request);
+        }
+
+        return redirect('/home')->with('error', 'شما دسترسی به پنل مدیریت را ندارید');
     }
 }

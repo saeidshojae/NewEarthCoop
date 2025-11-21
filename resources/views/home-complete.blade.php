@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>خانه - New Earth Coop</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <!-- Swiper -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-element-bundle.min.js"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gfonts.ir" crossorigin>
+    <link href="https://fonts.gfonts.ir/css?family=Vazirmatn:100,200,300,400,500,600,700,800,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Custom CSS Variables */
+        :root {
+            --color-earth-green: #10b981;
+            --color-ocean-blue: #3b82f6;
+            --color-digital-gold: #f59e0b;
+            --color-pure-white: #ffffff;
+            --color-light-gray: #f8fafc;
+            --color-gentle-black: #1e293b;
+            --color-dark-green: #047857;
+            --color-dark-blue: #1d4ed8;
+            --color-red-tomato: #FF6347;
+        }
+        
+        * {
+            font-family: 'Vazirmatn', 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8f5e9 100%);
+            min-height: 100vh;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes bounce-custom {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .7; }
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .logo-animated {
+            animation: bounce-custom 3s infinite ease-in-out;
+        }
+        
+        .badge-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        .blinking-item {
+            animation: blink 2s ease-in-out infinite;
+        }
+
+        /* Sidebar animations */
+        .sidebar-menu-item:nth-child(1) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.1s both; }
+        .sidebar-menu-item:nth-child(2) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.2s both; }
+        .sidebar-menu-item:nth-child(3) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.3s both; }
+        .sidebar-menu-item:nth-child(4) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.4s both; }
+        .sidebar-menu-item:nth-child(5) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.5s both; }
+        .sidebar-menu-item:nth-child(6) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.6s both; }
+        .sidebar-menu-item:nth-child(7) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.7s both; }
+        .sidebar-menu-item:nth-child(8) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.8s both; }
+        .sidebar-menu-item:nth-child(9) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.9s both; }
+
+        /* Hover effects */
+        .sidebar-menu-link:hover {
+            background-color: var(--color-light-gray);
+            color: var(--color-earth-green);
+            transform: translateX(-5px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Ripple Effect */
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ripple::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .ripple:active::after {
+            width: 300px;
+            height: 300px;
+        }
+
+        /* Smooth Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #059669;
+        }
+
+        /* Content Card */
+        .content-card {
+            transition: all 0.3s ease;
+        }
+        
+        .content-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Swiper Slider */
+        swiper-container {
+            width: 100%;
+            height: auto;
+        }
+        
+        swiper-slide {
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        swiper-slide img {
+            display: block;
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            border-radius: 1rem;
+        }
+    </style>
+</head>
+
+<body class="font-vazirmatn leading-relaxed min-h-screen flex flex-col" x-data="{ 
+    mobileMenuOpen: false, 
+    sidebarOpen: false,
+    userDropdownOpen: false
+}">
+    
+    <!-- Header -->
+    <header class="bg-pure-white shadow-md py-4 px-6 md:px-8 sticky top-0 z-50 transition-all duration-300" style="background-color: var(--color-pure-white);">
+        <div class="container mx-auto flex justify-between items-center">
+            <!-- Logo & Back Button -->
+            <div class="flex items-center space-x-3 md:space-x-reverse rtl:space-x-reverse">
+                <a href="{{ url()->previous() == url()->current() ? route('home') : url()->previous() }}" class="text-gray-600 hover:text-green-600 transition-colors mr-3">
+                    <i class="fa fa-arrow-left text-xl"></i>
+                </a>
+                <svg width="45" height="45" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="logo-animated">
+                    <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" fill="#10b981" opacity="0.8"/>
+                    <path d="M12 2C10.5 4 8 6 8 9C8 12 12 14 12 14C12 14 16 12 16 9C16 6 13.5 4 12 2ZM12 14C12 14 10 16 10 18C10 20 12 22 12 22" fill="#047857"/>
+                </svg>
+                <a href="{{ route('home') }}" class="text-2xl md:text-3xl font-extrabold text-gentle-black" style="color: var(--color-gentle-black);">EarthCoop</a>
+            </div>
+
+            <!-- Desktop Navigation -->
+            <nav class="hidden md:flex items-center space-x-8 rtl:space-x-reverse text-gentle-black flex-grow justify-center" style="color: var(--color-gentle-black);">
+                <a href="{{ route('home') }}" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group flex items-center" style="hover:color: var(--color-earth-green);">
+                    <i class="fas fa-home ml-2" style="color: var(--color-earth-green);"></i> <span>خانه</span>
+                    <span class="absolute bottom-0 right-0 w-0 h-0.5 group-hover:w-full transition-all duration-300" style="background-color: var(--color-earth-green);"></span>
+                </a>
+                
+                @if(auth()->check())
+                <a href="{{ route('blog.index') }}" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group flex items-center">
+                    <i class="fas fa-blog ml-2" style="color: var(--color-earth-green);"></i> <span>وبلاگ</span>
+                    <span class="absolute bottom-0 right-0 w-0 h-0.5 group-hover:w-full transition-all duration-300" style="background-color: var(--color-earth-green);"></span>
+                </a>
+                <a href="{{ route('auction.index') }}" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group flex items-center">
+                    <i class="fas fa-chart-line ml-2" style="color: var(--color-earth-green);"></i> <span>دفتر سهام</span>
+                    <span class="absolute bottom-0 right-0 w-0 h-0.5 group-hover:w-full transition-all duration-300" style="background-color: var(--color-earth-green);"></span>
+                </a>
+                @else
+                <a href="{{ route('blog.index') }}" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group flex items-center">
+                    <i class="fas fa-blog ml-2" style="color: var(--color-earth-green);"></i> <span>وبلاگ</span>
+                    <span class="absolute bottom-0 right-0 w-0 h-0.5 group-hover:w-full transition-all duration-300" style="background-color: var(--color-earth-green);"></span>
+                </a>
+                @endif
+                
+                @foreach(\App\Models\Page::where('is_published', 1)->get() as $page)
+                <a href="{{ url('/pages/' . $page->slug) }}" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group flex items-center">
+                    <i class="fas fa-file-alt ml-2" style="color: var(--color-earth-green);"></i> <span>{{ $page->title }}</span>
+                    <span class="absolute bottom-0 right-0 w-0 h-0.5 group-hover:w-full transition-all duration-300" style="background-color: var(--color-earth-green);"></span>
+                </a>
+                @endforeach
+            </nav>
+
+            <div class="flex items-center gap-3">
+                <!-- Mobile Menu Button (Hamburger) -->
+                <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden text-gentle-black focus:outline-none" style="color: var(--color-gentle-black);">
+                    <i class="fas fa-bars text-2xl" x-show="!mobileMenuOpen"></i>
+                    <i class="fas fa-times text-2xl" x-show="mobileMenuOpen" x-transition></i>
+                </button>
+
+                <!-- Sidebar Toggle (for desktop too) -->
+                <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden text-gentle-black focus:outline-none" style="color: var(--color-gentle-black);">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+
+                <!-- User Profile Dropdown -->
+                <div class="relative">
+                    <button @click="userDropdownOpen = !userDropdownOpen" class="px-4 py-2 rounded-full shadow-md transition duration-300 font-medium transform hover:scale-105 flex items-center ripple" style="background-color: var(--color-earth-green); color: var(--color-pure-white);">
+                        <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white text-lg ml-2">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span class="hidden sm:inline">{{ Auth::user()->fullName() }}</span>
+                        <i class="fas fa-chevron-down mr-2 text-sm transition-transform duration-300" :class="{ 'rotate-180': userDropdownOpen }"></i>
+                    </button>
+                    
+                    <div x-show="userDropdownOpen" 
+                         @click.away="userDropdownOpen = false" 
+                         x-transition:enter="transition ease-out duration-200" 
+                         x-transition:enter-start="opacity-0 scale-95" 
+                         x-transition:enter-end="opacity-100 scale-100" 
+                         x-transition:leave="transition ease-in duration-150" 
+                         x-transition:leave-start="opacity-100 scale-100" 
+                         x-transition:leave-end="opacity-0 scale-95" 
+                         class="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-2 z-50 text-right origin-top-left"
+                         style="display: none; background-color: var(--color-pure-white);">
+                        
+                        <a href="{{ route('profile.show') }}" class="block px-4 py-2 hover:bg-gray-50 transition duration-200 flex items-center justify-start" style="color: var(--color-earth-green);">
+                            پروفایل <i class="fas fa-user-circle mr-3"></i>
+                        </a>
+                        
+                        <hr class="my-1 border-gray-200">
+                        <h6 class="px-4 py-2 text-sm font-bold" style="color: var(--color-ocean-blue);">دفتر سهام</h6>
+                        
+                        <a href="{{ route('auction.index') }}" class="block px-4 py-2 hover:bg-gray-50 transition duration-200 flex items-center justify-start" style="color: var(--color-gentle-black);">
+                            حراج‌های سهام <i class="fas fa-gavel mr-3"></i>
+                        </a>
+                        <a href="{{ route('wallet.index') }}" class="block px-4 py-2 hover:bg-gray-50 transition duration-200 flex items-center justify-start" style="color: var(--color-gentle-black);">
+                            کیف‌پول <i class="fas fa-wallet mr-3"></i>
+                        </a>
+                        <a href="{{ route('holding.index') }}" class="block px-4 py-2 hover:bg-gray-50 transition duration-200 flex items-center justify-start" style="color: var(--color-gentle-black);">
+                            کیف‌سهام <i class="fas fa-chart-line mr-3"></i>
+                        </a>
+                        
+                        <hr class="my-1 border-gray-200">
+                        
+                        <a href="{{ route('terms') }}" class="block px-4 py-2 hover:bg-gray-50 transition duration-200 flex items-center justify-start" style="color: var(--color-gentle-black);">
+                            اساسنامه <i class="fas fa-file-alt mr-3"></i>
+                        </a>
+                        <a href="{{ route('spring-accounts') }}" class="block px-4 py-2 hover:bg-gray-50 transition duration-200 flex items-center justify-start" style="color: var(--color-gentle-black);">
+                            توافقنامه مالی <i class="fas fa-file-contract mr-3"></i>
+                        </a>
+                        
+                        @if (auth()->check() && auth()->user()->is_admin == 1)
+                        <hr class="my-1 border-gray-200">
+                        <h6 class="px-4 py-2 text-sm font-bold" style="color: var(--color-ocean-blue);">مدیریت</h6>
+                        <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 hover:bg-gray-50 transition duration-200 flex items-center justify-start" style="color: var(--color-gentle-black);">
+                            پنل مدیریت <i class="bi bi-house-door mr-3"></i>
+                        </a>
+                        <a href="{{ route('admin.blog.dashboard') }}" class="block px-4 py-2 hover:bg-gray-50 transition duration-200 flex items-center justify-start" style="color: var(--color-gentle-black);">
+                            مدیریت وبلاگ <i class="fas fa-blog mr-3"></i>
+                        </a>
+                        @endif
+                        
+                        <hr class="my-1 border-gray-200">
+                        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form-complete-dropdown').submit();" class="block px-4 py-2 hover:bg-red-50 transition duration-200 flex items-center justify-start" style="color: var(--color-red-tomato);">
+                            خروج <i class="fas fa-sign-out-alt mr-3"></i>
+                        </a>
+                        <form id="logout-form-complete-dropdown" action="{{ route('logout') }}" method="POST" class="hidden">
+                            @csrf
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation -->
+        <div x-show="mobileMenuOpen" 
+             x-transition:enter="transition ease-out duration-200" 
+             x-transition:enter-start="opacity-0 -translate-y-2" 
+             x-transition:enter-end="opacity-100 translate-y-0" 
+             x-transition:leave="transition ease-in duration-150" 
+             x-transition:leave-start="opacity-100 translate-y-0" 
+             x-transition:leave-end="opacity-0 -translate-y-2" 
+             class="md:hidden mt-4 pb-4 border-t border-gray-200"
+             style="display: none;">
+            <nav class="flex flex-col items-center space-y-2 text-gentle-black" style="color: var(--color-gentle-black);">
+                <a href="{{ route('home') }}" class="block w-full text-center py-2 hover:bg-gray-50 rounded-md transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-home ml-2" style="color: var(--color-earth-green);"></i> <span>خانه</span>
+                </a>
+                @if(auth()->check())
+                <a href="{{ route('blog.index') }}" class="block w-full text-center py-2 hover:bg-gray-50 rounded-md transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-blog ml-2" style="color: var(--color-earth-green);"></i> <span>وبلاگ</span>
+                </a>
+                <a href="{{ route('auction.index') }}" class="block w-full text-center py-2 hover:bg-gray-50 rounded-md transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-chart-line ml-2" style="color: var(--color-earth-green);"></i> <span>دفتر سهام</span>
+                </a>
+                @else
+                <a href="{{ route('blog.index') }}" class="block w-full text-center py-2 hover:bg-gray-50 rounded-md transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-blog ml-2" style="color: var(--color-earth-green);"></i> <span>وبلاگ</span>
+                </a>
+                @endif
+                @foreach(\App\Models\Page::where('is_published', 1)->get() as $page)
+                <a href="{{ url('/pages/' . $page->slug) }}" class="block w-full text-center py-2 hover:bg-gray-50 rounded-md transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-file-alt ml-2" style="color: var(--color-earth-green);"></i> <span>{{ $page->title }}</span>
+                </a>
+                @endforeach
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="container mx-auto flex flex-col lg:flex-row gap-8 p-6 md:p-8 flex-grow">
+        
+        <!-- Sidebar -->
+        <aside x-show="sidebarOpen" 
+               x-transition:enter="transition ease-out duration-300"
+               x-transition:enter-start="-translate-x-full"
+               x-transition:enter-end="translate-x-0"
+               x-transition:leave="transition ease-in duration-300"
+               x-transition:leave-start="translate-x-0"
+               x-transition:leave-end="-translate-x-full"
+               @click.away="sidebarOpen = false"
+               class="fixed lg:static w-80 bg-white rounded-2xl shadow-lg p-6 flex-shrink-0 lg:sticky lg:top-24 h-fit border border-gray-200 transition-all duration-300 hover:shadow-xl z-40"
+               style="display: none; background-color: var(--color-pure-white);">
+            
+            <div class="pb-4 mb-4 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-gentle-black flex items-center justify-between" style="color: var(--color-gentle-black);">
+                    <i class="fas fa-bars" style="color: var(--color-earth-green);"></i>
+                    <span class="mr-3">منو</span>
+                </h2>
+            </div>
+            
+            <nav>
+                <ul class="space-y-2">
+                    <!-- Notifications -->
+                    <li class="sidebar-menu-item">
+                        <a href="{{ route('notifications.index') }}" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black transition duration-200 flex items-center justify-between relative group" style="color: var(--color-gentle-black);">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg opacity-0 group-hover:opacity-100 transition-all duration-200" style="background-color: var(--color-earth-green);"></span>
+                            <i class="fas fa-bell" style="color: var(--color-ocean-blue);"></i>
+                            <span class="flex-grow text-right mx-3">اعلان‌ها</span>
+                            @if(auth()->user()->unreadNotifications->count() > 0)
+                            <span class="badge text-white text-xs px-2 py-1 rounded-full font-bold badge-pulse" style="background-color: var(--color-red-tomato);">{{ auth()->user()->unreadNotifications->count() }}</span>
+                            @endif
+                        </a>
+                    </li>
+                    
+                    <!-- Groups -->
+                    <li class="sidebar-menu-item">
+                        <a href="{{ route('groups.index') }}" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black transition duration-200 flex items-center justify-between relative group" style="color: var(--color-gentle-black);">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg opacity-0 group-hover:opacity-100 transition-all duration-200" style="background-color: var(--color-earth-green);"></span>
+                            <i class="fas fa-users" style="color: var(--color-ocean-blue);"></i>
+                            <span class="flex-grow text-right mx-3">گروه‌های من</span>
+                            @if($groups->count() > 0)
+                            <span class="badge text-xs px-2 py-1 rounded-full font-bold" style="background-color: var(--color-digital-gold); color: var(--color-pure-white);">{{ $groups->count() }}</span>
+                            @endif
+                        </a>
+                    </li>
+                    
+                    <!-- Collaborations -->
+                    <li class="sidebar-menu-item">
+                        <a href="{{ route('history.index') }}" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black transition duration-200 flex items-center justify-between relative group" style="color: var(--color-gentle-black);">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg opacity-0 group-hover:opacity-100 transition-all duration-200" style="background-color: var(--color-earth-green);"></span>
+                            <i class="fas fa-handshake" style="color: var(--color-digital-gold);"></i>
+                            <span class="flex-grow text-right mx-3">مشارکت‌های من</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Elections -->
+                    <li class="sidebar-menu-item">
+                        <a href="{{ route('history.election') }}" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black transition duration-200 flex items-center justify-between relative group" style="color: var(--color-gentle-black);">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg opacity-0 group-hover:opacity-100 transition-all duration-200" style="background-color: var(--color-earth-green);"></span>
+                            <i class="fas fa-vote-yea" style="color: var(--color-earth-green);"></i>
+                            <span class="flex-grow text-right mx-3">انتخابات جاری</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Polls -->
+                    <li class="sidebar-menu-item">
+                        <a href="{{ route('history.poll') }}" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black transition duration-200 flex items-center justify-between relative group" style="color: var(--color-gentle-black);">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg opacity-0 group-hover:opacity-100 transition-all duration-200" style="background-color: var(--color-earth-green);"></span>
+                            <i class="fas fa-chart-pie" style="color: var(--color-ocean-blue);"></i>
+                            <span class="flex-grow text-right mx-3">نظرسنجی‌های جاری</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Spring Account -->
+                    @php
+                        $checkAcceptSpringAccount = \App\Models\Spring::where('user_id', auth()->user()->id)->first();
+                    @endphp
+                    <li class="sidebar-menu-item">
+                        <a href="{{ route('spring-accounts') }}" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black transition duration-200 flex items-center justify-between relative group {{ $checkAcceptSpringAccount && $checkAcceptSpringAccount->status == 0 ? 'blinking-item' : '' }}" style="color: var(--color-gentle-black);">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg opacity-0 group-hover:opacity-100 transition-all duration-200" style="background-color: var(--color-earth-green);"></span>
+                            <i class="fas fa-wallet" style="color: var(--color-digital-gold);"></i>
+                            <span class="flex-grow text-right mx-3">حساب مالی نجم بهار</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Invite Friends -->
+                    <li class="sidebar-menu-item">
+                        <a href="{{ route('my-invation-code') }}" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black transition duration-200 flex items-center justify-between relative group" style="color: var(--color-gentle-black);">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg opacity-0 group-hover:opacity-100 transition-all duration-200" style="background-color: var(--color-earth-green);"></span>
+                            <i class="fas fa-user-plus" style="color: var(--color-earth-green);"></i>
+                            <span class="flex-grow text-right mx-3">دعوت از دوستان</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Edit Profile -->
+                    <li class="sidebar-menu-item">
+                        <a href="{{ route('profile.edit') }}" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black transition duration-200 flex items-center justify-between relative group" style="color: var(--color-gentle-black);">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg opacity-0 group-hover:opacity-100 transition-all duration-200" style="background-color: var(--color-earth-green);"></span>
+                            <i class="fas fa-cog" style="color: var(--color-ocean-blue);"></i>
+                            <span class="flex-grow text-right mx-3">ویرایش حساب کاربری</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Support -->
+                    <li class="sidebar-menu-item">
+                        <a href="{{ route('user.tickets.index') }}" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black transition duration-200 flex items-center justify-between relative group" style="color: var(--color-gentle-black);">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg opacity-0 group-hover:opacity-100 transition-all duration-200" style="background-color: var(--color-earth-green);"></span>
+                            <i class="fas fa-headset" style="color: var(--color-ocean-blue);"></i>
+                            <span class="flex-grow text-right mx-3">پشتیبانی</span>
+                            @php
+                                $openTicketsCount = \App\Models\Ticket::where(function($q) {
+                                    $q->where('user_id', auth()->id())
+                                      ->orWhere('email', auth()->user()->email);
+                                })->whereIn('status', ['open', 'in-progress'])->count();
+                            @endphp
+                            @if($openTicketsCount > 0)
+                            <span class="badge text-white text-xs px-2 py-1 rounded-full font-bold" style="background-color: var(--color-red-tomato);">{{ $openTicketsCount }}</span>
+                            @endif
+                        </a>
+                    </li>
+                    
+                    <!-- Admin Panel (if admin) -->
+                    @if (auth()->user()->is_admin == 1)
+                    <li class="sidebar-menu-item">
+                        <a href="{{ route('admin.dashboard') }}" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black transition duration-200 flex items-center justify-between relative group" style="color: var(--color-gentle-black);">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg opacity-0 group-hover:opacity-100 transition-all duration-200" style="background-color: var(--color-earth-green);"></span>
+                            <i class="fas fa-user-shield" style="color: #9333ea;"></i>
+                            <span class="flex-grow text-right mx-3">پنل مدیریت</span>
+                        </a>
+                    </li>
+                    @endif
+                    
+                    <!-- Logout -->
+                    <li class="sidebar-menu-item">
+                        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form-complete-sidebar').submit();" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black transition duration-200 flex items-center justify-between relative group" style="color: var(--color-gentle-black);">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg opacity-0 group-hover:opacity-100 transition-all duration-200" style="background-color: var(--color-earth-green);"></span>
+                            <i class="fas fa-sign-out-alt" style="color: var(--color-digital-gold);"></i>
+                            <span class="flex-grow text-right mx-3">خروج</span>
+                        </a>
+                        <form id="logout-form-complete-sidebar" action="{{ route('logout') }}" method="POST" class="hidden">
+                            @csrf
+                        </form>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="mt-6 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+                نسخه ۲.۱.۰ - EarthCoop
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-grow bg-white rounded-2xl shadow-lg p-6 md:p-8 border border-gray-200" style="background-color: var(--color-pure-white);">
+            
+            <!-- Welcome Section -->
+            <div class="mb-8">
+                <h1 class="text-3xl md:text-4xl font-bold text-gentle-black mb-4 text-center" style="color: var(--color-gentle-black);">
+                    {{ \App\Models\Setting::find(1)->home_titre }}
+                </h1>
+                <p class="text-center text-gray-600">به سیستم کوپراتیو زمین نو خوش آمدید</p>
+            </div>
+
+            <!-- Image Slider -->
+            @if(\App\Models\Slider::where('position', 1)->count() > 0)
+            <div class="relative w-full mb-8 rounded-xl shadow-md overflow-hidden border border-gray-200 group">
+                <swiper-container class="mySwiper" pagination="true" loop="true" autoplay-delay="6000" style="--swiper-pagination-color: var(--color-earth-green); --swiper-pagination-bullet-inactive-color: #d1d5db;">
+                    @foreach(\App\Models\Slider::where('position', 1)->get() as $slider)
+                    <swiper-slide>
+                        <img src="{{ asset('images/sliders/' . $slider->src) }}" class="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105" alt="اسلایدر {{ $loop->iteration }}">
+                    </swiper-slide>
+                    @endforeach
+                </swiper-container>
+            </div>
+            @endif
+
+            <!-- Home Content -->
+            <div class="mb-8 prose prose-lg max-w-none text-gray-700">
+                {!! \App\Models\Setting::find(1)->home_content !!}
+            </div>
+
+            <!-- Groups Statistics -->
+            @php
+                $generalGroups = $groups->filter(function($group) {
+                    return strtolower(trim($group->group_type)) === 'general';
+                });
+                $specializedGroups = $groups->filter(function($group) {
+                    return strtolower(trim($group->group_type)) === 'specialized';
+                });
+                $exclusiveGroups = $groups->filter(function($group) {
+                    return strtolower(trim($group->group_type)) === 'exclusive';
+                });
+            @endphp
+
+            @if($groups->count() > 0)
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
+                <!-- General Groups -->
+                <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 content-card" style="background-color: var(--color-pure-white);">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gentle-black" style="color: var(--color-gentle-black);">گروه‌های عمومی</h3>
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl" style="background-color: rgba(16, 185, 129, 0.15); color: var(--color-earth-green);">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-extrabold text-gentle-black font-poppins mb-4" style="color: var(--color-gentle-black);">{{ $generalGroups->count() }}</div>
+                    <div class="flex items-center text-sm text-gray-600 border-t border-gray-200 pt-4">
+                        <i class="fas fa-arrow-up ml-2" style="color: var(--color-earth-green);"></i>
+                        <span>فعال و در حال رشد</span>
+                    </div>
+                </div>
+
+                <!-- Specialized Groups -->
+                <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 content-card" style="background-color: var(--color-pure-white);">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gentle-black" style="color: var(--color-gentle-black);">گروه‌های تخصصی</h3>
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl" style="background-color: rgba(59, 130, 246, 0.15); color: var(--color-ocean-blue);">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-extrabold text-gentle-black font-poppins mb-4" style="color: var(--color-gentle-black);">{{ $specializedGroups->count() }}</div>
+                    <div class="flex items-center text-sm text-gray-600 border-t border-gray-200 pt-4">
+                        <i class="fas fa-arrow-up ml-2" style="color: var(--color-ocean-blue);"></i>
+                        <span>تخصصی و پیشرفته</span>
+                    </div>
+                </div>
+
+                <!-- Exclusive Groups -->
+                <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 content-card" style="background-color: var(--color-pure-white);">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gentle-black" style="color: var(--color-gentle-black);">گروه‌های اختصاصی</h3>
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl" style="background-color: rgba(147, 51, 234, 0.15); color: #9333ea;">
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-extrabold text-gentle-black font-poppins mb-4" style="color: var(--color-gentle-black);">{{ $exclusiveGroups->count() }}</div>
+                    <div class="flex items-center text-sm text-gray-600 border-t border-gray-200 pt-4">
+                        <i class="fas fa-arrow-up ml-2" style="color: #9333ea;"></i>
+                        <span>ویژه و انحصاری</span>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- Active Auctions -->
+            @if(isset($activeAuctions) && $activeAuctions->count() > 0)
+            <div class="mt-8 p-6 bg-white rounded-xl shadow-md border border-gray-200" style="background-color: var(--color-pure-white);">
+                <h2 class="text-2xl font-bold text-gentle-black mb-6 flex items-center gap-3" style="color: var(--color-gentle-black);">
+                    <i class="fas fa-gavel" style="color: var(--color-earth-green);"></i>
+                    حراج‌های فعال
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    @foreach($activeAuctions as $auction)
+                    <div class="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all content-card">
+                        <h3 class="font-semibold text-gentle-black mb-2" style="color: var(--color-gentle-black);">{{ $auction->stock->name ?? 'حراج' }}</h3>
+                        <p class="text-sm text-gray-600 mb-4">پایان: {{ $auction->ends_at->diffForHumans() }}</p>
+                        <a href="#" class="inline-block px-4 py-2 rounded-lg text-white transition-all" style="background: linear-gradient(135deg, var(--color-earth-green) 0%, var(--color-dark-green) 100%);">
+                            مشاهده جزئیات
+                        </a>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+        </main>
+    </div>
+
+    <!-- Success/Error Alerts -->
+    @if(session('success'))
+    <div x-data="{ show: true }" 
+         x-show="show" 
+         x-init="setTimeout(() => show = false, 5000)"
+         class="fixed bottom-4 left-4 bg-white rounded-xl shadow-2xl p-4 z-50 max-w-md"
+         style="display: none; background-color: var(--color-pure-white);">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background-color: var(--color-earth-green);">
+                <i class="fas fa-check text-white"></i>
+            </div>
+            <div class="flex-1">
+                <p class="font-semibold text-gentle-black" style="color: var(--color-gentle-black);">موفقیت</p>
+                <p class="text-sm text-gray-600">{{ session('success') }}</p>
+            </div>
+            <button @click="show = false" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div x-data="{ show: true }" 
+         x-show="show" 
+         x-init="setTimeout(() => show = false, 5000)"
+         class="fixed bottom-4 left-4 bg-white rounded-xl shadow-2xl p-4 z-50 max-w-md"
+         style="display: none; background-color: var(--color-pure-white);">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background-color: var(--color-red-tomato);">
+                <i class="fas fa-exclamation text-white"></i>
+            </div>
+            <div class="flex-1">
+                <p class="font-semibold text-gentle-black" style="color: var(--color-gentle-black);">خطا</p>
+                <p class="text-sm text-gray-600">{{ session('error') }}</p>
+            </div>
+            <button @click="show = false" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    @endif
+
+</body>
+</html>

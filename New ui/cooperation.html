@@ -1,0 +1,439 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EarthCoop - فرصت‌های همکاری</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Custom Tailwind Configuration - پیکربندی رنگ‌ها و فونت‌ها */
+        :root {
+            --color-earth-green: #10b981; /* سبز زمینی */
+            --color-ocean-blue: #3b82f6; /* آبی اقیانوسی */
+            --color-digital-gold: #f59e0b; /* طلایی دیجیتال */
+            --color-pure-white: #ffffff; /* سفید خالص */
+            --color-light-gray: #f8fafc; /* خاکستری روشن */
+            --color-gentle-black: #1e293b; /* مشکی ملایم */
+            --color-dark-green: #047857; /* سبز تیره */
+            --color-dark-blue: #1d4ed8; /* آبی تیره */
+            --color-accent-peach: #ff7e5f; /* هلویی تاکیدی */
+            --color-accent-sky: #6dd5ed; /* آبی آسمانی تاکیدی */
+            --color-purple-700: #6B46C1; /* بنفش تیره برای هاور */
+        }
+
+        /* Utility classes for custom colors */
+        .bg-earth-green { background-color: var(--color-earth-green); }
+        .text-earth-green { color: var(--color-earth-green); }
+        .bg-ocean-blue { background-color: var(--color-ocean-blue); }
+        .text-ocean-blue { color: var(--color-ocean-blue); }
+        .bg-digital-gold { background-color: var(--color-digital-gold); }
+        .text-digital-gold { color: var(--color-digital-gold); }
+        .bg-pure-white { background-color: var(--color-pure-white); }
+        .text-pure-white { color: var(--color-pure-white); }
+        .bg-light-gray { background-color: var(--color-light-gray); }
+        .text-light-gray { color: var(--color-light-gray); }
+        .bg-gentle-black { background-color: var(--color-gentle-black); }
+        .text-gentle-black { color: var(--color-gentle-black); }
+        .bg-dark-green { background-color: var(--color-dark-green); }
+        .bg-dark-blue { background-color: var(--color-dark-blue); }
+        .bg-accent-peach { background-color: var(--color-accent-peach); }
+        .text-accent-peach { color: var(--color-accent-peach); }
+        .bg-accent-sky { background-color: var(--color-accent-sky); }
+        .text-accent-sky { color: var(--color-accent-sky); }
+        .text-purple-700 { color: var(--color-purple-700); }
+
+        /* Font Families - Vazirmatn for Farsi, Poppins for English numbers/text */
+        .font-vazirmatn { font-family: 'Vazirmatn', sans-serif; }
+        .font-poppins { font-family: 'Poppins', sans-serif; }
+
+        /* Custom animations */
+        @keyframes glow {
+            0% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.4), 0 0 25px rgba(245, 158, 11, 0.2); }
+            50% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.7), 0 0 40px rgba(245, 158, 11, 0.4); }
+            100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.4), 0 0 25px rgba(245, 158, 11, 0.2); }
+        }
+
+        @keyframes pulse-light {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes bounce-custom {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        /* Apply animations */
+        .animate-glow { animation: glow 3s infinite ease-in-out; }
+        .animate-float { animation: float 6s infinite ease-in-out; }
+        .animate-pulse-light { animation: pulse-light 2s infinite ease-in-out; }
+        .animate-bounce-custom { animation: bounce-custom 3s infinite ease-in-out; }
+
+        /* Smooth scroll animations */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Hamburger menu styling */
+        .hamburger-menu {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 30px;
+            height: 25px;
+            cursor: pointer;
+            z-index: 50;
+        }
+
+        .hamburger-menu span {
+            display: block;
+            width: 100%;
+            height: 3px;
+            background-color: var(--color-gentle-black);
+            border-radius: 5px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .hamburger-menu.open span:nth-child(1) { transform: translateY(11px) rotate(45deg); }
+        .hamburger-menu.open span:nth-child(2) { opacity: 0; }
+        .hamburger-menu.open span:nth-child(3) { transform: translateY(-11px) rotate(-45deg); }
+
+        .mobile-nav-menu {
+            position: absolute;
+            top: 100%;
+            right: 0; /* Changed to right for RTL */
+            width: 100%;
+            background-color: var(--color-pure-white);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            padding: 1rem 0;
+            z-index: 40;
+        }
+
+        /* Gradient backgrounds */
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
+        }
+
+        .section-separator {
+            width: 100px;
+            height: 5px;
+            background: linear-gradient(90deg, var(--color-earth-green), var(--color-ocean-blue), var(--color-digital-gold));
+            border-radius: 5px;
+            margin: 0 auto 2.5rem auto; /* Centered with bottom margin */
+        }
+
+        /* Specific styles for the cooperation page */
+        .cooperation-card {
+            background: linear-gradient(145deg, #ffffff 0%, #f0f4f7 100%);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s ease;
+            border-radius: 18px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(220, 220, 220, 0.3);
+        }
+
+        .cooperation-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
+        }
+
+        .cooperation-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, var(--color-earth-green), var(--color-ocean-blue), var(--color-digital-gold));
+        }
+
+        .email-label {
+            background: linear-gradient(90deg, var(--color-digital-gold), var(--color-accent-peach));
+            color: var(--color-pure-white);
+            padding: 1.5rem 2.5rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 15px 30px rgba(245, 158, 11, 0.4), 0 0 40px rgba(245, 158, 11, 0.2);
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            animation: email-glow 2s infinite alternate; /* Added glow animation */
+        }
+
+        .email-label:hover {
+            transform: scale(1.03);
+            box-shadow: 0 20px 40px rgba(245, 158, 11, 0.6), 0 0 50px rgba(245, 158, 11, 0.3);
+        }
+
+        .email-label::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: skewX(-20deg);
+            transition: all 0.5s ease;
+        }
+
+        .email-label:hover::before {
+            left: 100%;
+        }
+
+        /* New animation for email label glow */
+        @keyframes email-glow {
+            0% { box-shadow: 0 0 10px rgba(245, 158, 11, 0.5), 0 0 20px rgba(245, 158, 11, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.8), 0 0 30px rgba(245, 158, 11, 0.5); }
+            100% { box-shadow: 0 0 10px rgba(245, 158, 11, 0.5), 0 0 20px rgba(245, 158, 11, 0.3); }
+        }
+    </style>
+</head>
+<body class="font-poppins text-gentle-black leading-relaxed bg-light-gray">
+
+<header class="bg-pure-white shadow-md py-4 px-6 md:px-8 sticky top-0 z-50">
+    <div class="container mx-auto flex justify-between items-center">
+        <div class="flex items-center space-x-3 md:space-x-reverse md:space-x-3 rtl:space-x-reverse rtl:space-x-3">
+            <svg width="45" height="45" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="animate-bounce-custom">
+                <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" fill="#10b981" opacity="0.8"/>
+                <path d="M12 2C10.5 4 8 6 8 9C8 12 12 14 12 14C12 14 16 12 16 9C16 6 13.5 4 12 2ZM12 14C12 14 10 16 10 18C10 20 12 22 12 22" fill="#047857"/>
+            </svg>
+            <span class="text-2xl md:text-3xl font-extrabold text-gentle-black font-vazirmatn">EarthCoop</span>
+            <span class="text-sm text-gray-500 hidden md:block border-r-2 border-gray-200 pr-4 mr-4 font-vazirmatn">"خانه‌ای برای همه؛ همکاری برای آینده"</span>
+        </div>
+
+        <nav class="hidden md:flex items-center space-x-8 rtl:space-x-reverse rtl:space-x-8 font-vazirmatn text-gentle-black">
+            <a href="main.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                درباره ارث کوپ
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="main.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                راهنما
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="#" class="relative text-earth-green font-bold pb-1 group">
+                فرصتهای همکاری
+                <span class="absolute bottom-0 right-0 w-full h-0.5 bg-earth-green"></span>
+            </a>
+            <a href="main.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                پروژه‌ها
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="main.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                بلاگ
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="main.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group">
+                تماس با ما
+                <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+            </a>
+        </nav>
+
+        <div class="hidden md:flex items-center space-x-4 rtl:space-x-reverse rtl:space-x-4">
+            <button class="bg-earth-green text-pure-white px-6 py-2 rounded-full shadow-md hover:bg-dark-green transition duration-300 font-vazirmatn font-medium transform hover:scale-105">عضویت</button>
+            <button class="bg-ocean-blue text-pure-white px-6 py-2 rounded-full shadow-md hover:bg-dark-blue transition duration-300 font-vazirmatn font-medium transform hover:scale-105">ورود</button>
+            <!-- Changed the 'دعوت' button to digital gold color -->
+            <button class="bg-digital-gold text-pure-white px-6 py-2 rounded-full shadow-md hover:bg-digital-gold/80 transition duration-300 font-vazirmatn font-medium transform hover:scale-105">دعوت</button>
+        </div>
+
+        <div class="md:hidden flex items-center">
+            <button id="mobile-menu-button" class="hamburger-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </div>
+    <div id="mobile-menu" class="mobile-nav-menu hidden md:hidden">
+        <nav class="flex flex-col items-center space-y-4 font-vazirmatn text-gentle-black py-4">
+            <a href="main.html" class="hover:text-earth-green transition duration-300 font-medium">خانه</a>
+            <a href="main.html" class="hover:text-earth-green transition duration-300 font-medium">درباره ما</a>
+            <a href="main.html" class="hover:text-earth-green transition duration-300 font-medium">شبکه</a>
+            <a href="main.html" class="hover:text-earth-green transition duration-300 font-medium">پروژه‌ها</a>
+            <a href="main.html" class="hover:text-earth-green transition duration-300 font-medium">اقتصاد</a>
+            <hr class="w-full border-t border-light-gray my-2">
+            <button class="bg-earth-green text-pure-white px-5 py-2 rounded-full shadow-md w-3/4 hover:bg-dark-green transition duration-300 font-vazirmatn font-medium">عضویت</button>
+            <!-- Changed the 'دعوت' button in mobile menu to digital gold color -->
+            <button class="bg-digital-gold text-pure-white px-5 py-2 rounded-full shadow-md w-3/4 hover:bg-digital-gold/80 transition duration-300 font-vazirmatn font-medium">دعوت</button>
+            <!-- Changed "ورود" button in mobile menu to be blue -->
+            <button class="bg-ocean-blue text-pure-white px-5 py-2 rounded-full shadow-md w-3/4 hover:bg-dark-blue transition duration-300 font-vazirmatn font-medium">ورود</button>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <!-- Cooperation Opportunities Section - بخش فرصت‌های همکاری -->
+    <section class="py-16 md:py-24 bg-pure-white fade-in-section">
+        <div class="container mx-auto px-6 text-center">
+            <div class="max-w-4xl mx-auto mb-12">
+                <h1 class="text-4xl md:text-5xl font-extrabold font-vazirmatn text-gentle-black mb-6">
+                    فرصت‌های همکاری با EarthCoop
+                </h1>
+                <div class="section-separator"></div>
+                <p class="text-lg md:text-xl text-gray-700 font-vazirmatn leading-relaxed mb-10">
+                    ما در تیم توسعه ارث‌کوپ برای توسعه بهتر این زیست بوم به همکاری شما نیازمندیم.
+                    اگر در زمینه‌های زیر تخصص دارید و مایلید از توسعه دهندگان ارث‌کوپ باشید با ما تماس بگیرید.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 mb-16">
+                <!-- Skill Card 1 -->
+                <div class="cooperation-card p-8 flex flex-col items-center group text-center">
+                    <div class="w-24 h-24 bg-earth-green/15 rounded-full flex items-center justify-center text-4xl text-earth-green mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-palette"></i> <!-- Icon for Graphic Designer -->
+                    </div>
+                    <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">گرافیست و طراح رابط کاربری</h3>
+                    <p class="text-gray-700 text-center font-vazirmatn">
+                        خلاقیت خود را در طراحی رابط‌های کاربری زیبا و کاربرپسند به کار گیرید.
+                    </p>
+                </div>
+
+                <!-- Skill Card 2 -->
+                <div class="cooperation-card p-8 flex flex-col items-center group text-center">
+                    <div class="w-24 h-24 bg-ocean-blue/15 rounded-full flex items-center justify-center text-4xl text-ocean-blue mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                        <i class="fab fa-android"></i> <!-- Icon for Android -->
+                        <i class="fab fa-apple ml-2"></i> <!-- Icon for iOS -->
+                    </div>
+                    <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">برنامه نویس اپلیکیشن اندروید و آی او آس</h3>
+                    <p class="text-gray-700 text-center font-vazirmatn">
+                        به تیم ما در توسعه اپلیکیشن‌های موبایل قدرتمند و کارآمد بپیوندید.
+                    </p>
+                </div>
+
+                <!-- Skill Card 3 -->
+                <div class="cooperation-card p-8 flex flex-col items-center group text-center">
+                    <div class="w-24 h-24 bg-digital-gold/15 rounded-full flex items-center justify-center text-4xl text-digital-gold mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-robot"></i> <!-- Icon for AI -->
+                    </div>
+                    <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">توسعه دهنده دستیارهای هوش مصنوعی</h3>
+                    <p class="text-gray-700 text-center font-vazirmatn">
+                        در ساخت دستیارهای هوشمند و نوآورانه با ما همکاری کنید.
+                    </p>
+                </div>
+
+                <!-- Skill Card 4 -->
+                <div class="cooperation-card p-8 flex flex-col items-center group text-center">
+                    <div class="w-24 h-24 bg-accent-peach/15 rounded-full flex items-center justify-center text-4xl text-accent-peach mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-chart-pie"></i> <!-- Icon for Infography -->
+                        <i class="fas fa-film ml-2"></i> <!-- Icon for Motion Graphics -->
+                    </div>
+                    <h3 class="text-2xl font-bold font-vazirmatn text-gentle-black mb-3">سازنده اینفوگرافی و موشن گرافی</h3>
+                    <p class="text-gray-700 text-center font-vazirmatn">
+                        با ساخت محتوای بصری جذاب، پیام ما را به بهترین شکل منتقل کنید.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Email Label -->
+            <div class="flex justify-center">
+                <!-- Adjusted classes for better responsiveness on mobile -->
+                <div class="email-label text-xl sm:text-2xl md:text-4xl font-extrabold font-poppins flex flex-wrap items-center justify-center gap-2 md:gap-4 rtl:space-x-reverse">
+                    <i class="fas fa-envelope text-3xl sm:text-4xl md:text-5xl"></i>
+                    <span class="break-all">S.s.sh.kia@gmail.com</span>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="bg-gentle-black text-pure-white py-12 px-6">
+    <div class="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 text-right">
+        <div class="col-span-1 md:col-span-1">
+            <div class="flex items-center space-x-2 rtl:space-x-reverse mb-4 justify-end md:justify-start">
+                <svg width="35" height="35" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" fill="#10b981" opacity="0.7"/>
+                    <path d="M12 2C10.5 4 8 6 8 9C8 12 12 14 12 14C12 14 16 12 16 9C16 6 13.5 4 12 2ZM12 14C12 14 10 16 10 18C10 20 12 22 12 22" fill="#047857"/>
+                </svg>
+                <span class="text-2xl font-bold font-vazirmatn">EarthCoop</span>
+            </div>
+            <p class="text-gray-400 text-sm font-vazirmatn">
+                یک تعاونی جهانی که افراد را توانمند می‌سازد تا به صورت جمعی آینده‌ای پایدار را از طریق مالکیت مشترک و اصول دموکراتیک بسازند.
+            </p>
+            <div class="flex space-x-4 rtl:space-x-reverse mt-6 justify-end md:justify-start">
+                <a href="#" class="text-gray-400 hover:text-pure-white transition duration-300"><i class="fab fa-facebook-f text-xl"></i></a>
+                <a href="#" class="text-gray-400 hover:text-pure-white transition duration-300"><i class="fab fa-twitter text-xl"></i></a>
+                <a href="#" class="text-gray-400 hover:text-pure-white transition duration-300"><i class="fab fa-linkedin-in text-xl"></i></a>
+                <a href="#" class="text-gray-400 hover:text-pure-white transition duration-300"><i class="fab fa-instagram text-xl"></i></a>
+            </div>
+        </div>
+
+        <div>
+            <h3 class="text-lg font-semibold mb-4 text-earth-green font-vazirmatn">لینک‌های سریع</h3>
+            <ul class="space-y-2 font-vazirmatn">
+                <li><a href="main.html" class="text-gray-400 hover:text-pure-white transition duration-300">خانه</a></li>
+                <li><a href="main.html" class="text-gray-400 hover:text-pure-white transition duration-300">درباره ما</a></li>
+                <li><a href="main.html" class="text-gray-400 hover:text-pure-white transition duration-300">شبکه ما</a></li>
+                <li><a href="main.html" class="text-gray-400 hover:text-pure-white transition duration-300">پروژه‌ها</a></li>
+                <li><a href="main.html" class="text-gray-400 hover:text-pure-white transition duration-300">اقتصاد</a></li>
+            </ul>
+        </div>
+
+        <div>
+            <h3 class="text-lg font-semibold mb-4 text-ocean-blue font-vazirmatn">پشتیبانی</h3>
+            <ul class="space-y-2 font-vazirmatn">
+                <li><a href="main.html" class="text-gray-400 hover:text-pure-white transition duration-300">سوالات متداول</a></li>
+                <li><a href="main.html" class="text-gray-400 hover:text-pure-white transition duration-300">تماس با ما</a></li>
+                <li><a href="main.html" class="text-gray-400 hover:text-pure-white transition duration-300">حریم خصوصی</a></li>
+                <li><a href="main.html" class="text-gray-400 hover:text-pure-white transition duration-300">شرایط خدمات</a></li>
+            </ul>
+        </div>
+
+        <div>
+            <h3 class="text-lg font-semibold mb-4 text-digital-gold font-vazirmatn">در تماس باشید</h3>
+            <p class="text-gray-400 mb-2 font-vazirmatn"><i class="fas fa-map-marker-alt ml-2"></i> دفتر مرکزی جهانی، EarthCoop</p>
+            <p class="text-gray-400 mb-2 font-vazirmatn"><i class="fas fa-envelope ml-2"></i> info@earthcoop.org</p>
+            <p class="text-400 font-vazirmatn"><i class="fas fa-phone-alt ml-2"></i> +1 (123) 456-7890</p>
+        </div>
+    </div>
+    <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-500 text-sm font-vazirmatn">
+        &copy; 2025 EarthCoop. تمامی حقوق محفوظ است.
+    </div>
+</footer>
+
+<script>
+    // Smooth scroll animation logic
+    document.addEventListener('DOMContentLoaded', () => {
+        const sections = document.querySelectorAll('.fade-in-section');
+
+        const observerOptions = {
+            root: null, // viewport
+            rootMargin: '0px',
+            threshold: 0.1 // Trigger when 10% of the section is visible
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target); // Stop observing once visible
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            mobileMenuButton.classList.toggle('open');
+        });
+    });
+</script>
+</body>
+</html>

@@ -18,6 +18,7 @@ class Auction extends Model
         'ends_at',
         'status',
         'type',
+        'settlement_mode',
         'min_bid',
         'max_bid',
         'lot_size',

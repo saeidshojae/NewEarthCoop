@@ -8,7 +8,21 @@ use Illuminate\Database\Eloquent\Model;
 class Announcement extends Model
 {
     use HasFactory;
-    protected $fillable =['title', 'content', 'group_level'];
+    protected $fillable = ['title', 'content', 'group_level', 'image', 'should_pin', 'created_by'];
+
+    protected $casts = [
+        'should_pin' => 'boolean',
+    ];
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function pinnedMessages()
+    {
+        return $this->hasMany(PinnedMessage::class, 'announcement_id');
+    }
 
     public function groupLevel(){
         if($this->group_level == 0){

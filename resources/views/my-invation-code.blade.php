@@ -1,237 +1,703 @@
-@extends('layouts.app')
+@extends('layouts.unified')
 
-@section('title', 'نظرسنجی های جاری')
+@section('title', 'دعوت از دوستان - ' . config('app.name', 'EarthCoop'))
 
-@section('head-tag')
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-
-<script src="https://unpkg.com/persian-date@1.1.0/dist/persian-date.min.js"></script>
-<script src="https://unpkg.com/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
-
-<link rel="stylesheet" href="https://unpkg.com/persian-datepicker@1.2.0/dist/css/persian-datepicker.min.css">
-    <style>
-    .toggle-box {
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 1rem;
-      margin: 1rem 0;
-      transition: all 0.3s ease;
-      width: 100%;
-      background-color: #fff
+@push('styles')
+<style>
+    :root {
+        --color-earth-green: #10b981;
+        --color-ocean-blue: #3b82f6;
+        --color-digital-gold: #f59e0b;
+        --color-pure-white: #ffffff;
+        --color-light-gray: #f8fafc;
+        --color-gentle-black: #1e293b;
+        --color-dark-green: #047857;
+        --color-dark-blue: #1d4ed8;
+        --color-accent-peach: #ff7e5f;
     }
 
-    .toggle-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 1.1rem;
+    .font-vazirmatn { font-family: 'Vazirmatn', sans-serif; }
+
+    /* Invite Section */
+    .invite-section {
+        width: 100%;
+        background-color: var(--color-pure-white);
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        padding: 2.5rem;
+        border: 1px solid #e2e8f0;
+        animation: fadeIn 0.8s ease-out;
     }
 
-    .toggle-content {
-      margin-top: 1rem;
-      display: none;
-      font-size: 0.95rem;
-      line-height: 1.6;
+    .invite-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: var(--color-dark-green);
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid var(--color-earth-green);
+        position: relative;
+        text-align: right;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        font-family: 'Vazirmatn', sans-serif;
     }
 
-    .toggle-icon {
-      font-size: 1.3rem;
-      transition: transform 0.3s;
+    .invite-title::after {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        right: 0;
+        width: 80px;
+        height: 3px;
+        background: linear-gradient(90deg, var(--color-digital-gold), var(--color-accent-peach));
+        border-radius: 2px;
     }
 
-    .open .toggle-icon {
-      transform: rotate(180deg);
+    .invite-codes-subtitle {
+        font-size: 1.4rem;
+        color: var(--color-gentle-black);
+        margin-bottom: 20px;
+        text-align: right;
+        font-weight: 600;
+        font-family: 'Vazirmatn', sans-serif;
     }
 
-    .open .toggle-content {
-      display: block;
-    }
-    input {
-        background-color: #fff !important
-    }
-    select {
-        background-color: #fff !important
-    }
-
-    textarea {
-        background-color: #fff !important
+    /* Info Cards */
+    .info-card {
+        background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(220, 220, 220, 0.3);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
-    .remove-selection {
-    padding: 0 .4rem;
-    margin: .2rem .3rem .2rem .1rem;
-  }
-  .badge {
-    background-color: #57a1d7bf !important;
-  }
-  .error-message {
-    color: red;
-    font-size: 0.9rem;
-    display: none;
-  }
+    .info-card h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--color-gentle-black);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-family: 'Vazirmatn', sans-serif;
+    }
 
-  .select2-container{
-    margin-bottom: 1rem !important;
-  }
+    .info-card p {
+        color: #64748b;
+        line-height: 1.8;
+        margin-bottom: 0.75rem;
+        font-family: 'Vazirmatn', sans-serif;
+    }
 
-    </style>
-@endsection
+    .info-card strong {
+        color: var(--color-gentle-black);
+        font-weight: 700;
+    }
+
+    /* Table Styles */
+    .data-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 0.75rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--color-light-gray);
+        margin-bottom: 2rem;
+    }
+
+    .data-table {
+        width: 100%;
+        min-width: 600px;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 15px 20px;
+        text-align: center;
+        border-bottom: 1px solid var(--color-light-gray);
+        border-left: 1px solid var(--color-light-gray);
+    }
+
+    .data-table th {
+        background: linear-gradient(180deg, var(--color-light-gray) 0%, var(--color-pure-white) 100%);
+        color: var(--color-dark-green);
+        font-weight: 700;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        font-family: 'Vazirmatn', sans-serif;
+    }
+
+    .data-table th:first-child {
+        border-top-right-radius: 0.75rem;
+    }
+
+    .data-table th:last-child {
+        border-top-left-radius: 0.75rem;
+        border-left: none;
+    }
+
+    .data-table tbody tr:nth-child(even) {
+        background-color: var(--color-light-gray);
+    }
+
+    .data-table tbody tr:hover {
+        background-color: #eef2f6;
+        transform: scale(1.005);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .data-table td {
+        color: var(--color-gentle-black);
+        font-size: 0.95rem;
+        transition: all 0.2s ease-in-out;
+        font-family: 'Vazirmatn', sans-serif;
+    }
+
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .data-table tbody tr:last-child td:first-child {
+        border-bottom-right-radius: 0.75rem;
+    }
+
+    .data-table tbody tr:last-child td:last-child {
+        border-bottom-left-radius: 0.75rem;
+        border-left: none;
+    }
+
+    .code-badge {
+        background: linear-gradient(135deg, var(--color-earth-green), var(--color-ocean-blue));
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+        letter-spacing: 1px;
+        display: inline-block;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: inline-block;
+    }
+
+    .status-badge.unused {
+        background: rgba(16, 185, 129, 0.15);
+        color: var(--color-dark-green);
+    }
+
+    .status-badge.used {
+        background: rgba(59, 130, 246, 0.15);
+        color: var(--color-dark-blue);
+    }
+
+    /* Share Button */
+    .share-button {
+        background: linear-gradient(45deg, var(--color-ocean-blue) 0%, var(--color-dark-blue) 100%);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    .share-button:hover:not(:disabled) {
+        background: linear-gradient(45deg, var(--color-dark-blue) 0%, var(--color-ocean-blue) 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .share-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Request Code Container */
+    .request-code-container {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        margin-top: 30px;
+        gap: 20px;
+    }
+
+    .request-code-button {
+        background: linear-gradient(45deg, var(--color-digital-gold) 0%, var(--color-accent-peach) 100%);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 9999px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        font-family: 'Vazirmatn', sans-serif;
+    }
+
+    .request-code-button:hover:not(:disabled) {
+        background: linear-gradient(45deg, var(--color-accent-peach) 0%, var(--color-digital-gold) 100%);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    .request-code-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .code-limit-text {
+        font-size: 1rem;
+        color: var(--color-gentle-black);
+        font-weight: 500;
+        font-family: 'Vazirmatn', sans-serif;
+    }
+
+    /* Copy Message */
+    .copy-message {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: var(--color-earth-green);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 0.5rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+        font-size: 1.1rem;
+        font-weight: 600;
+        z-index: 2000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+        text-align: center;
+        font-family: 'Vazirmatn', sans-serif;
+    }
+
+    .copy-message.show {
+        opacity: 1;
+        visibility: visible;
+        animation: slideInAndOut 3s forwards;
+    }
+
+    @keyframes slideInAndOut {
+        0% {
+            opacity: 0;
+            visibility: hidden;
+            transform: translate(-50%, -80%);
+        }
+        10% {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%);
+        }
+        90% {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%);
+        }
+        100% {
+            opacity: 0;
+            visibility: hidden;
+            transform: translate(-50%, -20%);
+        }
+    }
+
+    /* Fade-in animation */
+    .fade-in-section {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+
+    .fade-in-section.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .invite-section {
+            padding: 1.5rem;
+        }
+
+        .invite-title {
+            font-size: 1.6rem;
+        }
+
+        .invite-codes-subtitle {
+            font-size: 1.1rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 10px 12px;
+            font-size: 0.8rem;
+        }
+
+        .share-button {
+            padding: 5px 10px;
+            font-size: 0.75rem;
+        }
+
+        .request-code-container {
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .request-code-button {
+            width: 100%;
+            justify-content: center;
+            font-size: 0.85rem;
+            padding: 8px 15px;
+        }
+    }
+</style>
+@endpush
 
 @section('content')
-<div class="container" style="direction: rtl; text-align: right;">
-    <h1 class="mb-4 text-center">کد های دعوت شما</h1>
-    <div class="invite-quota" style='display: flex; flex-direction: column;
-    align-items: center;'>
-    <h2>سهمیه دعوت‌نامه‌ی شما به ارثکوپ</h2>
-    
-    <p>عضویت در ارثکوپ فقط با دعوت یک عضو احراز هویت‌شده ممکن است.<br>
-    شما نیز با دعوت یکی از اعضا، به جمع اولین ساکنان ارثکوپ پیوسته‌اید.</p>
-    
-    <p><strong>اکنون می‌توانید حداکثر ۱۰ نفر</strong> از کسانی را که هویت واقعی و ایرانی‌شان را تأیید می‌کنید، دعوت کنید.</p>
-    
-    <div class="invite-note">
-        <p>🔐 <strong>کدهای دعوت ارثکوپ</strong>، زمام‌دارند و تنها تا <strong>۷۲ ساعت</strong> اعتبار دارند.<br>
-        پیش از ایجاد کد، با فرد موردنظر گفت‌وگو کنید و در صورت تمایل، دعوت‌نامه را برای او بفرستید.</p>
-    </div>
-    
-    <div class="invite-reward">
-        <p>💰 <strong>پاداش دعوت موفق:</strong><br>
-        با پیوستن هر دعوت‌شده و تأیید موافقت‌نامه «نجم بهار»،<br>
-        <strong>۱۰ بهار</strong> معادل <strong>۱ گرم طلای ۲۴ عیار</strong> به حساب شما واریز می‌شود.<br>
-        با ۱۰ دعوت موفق، تا <strong>۱۰۰ بهار</strong> (۱۰ گرم طلا) دریافت خواهید کرد.</p>
-    </div>
-    
-    <p>نگران نباشید؛ اگر کدی منقضی شود یا استفاده نشود، سهمیه دعوت شما محفوظ می‌ماند و می‌توانید کد جدید بسازید.</p>
-    
-    <p><strong>با هم ارثکوپ را می‌سازیم.</strong></p>
-</div>
+<div class="container mx-auto flex flex-col lg:flex-row gap-8 p-6 md:p-8">
+    @include('partials.sidebar-unified')
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+    <main class="flex-grow fade-in-section">
+        <!-- Invite Section -->
+        <section class="invite-section">
+            <h2 class="invite-title">دعوت از دوستان</h2>
 
-    @if ($errors->any())
-    <div class="alert alert-danger">
-        <ul class="mb-0">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+            <!-- Info Cards -->
+            <div class="info-card">
+                <h3>
+                    <i class="fas fa-info-circle" style="color: var(--color-ocean-blue);"></i>
+                    سهمیه دعوت‌نامه‌ی شما به ارثکوپ
+                </h3>
+                <p>
+                    عضویت در ارثکوپ فقط با دعوت یک عضو احراز هویت‌شده ممکن است.<br>
+                    شما نیز با دعوت یکی از اعضا، به جمع اولین ساکنان ارثکوپ پیوسته‌اید.
+                </p>
+                <p>
+                    <strong>اکنون می‌توانید حداکثر ۱۰ نفر</strong> از کسانی را که هویت واقعی و ایرانی‌شان را تأیید می‌کنید، دعوت کنید.
+                </p>
+            </div>
 
+            <div class="info-card" style="background: linear-gradient(145deg, rgba(16, 185, 129, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%); border-right: 4px solid var(--color-earth-green);">
+                <h3>
+                    <i class="fas fa-lock" style="color: var(--color-earth-green);"></i>
+                    کدهای دعوت ارثکوپ
+                </h3>
+                <p>
+                    کدهای دعوت ارثکوپ، زمام‌دارند و تنها تا <strong>۷۲ ساعت</strong> اعتبار دارند.<br>
+                    پیش از ایجاد کد، با فرد موردنظر گفت‌وگو کنید و در صورت تمایل، دعوت‌نامه را برای او بفرستید.
+                </p>
+            </div>
 
-<div class="table-responsive">
-    <table class="table table-bordered table-striped table-hover text-center align-middle">
-        <thead class="table-dark">
-             @php
-                        $codes = \App\Models\InvitationCode::where('user_id', auth()->user()->id)->orderBy('created_at', 'desc')->get();
-                        $checkExpire = \App\Models\InvitationCode::where('used', 0)->where('expire_at', '<=', now())->where('user_id', auth()->user()->id)->orderBy('created_at', 'desc')->get();
-                        foreach($checkExpire as $check){
-                            $check->delete();
-                        }
-                    @endphp
-             <tr>
-                        <td>کد</td>
-                        <td>وضعیت</td>
-                        <td>تاریخ ایجاد</td>
-                        <td>تاریخ انقضا</td>
-                        <td>اشتراک گذاری</td>
-                    </tr>
+            <div class="info-card" style="background: linear-gradient(145deg, rgba(245, 158, 11, 0.1) 0%, rgba(255, 126, 95, 0.1) 100%); border-right: 4px solid var(--color-digital-gold);">
+                <h3>
+                    <i class="fas fa-gift" style="color: var(--color-digital-gold);"></i>
+                    پاداش دعوت موفق
+                </h3>
+                <p>
+                    با پیوستن هر دعوت‌شده و تأیید موافقت‌نامه «نجم بهار»،<br>
+                    <strong>۱۰ بهار</strong> معادل <strong>۱ گرم طلای ۲۴ عیار</strong> به حساب شما واریز می‌شود.<br>
+                    با ۱۰ دعوت موفق، تا <strong>۱۰۰ بهار</strong> (۱۰ گرم طلا) دریافت خواهید کرد.
+                </p>
+            </div>
+
+            <p style="text-align: center; color: #64748b; margin-bottom: 2rem; font-family: 'Vazirmatn', sans-serif;">
+                نگران نباشید؛ اگر کدی منقضی شود یا استفاده نشود، سهمیه دعوت شما محفوظ می‌ماند و می‌توانید کد جدید بسازید.<br>
+                <strong style="color: var(--color-gentle-black);">با هم ارثکوپ را می‌سازیم.</strong>
+            </p>
+
+            @if(session('success'))
+                <div style="background: #d1fae5; border: 1px solid #10b981; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1.5rem; color: #047857;">
+                    <i class="fas fa-check-circle" style="margin-left: 0.5rem;"></i>
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div style="background: #fee2e2; border: 1px solid #ef4444; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1.5rem; color: #dc2626;">
+                    <i class="fas fa-exclamation-circle" style="margin-left: 0.5rem;"></i>
+                    {{ session('error') }}
+                </div>
+            @endif
+
+            @if ($errors->any())
+                <div style="background: #fee2e2; border: 1px solid #ef4444; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1.5rem; color: #dc2626;">
+                    <ul style="margin: 0; padding-right: 1.5rem;">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <h3 class="invite-codes-subtitle">کد های دعوت شما</h3>
+
+            <!-- Table Wrapper -->
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>کد</th>
+                            <th>وضعیت</th>
+                            <th>تاریخ ایجاد</th>
+                            <th>تاریخ انقضا</th>
+                            <th>اشتراک گذاری</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php
+                            $codes = \App\Models\InvitationCode::where('user_id', auth()->user()->id)
+                                ->with('usedBy')
+                                ->orderBy('created_at', 'desc')
+                                ->get();
+                            
+                            // Delete expired unused codes
+                            $expiredCodes = \App\Models\InvitationCode::where('user_id', auth()->user()->id)
+                                ->where('used', 0)
+                                ->where('expire_at', '<=', now())
+                                ->get();
+                            
+                            foreach($expiredCodes as $expiredCode) {
+                                $expiredCode->delete();
+                            }
+                            
+                            // Refresh codes after deletion
+                            $codes = \App\Models\InvitationCode::where('user_id', auth()->user()->id)
+                                ->with('usedBy')
+                                ->orderBy('created_at', 'desc')
+                                ->get();
+                        @endphp
+
                         @forelse($codes as $code)
                             <tr>
-                                <th>{{ $code->code }}</th>
-                                <th>{{ $code->used == 0 ? 'استفاده نشده' : $code->usedBy->fullName() }}</th>
-                                <th>{{ verta($code->created_at)->format('Y-m-d') }}</th>
-                                <th>{{ verta($code->expire_at)->format('Y-m-d') }}</th>
-                                        <th>
-            <!-- دکمه اشتراک‌گذاری -->
-            <button class='btn btn-warning' @if($code->used == 1) style='' disabled @else onclick="shareToSocialMedia('{{ $code->code }}')" @endif><i style='margin: 0' class="fa fa-share-alt"></i>
-</button>
-        </th>
+                                <td>
+                                    <span class="code-badge">{{ $code->code }}</span>
+                                </td>
+                                <td>
+                                    @if($code->used == 0)
+                                        <span class="status-badge unused">استفاده نشده</span>
+                                    @else
+                                        <span class="status-badge used">
+                                            استفاده شده توسط: {{ $code->usedBy ? $code->usedBy->fullName() : 'نامشخص' }}
+                                        </span>
+                                    @endif
+                                </td>
+                                <td>{{ verta($code->created_at)->format('Y/m/d') }}</td>
+                                <td>{{ $code->expire_at ? verta($code->expire_at)->format('Y/m/d') : '-' }}</td>
+                                <td>
+                                    <button 
+                                        class="share-button ripple-effect" 
+                                        @if($code->used == 1) disabled @else onclick="shareInviteCode('{{ $code->code }}')" @endif
+                                        title="اشتراک‌گذاری کد دعوت">
+                                        <i class="fas fa-share-alt"></i>
+                                    </button>
+                                </td>
                             </tr>
-                        @endforeach
-                        
-                    </table>
-                    <div class="text-center mt-4">
-                        <a @if($codes->count() >= 10) style='opacity: .5' @else href="{{ route('profile.generate-code') }}" @endif class="btn btn-primary">درخواست کد جدید</a>
-                        <a class="">{{ $codes->count() . '/10' }}</a>
-                    </div>
+                        @empty
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 3rem; color: #64748b;">
+                                    <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; display: block; color: #cbd5e1;"></i>
+                                    <p style="font-size: 1.1rem; font-weight: 600;">هنوز کد دعوتی ایجاد نکرده‌اید</p>
+                                    <p style="font-size: 0.95rem; margin-top: 0.5rem;">برای دعوت دوستان خود، کد دعوت جدید ایجاد کنید.</p>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Request Code Container -->
+            <div class="request-code-container">
+                @if($codes->count() >= 10)
+                    <a href="#" class="request-code-button" style="opacity: 0.5; cursor: not-allowed; pointer-events: none;">
+                        <i class="fas fa-plus-circle"></i>
+                        درخواست کد جدید
+                    </a>
+                @else
+                    <a href="{{ route('profile.generate-code') }}" class="request-code-button">
+                        <i class="fas fa-plus-circle"></i>
+                        درخواست کد جدید
+                    </a>
+                @endif
+                <span class="code-limit-text">{{ $codes->count() }}/10</span>
+            </div>
+        </section>
+    </main>
 </div>
 
+<!-- Copy Success Message -->
+<div id="copySuccessMessage" class="copy-message">
+    لینک با موفقیت کپی شد!
 </div>
+
+@push('scripts')
 <script>
-function shareToSocialMedia(code) {
-var url = "https://earthcoop.info?code=" + code; // لینک سایت شما
-var message = `
-سلام ! در EarthCoop منتظر شما هستم. با زدن روی لینک زیر و وارد کردن کد دعوت در زیست‌بوم همکاری‌های جهانی به ما بپیوندید.
-کد دعوت: ${code}
-لینک: 
-`
-    if (navigator.share) {
-        // استفاده از Web Share API برای دستگاه‌های موبایل یا مرورگرهایی که این API را پشتیبانی می‌کنند
-        navigator.share({
-            title: 'دعوت از دوستان',
-            text: message,
-            url: url,
-        }).then(() => {
-            console.log('اشتراک‌گذاری موفق');
-        }).catch((error) => {
-            console.error('خطا در اشتراک‌گذاری:', error);
+    // Fade-in animation
+    document.addEventListener('DOMContentLoaded', () => {
+        const sections = document.querySelectorAll('.fade-in-section');
+
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(section => {
+            observer.observe(section);
         });
-    } else {
-        navigator.clipboard.writeText(url)
-  .then(() => {
-    alert("لینک با موفقیت کپی شد!");
-  })
-  .catch(err => {
-    alert("خطا در کپی کردن لینک:", err);
-  });
-  
+
+        // Ripple effect for buttons
+        const buttons = document.querySelectorAll('.ripple-effect');
+        buttons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const ripple = document.createElement('span');
+                ripple.style.width = ripple.style.height = Math.max(rect.width, rect.height) + 'px';
+                ripple.style.left = `${x}px`;
+                ripple.style.top = `${y}px`;
+                ripple.style.position = 'absolute';
+                ripple.style.borderRadius = '50%';
+                ripple.style.background = 'rgba(255, 255, 255, 0.7)';
+                ripple.style.transform = 'scale(0)';
+                ripple.style.animation = 'ripple 0.6s linear';
+                ripple.style.pointerEvents = 'none';
+                ripple.style.zIndex = '1';
+                
+                this.style.position = 'relative';
+                this.style.overflow = 'hidden';
+                this.appendChild(ripple);
+                
+                ripple.addEventListener('animationend', () => {
+                    ripple.remove();
+                });
+            });
+        });
+    });
+
+    // Share invite code function
+    function shareInviteCode(code) {
+        const url = window.location.origin + '/register?code=' + code;
+        const message = `سلام! در EarthCoop منتظر شما هستم. با زدن روی لینک زیر و وارد کردن کد دعوت در زیست‌بوم همکاری‌های جهانی به ما بپیوندید.\nکد دعوت: ${code}\nلینک: ${url}`;
+
+        if (navigator.share) {
+            // Use Web Share API for mobile devices
+            navigator.share({
+                title: 'دعوت از دوستان',
+                text: message,
+                url: url,
+            }).then(() => {
+                console.log('اشتراک‌گذاری موفق');
+            }).catch((error) => {
+                console.error('خطا در اشتراک‌گذاری:', error);
+                copyToClipboard(url);
+            });
+        } else {
+            // Fallback to clipboard
+            copyToClipboard(url);
+        }
     }
-}
+
+    // Copy to clipboard function
+    function copyToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                showCopyMessage();
+            }).catch(err => {
+                console.error('خطا در کپی کردن:', err);
+                fallbackCopyToClipboard(text);
+            });
+        } else {
+            fallbackCopyToClipboard(text);
+        }
+    }
+
+    // Fallback copy method
+    function fallbackCopyToClipboard(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            showCopyMessage();
+        } catch (err) {
+            console.error('خطا در کپی کردن:', err);
+            alert('لینک: ' + text);
+        }
+        document.body.removeChild(textarea);
+    }
+
+    // Show copy success message
+    function showCopyMessage() {
+        const message = document.getElementById('copySuccessMessage');
+        if (message) {
+            message.classList.add('show');
+            setTimeout(() => {
+                message.classList.remove('show');
+            }, 3000);
+        }
+    }
+
+    // Add ripple animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
 </script>
-@endsection
-
-@section('scripts')
-{{-- اسکریپت جی کوئری و Bootstrap --}}
-<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-
-{{-- اگر از Bootstrap5 استفاده می‌کنید: --}}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<!-- بارگذاری jQuery -->
-<!-- بارگذاری Bootstrap 5 -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js" defer></script>
-
-
-
-<script>
-    function toggleBox(header) {
-      const content = header.nextElementSibling;
-      const icon = header.querySelector('.toggle-icon');
-      content.style.display = content.style.display === 'none' ? 'block' : 'none';
-      icon.classList.toggle('fa-chevron-down');
-      icon.classList.toggle('fa-chevron-up');
-    }
-  
-    // همه رو پیش‌فرض ببنده
-    document.querySelectorAll('.toggle-content').forEach(el => el.style.display = 'none');
-  </script>
-  
-
-<script>
-    function updatePlaceholder() {
-        const select = document.getElementById('country_code');
-        const selected = select.options[select.selectedIndex];
-        const placeholder = selected.getAttribute('data-placeholder');
-    
-        document.getElementById('phone').placeholder = 'برای مثال: ' + placeholder;
-    }
-    </script>
-
+@endpush
 @endsection

@@ -10,48 +10,48 @@ use Illuminate\Http\Request;
 
 class GroupController extends Controller
 {
-    public function index(){
-    $groupsQuery = Group::query();
+    public function index(Request $request){
+        $groupsQuery = Group::with(['experience', 'specialty', 'ageGroup']);
 
-    // فیلتر user
-    if(isset($_GET['user'])){
-        $groupUserIds = GroupUser::where('user_id', $_GET['user'])->pluck('group_id')->toArray();
-        $groupsQuery->whereIn('id', $groupUserIds);
-    }
-
-    // فیلتر level
-    if(isset($_GET['level'])){
-        $groupsQuery->where('location_level', $_GET['level']);
-    }
-
-    // فیلتر sort
-    if(isset($_GET['sort'])){
-        switch($_GET['sort']){
-            case 'experience':
-                $groupsQuery->whereNotNull('experience_id');
-                break;
-            case 'job':
-                $groupsQuery->whereNotNull('specialty_id');
-                break;
-            case 'age':
-                $groupsQuery->whereNotNull('age_group_id');
-                break;
-            case 'gender':
-                $groupsQuery->whereNotNull('gender');
-                break;
-            case 'total':
-                $groupsQuery->whereNull('experience_id')
-                            ->whereNull('specialty_id')
-                            ->whereNull('age_group_id')
-                            ->whereNull('gender');
-                break;
+        // فیلتر user
+        if($request->has('user') && $request->user){
+            $groupUserIds = GroupUser::where('user_id', $request->user)->pluck('group_id')->toArray();
+            $groupsQuery->whereIn('id', $groupUserIds);
         }
+
+        // فیلتر level
+        if($request->has('level') && $request->level){
+            $groupsQuery->where('location_level', $request->level);
+        }
+
+        // فیلتر sort
+        if($request->has('sort') && $request->sort){
+            switch($request->sort){
+                case 'experience':
+                    $groupsQuery->whereNotNull('experience_id');
+                    break;
+                case 'job':
+                    $groupsQuery->whereNotNull('specialty_id');
+                    break;
+                case 'age':
+                    $groupsQuery->whereNotNull('age_group_id');
+                    break;
+                case 'gender':
+                    $groupsQuery->whereNotNull('gender');
+                    break;
+                case 'total':
+                    $groupsQuery->whereNull('experience_id')
+                                ->whereNull('specialty_id')
+                                ->whereNull('age_group_id')
+                                ->whereNull('gender');
+                    break;
+            }
+        }
+
+        $groups = $groupsQuery->orderBy('created_at', 'desc')->get();
+
+        return view('admin.groups.index', compact('groups'));
     }
-
-    $groups = $groupsQuery->orderBy('created_at', 'desc')->get();
-
-    return view('admin.groups.index', compact('groups'));
-}
 
     public function update(Request $request, Group $group){
         $inputs = $request->validate([
@@ -68,7 +68,7 @@ class GroupController extends Controller
         }
 
         $group->update($inputs);
-        return back();
+        return back()->with('success', 'اطلاعات گروه با موفقیت به‌روزرسانی شد');
     }
     
     public function postUpdate(Request $request, Blog $blog){
@@ -100,7 +100,7 @@ class GroupController extends Controller
     
     public function delete(Group $group){
         $group->delete();
-        return back();
+        return back()->with('success', 'گروه با موفقیت حذف شد');
     }
     
     public function postDelete(Blog $blog){

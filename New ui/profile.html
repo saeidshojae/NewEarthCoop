@@ -1,0 +1,2415 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل کاربری EarthCoop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        /* Custom Tailwind Configuration - پیکربندی رنگ‌ها و فونت‌ها */
+        :root {
+            --color-earth-green: #10b981; /* سبز زمینی */
+            --color-ocean-blue: #3b82f6; /* آبی اقیانوسی */
+            --color-digital-gold: #f59e0b; /* طلایی دیجیتال */
+            --color-pure-white: #ffffff; /* سفید خالص */
+            --color-light-gray: #f8fafc; /* خاکستری روشن */
+            --color-gentle-black: #1e293b; /* مشکی ملایم */
+            --color-dark-green: #047857; /* سبز تیره */
+            --color-dark-blue: #1d4ed8; /* آبی تیره */
+            --color-accent-peach: #ff7e5f; /* هلویی تاکیدی */
+            --color-accent-sky: #6dd5ed; /* آبی آسمانی تاکیدی */
+            --color-purple-700: #6B46C1; /* بنفش تیره برای هاور */
+            --color-red-tomato: #FF6347; /* قرمز گوجه ای */
+
+            /* Profile specific colors, harmonized with about.html palette */
+            --primary-900: #0D3B2A; /* سبز بسیار تیره */
+            --primary-800: #1A5D3E; /* سبز تیره */
+            --primary-700: #218955; /* سبز */
+            --primary-600: #27AE60; /* سبز روشن */
+            --primary-500: #2ECC71; /* سبز پررنگ */
+            --primary-400: #58D68D; /* سبز روشن‌تر */
+            --primary-300: #82E0AA; /* سبز بسیار روشن */
+            --primary-200: #ABEBC6; /* سبز روشن برای پس‌زمینه */
+            --primary-100: #D5F5E3; /* سبز بسیار روشن برای پس‌زمینه */
+            --primary-50: #EAFAF1; /* سبز فوق العاده روشن */
+            
+            --secondary-900: #1A5276;
+            --secondary-800: #2980B9;
+            --secondary-700: #3498DB;
+            --secondary-600: #5DADE2;
+            --secondary-500: #85C1E9;
+            --secondary-400: #AED6F1;
+            --secondary-300: #D6EAF8;
+            --secondary-200: #EBF5FB;
+            
+            --accent-900: #9C6400;
+            --accent-800: #F39C12;
+            --accent-700: #F8C471;
+            --accent-600: #F9E79F;
+            --accent-500: #FCF3CF;
+            
+            --neutral-900: #1C2833;
+            --neutral-800: #2C3E50;
+            --neutral-700: #34495E;
+            --neutral-600: #566573;
+            --neutral-500: #7F8C8D;
+            --neutral-400: #A6ACAF;
+            --neutral-300: #D5D8DC;
+            --neutral-200: #E5E7E9;
+            --neutral-100: #EBEDEF;
+            --neutral-50: #F4F6F6;
+            
+            --success-color: var(--primary-500);
+            --warning-color: #F1C40F;
+            --danger-color: #E74C3C;
+            --info-color: var(--secondary-700);
+            
+            --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.15);
+            --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.2);
+            --shadow-xxl: 0 30px 60px rgba(0, 0, 0, 0.2), 0 12px 24px rgba(0, 0, 0, 0.25);
+            
+            --transition-smooth: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-fast: all 0.15s ease-out;
+            
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-xl: 18px;
+            --radius-2xl: 24px;
+            --radius-full: 9999px;
+            
+            --text-heading: var(--neutral-900);
+            --text-primary: var(--neutral-800);
+            --text-secondary: var(--neutral-600);
+            --text-tertiary: var(--neutral-400);
+            --text-on-primary: white;
+            
+            --bg-light: var(--neutral-50);
+            --bg-card: white;
+            --bg-overlay: rgba(0, 0, 0, 0.4);
+            --border-color: var(--neutral-200);
+        }
+
+        /* Utility classes for custom colors */
+        .bg-earth-green { background-color: var(--color-earth-green); }
+        .text-earth-green { color: var(--color-earth-green); }
+        .bg-ocean-blue { background-color: var(--color-ocean-blue); }
+        .text-ocean-blue { color: var(--color-ocean-blue); }
+        .bg-digital-gold { background-color: var(--color-digital-gold); }
+        .text-digital-gold { color: var(--color-digital-gold); }
+        .bg-pure-white { background-color: var(--color-pure-white); }
+        .text-pure-white { color: var(--color-pure-white); }
+        .bg-light-gray { background-color: var(--color-light-gray); }
+        .text-light-gray { color: var(--color-light-gray); }
+        .bg-gentle-black { background-color: var(--color-gentle-black); }
+        .text-gentle-black { color: var(--color-gentle-black); }
+        .bg-dark-green { background-color: var(--color-dark-green); }
+        .bg-dark-blue { background-color: var(--color-dark-blue); }
+        .bg-accent-peach { background-color: var(--color-accent-peach); }
+        .text-accent-peach { color: var(--color-accent-peach); }
+        .bg-accent-sky { background-color: var(--color-accent-sky); }
+        .text-accent-sky { color: var(--color-accent-sky); }
+        .text-purple-700 { color: var(--color-purple-700); }
+        .text-red-tomato { color: var(--color-red-tomato); }
+
+
+        /* Font Families - Vazirmatn for Farsi, Poppins for English numbers/text */
+        .font-vazirmatn { font-family: 'Vazirmatn', sans-serif; }
+        .font-poppins { font-family: 'Poppins', sans-serif; }
+
+        /* Custom animations from main.html */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.4), 0 0 25px rgba(245, 158, 11, 0.2); }
+            50% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.7), 0 0 40px rgba(245, 158, 11, 0.4); }
+            100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.4), 0 0 25px rgba(245, 158, 11, 0.2); }
+        }
+
+        @keyframes pulse-light {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes bounce-custom {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0); }
+        }
+
+        /* Apply animations */
+        .animate-glow { animation: glow 3s infinite ease-in-out; }
+        .animate-float { animation: float 6s infinite ease-in-out; }
+        .animate-pulse-light { animation: pulse-light 2s infinite ease-in-out; }
+        .animate-bounce-custom { animation: bounce-custom 3s infinite ease-in-out; }
+
+        /* Ripple effect for buttons */
+        .ripple-effect {
+            position: relative;
+            overflow: hidden;
+            transform: translate3d(0, 0, 0); /* Force hardware acceleration */
+        }
+
+        .ripple-effect span {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            background-color: rgba(255, 255, 255, 0.7); /* White ripple */
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Fade-in section for content */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Specific styles for header elements to match main.html */
+        .header-link.active {
+            @apply bg-earth-green text-pure-white shadow-md;
+        }
+        .header-link:hover {
+            @apply text-pure-white;
+        }
+        .header-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.18) 100%);
+            border-radius: 9999px; /* Tailwind rounded-full */
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: -1;
+        }
+        .header-link:hover::before {
+            opacity: 1;
+        }
+
+        /* Sidebar menu item animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar-menu-item:first-child .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.1s both; }
+        .sidebar-menu-item:nth-child(2) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.2s both; }
+        .sidebar-menu-item:nth-child(3) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.3s both; }
+        .sidebar-menu-item:nth-child(4) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.4s both; }
+        .sidebar-menu-item:nth-child(5) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.5s both; }
+        .sidebar-menu-item:nth-child(6) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.6s both; }
+        .sidebar-menu-item:nth-child(7) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.7s both; }
+        .sidebar-menu-item:nth-child(8) .sidebar-menu-link { animation: fadeInUp 0.6s ease-out 0.8s both; }
+
+        /* Custom hover effect for sidebar menu items */
+        .sidebar-menu-link:hover {
+            background-color: var(--color-light-gray); /* Light gray background on hover */
+            color: var(--color-earth-green); /* Earth green text on hover */
+            transform: translateX(-5px); /* Slight movement to the left */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* Subtle shadow */
+        }
+
+        /* Active dot styling for gallery (not directly used in about.html but kept for consistency) */
+        .active-dot {
+            transform: scale(1.25); /* Slightly larger */
+            background-color: var(--color-earth-green) !important; /* Use a prominent color */
+            border-color: var(--color-earth-green) !important;
+        }
+
+        /* Profile specific styles */
+        body {
+            background-color: var(--color-light-gray);
+            color: var(--color-gentle-black);
+            line-height: 1.7;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            direction: rtl;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            /* Removed overflow-y: scroll to match about.html behavior */
+        }
+
+        .main-container {
+            display: flex;
+            padding: 35px;
+            gap: 35px;
+            flex: 1;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .dashboard-content {
+            flex-grow: 1;
+            background-color: var(--color-pure-white);
+            border-radius: 1rem; /* rounded-2xl */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* shadow-md */
+            padding: 2.5rem; /* p-10 */
+            min-height: calc(100vh - 170px);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e2e8f0; /* border-gray-200 */
+            font-size: 1.5rem;
+            color: var(--color-gentle-black);
+        }
+
+        /* Styles for the User Profile section */
+        .user-profile-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .profile-header h1 {
+            font-size: 2.2rem;
+            color: var(--color-gentle-black);
+            margin-bottom: 10px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .profile-picture-container {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-earth-green) 0%, var(--color-dark-green) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            margin: 20px auto 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.12);
+            border: 4px solid var(--color-earth-green);
+            overflow: hidden;
+            position: relative; /* Added for absolute positioning of upload button */
+        }
+
+        .profile-picture-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Camera button always visible next to the profile picture */
+        .camera-button-wrapper {
+            position: absolute; 
+            bottom: 5px; 
+            right: 5px; 
+            z-index: 10; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px; 
+            height: 45px; 
+            background-color: var(--color-earth-green);
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid var(--color-light-gray);
+        }
+
+        .camera-button-wrapper:hover {
+            background-color: var(--color-dark-green);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.12);
+        }
+
+        @media (max-width: 768px) {
+            .camera-button-wrapper {
+                bottom: 5px; 
+                right: 5px;
+                width: 50px; 
+                height: 50px;
+            }
+        }
+
+        .camera-button-wrapper i {
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .profile-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            padding: 20px;
+            background-color: var(--color-light-gray);
+            border-radius: 1rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            background-color: var(--color-pure-white);
+            padding: 18px 20px;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            border: 1px solid #f1f5f9;
+            position: relative;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--color-earth-green);
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+        }
+
+        .info-label i {
+            margin-left: 8px;
+            color: var(--color-dark-green);
+            font-size: 1.1em;
+        }
+
+        .info-value {
+            color: var(--color-gentle-black);
+            font-size: 1rem;
+            flex-grow: 1;
+        }
+
+        .info-actions {
+            display: flex;
+            gap: 8px;
+            position: absolute;
+            top: 15px;
+            left: 15px;
+        }
+
+        .action-button {
+            background-color: var(--color-light-gray);
+            border: none;
+            border-radius: 9999px;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease-out;
+            color: var(--color-earth-green);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+
+        .action-button:hover {
+            background-color: #e2e8f0;
+            color: var(--color-dark-green);
+            transform: scale(1.1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-button:active {
+            transform: scale(0.95);
+        }
+
+        .social-media-list,
+        .documents-list {
+            display: flex;
+            flex-wrap: wrap; 
+            gap: 10px;
+            margin-top: 10px;
+            padding: 0; 
+            border-radius: 0.375rem;
+        }
+        
+        /* Styling for editable input fields */
+        .edit-input-field {
+            width: 100%;
+            padding: 8px;
+            border-radius: 0.375rem;
+            border: 1px solid var(--color-earth-green);
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 1rem;
+            direction: rtl;
+            outline: none; 
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 5px; 
+        }
+
+        .edit-input-field:focus {
+            border-color: var(--color-ocean-blue);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        textarea.edit-input-field {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .social-media-item {
+            background-color: #e0f2fe;
+            color: var(--color-ocean-blue);
+            padding: 8px 12px;
+            border-radius: 9999px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid #bfdbfe;
+            transition: all 0.15s ease-out;
+        }
+
+        .social-media-item:hover {
+            background-color: #d0effd;
+            transform: translateY(-2px);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+
+        .documents-list {
+            flex-direction: column; 
+        }
+
+        .document-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #f1f5f9;
+            padding: 8px 12px;
+            border-radius: 0.375rem;
+            font-size: 0.9rem;
+            color: var(--color-gentle-black);
+            width: fit-content; 
+        }
+
+        .document-item i {
+            color: #64748b;
+        }
+
+        /* Specific styles for phone number input */
+        .phone-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .phone-input-group select,
+        .phone-input-group input {
+            padding: 8px;
+            border-radius: 0.375rem;
+            border: 1px solid var(--color-earth-green);
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 1rem;
+            direction: rtl;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .phone-input-group select:focus,
+        .phone-input-group input:focus {
+            border-color: var(--color-ocean-blue);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .phone-input-group select {
+            flex-shrink: 0;
+            width: 100px; 
+        }
+
+        .phone-input-group input {
+            flex-grow: 1; 
+        }
+
+        /* File upload specific styles */
+        .file-upload-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .file-upload-button {
+            background-color: var(--color-earth-green);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.3s ease;
+            font-size: 0.95rem;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-upload-button:hover {
+            background-color: var(--color-dark-green);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.12);
+        }
+
+        .file-upload-button:active {
+            transform: translateY(1px);
+        }
+
+        .file-list {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .uploaded-file-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #f1f5f9;
+            padding: 8px 12px;
+            border-radius: 0.375rem;
+            font-size: 0.9rem;
+            color: var(--color-gentle-black);
+            justify-content: space-between; 
+        }
+
+        .uploaded-file-item .file-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .remove-file-button {
+            background: none;
+            border: none;
+            color: var(--color-red-tomato);
+            cursor: pointer;
+            font-size: 1.1em;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+
+        .remove-file-button:hover {
+            opacity: 1;
+        }
+
+        /* Social Media Specific Styles */
+        .social-media-edit-input-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 5px;
+            width: 100%;
+        }
+
+        .social-media-edit-input-group input {
+            flex-grow: 1;
+        }
+
+        .add-link-button {
+            background-color: var(--color-ocean-blue);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 0.85rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+
+        .add-link-button:hover {
+            background-color: var(--color-dark-blue);
+        }
+
+        /* Password change section styles */
+        .password-change-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .password-change-fields .edit-input-field {
+            margin-top: 0; 
+        }
+
+        .submit-password-button {
+            background-color: var(--color-earth-green);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 0.95rem;
+            margin-top: 10px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .submit-password-button:hover {
+            background-color: var(--color-dark-green);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Responsive settings */
+        @media (max-width: 1024px) { /* lg breakpoint */
+            .main-container {
+                flex-direction: column;
+                padding: 20px; /* Adjusted padding */
+                gap: 20px; /* Adjusted gap */
+            }
+            .sidebar {
+                width: 100%;
+                position: static;
+                padding: 20px; /* Adjusted padding */
+            }
+            .dashboard-content {
+                padding: 20px; /* Adjusted padding */
+            }
+            .profile-info-grid {
+                gap: 20px; /* Adjusted gap */
+            }
+            .info-item {
+                padding: 15px 18px; /* Adjusted padding */
+            }
+            .info-label {
+                font-size: 0.85rem; /* Slightly smaller font */
+            }
+            .info-value {
+                font-size: 0.95rem; /* Slightly smaller font */
+            }
+            .camera-button-wrapper {
+                width: 40px; /* Smaller button */
+                height: 40px;
+            }
+            .camera-button-wrapper i {
+                font-size: 1rem; /* Smaller icon */
+            }
+            .social-media-item, .document-item {
+                font-size: 0.85rem; /* Smaller font */
+                padding: 6px 10px; /* Smaller padding */
+            }
+            .file-upload-button, .submit-password-button, .profession-submit-button {
+                padding: 8px 15px; /* Smaller padding */
+                font-size: 0.9rem; /* Smaller font */
+            }
+            .tab-button {
+                padding: 10px 15px; /* Smaller padding */
+                font-size: 0.9rem; /* Smaller font */
+            }
+            .tab-content-item {
+                padding: 12px; /* Smaller padding */
+                font-size: 0.95rem; /* Smaller font */
+            }
+            .profession-tag {
+                padding: 6px 10px; /* Smaller padding */
+                font-size: 0.85rem; /* Smaller font */
+            }
+        }
+
+        @media (max-width: 768px) { /* md breakpoint */
+            .header {
+                padding: 0 16px; /* Reduced padding */
+                height: 60px; /* Reduced height */
+            }
+            
+            .flex.items-center.space-x-3 span { /* Target EarthCoop title */
+                font-size: 1.8rem; /* Smaller font */
+            }
+            .flex.items-center.space-x-3 svg { /* Target EarthCoop logo */
+                width: 35px; /* Smaller logo */
+                height: 35px;
+            }
+            
+            /* Ensure desktop navigation is hidden on mobile */
+            .header-nav-desktop {
+                display: none !important; /* Force hide on mobile */
+            }
+            
+            .main-container {
+                padding: 16px; /* Further reduced padding */
+                gap: 16px; /* Further reduced gap */
+            }
+            
+            .dashboard-content {
+                padding: 16px; /* Further reduced padding */
+            }
+
+            .profile-header h1 {
+                font-size: 1.8rem; /* Smaller title */
+            }
+            .profile-picture-container {
+                width: 120px; /* Smaller profile picture */
+                height: 120px;
+                font-size: 2.5rem; /* Smaller icon */
+            }
+            .camera-button-wrapper {
+                width: 35px; /* Even smaller button */
+                height: 35px;
+                bottom: 2px; /* Adjusted position */
+                right: 2px;
+            }
+            .camera-button-wrapper i {
+                font-size: 1rem; /* Smaller icon */
+            }
+
+            .profile-info-grid {
+                grid-template-columns: 1fr; /* Single column layout */
+                gap: 15px; /* Reduced gap */
+                padding: 15px; /* Reduced padding */
+            }
+
+            .info-item {
+                padding: 15px; /* Reduced padding */
+            }
+            .info-label {
+                font-size: 0.8rem; /* Even smaller font */
+            }
+            .info-value {
+                font-size: 0.9rem; /* Even smaller font */
+            }
+            .info-actions {
+                top: 10px; /* Adjusted position */
+                left: 10px;
+                gap: 5px; /* Reduced gap */
+            }
+            .action-button {
+                width: 30px; /* Smaller action buttons */
+                height: 30px;
+                font-size: 0.9em; /* Smaller icon */
+            }
+
+            .phone-input-group {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px; /* Reduced gap */
+            }
+            .phone-input-group select,
+            .phone-input-group input {
+                width: 100%; /* Full width */
+                font-size: 0.9rem; /* Smaller font */
+                padding: 6px; /* Reduced padding */
+            }
+            .social-media-edit-input-group select {
+                width: 100px; /* Keep country code select width */
+            }
+            .social-media-edit-input-group input {
+                font-size: 0.9rem; /* Smaller font */
+                padding: 6px; /* Reduced padding */
+            }
+
+            .file-upload-button, .submit-password-button, .profession-submit-button {
+                padding: 8px 12px; /* Further reduced padding */
+                font-size: 0.85rem; /* Further reduced font */
+            }
+            .uploaded-file-item {
+                font-size: 0.8rem; /* Smaller font */
+                padding: 6px 10px; /* Smaller padding */
+            }
+
+            .groups-section {
+                padding: 20px; /* Reduced padding */
+                margin-top: 30px; /* Adjusted margin */
+            }
+            .groups-section h2 {
+                font-size: 1.6rem; /* Smaller title */
+                margin-bottom: 15px; /* Reduced margin */
+                padding-bottom: 8px; /* Reduced padding */
+            }
+            .groups-section h2::after {
+                width: 50px; /* Smaller underline */
+                height: 2px;
+            }
+            .tab-buttons {
+                flex-wrap: wrap; /* Allow tabs to wrap */
+                justify-content: center; /* Center tabs when wrapped */
+                gap: 8px; /* Reduced gap */
+                margin-bottom: 20px; /* Reduced margin */
+                padding-bottom: 8px; /* Reduced padding */
+            }
+            .tab-button {
+                padding: 8px 12px; /* Further reduced padding */
+                font-size: 0.85rem; /* Further reduced font */
+                min-width: unset; /* Remove min-width to allow more flexible wrapping */
+                flex-basis: auto; /* Allow items to determine their own width */
+            }
+            .tab-content-item {
+                padding: 10px; /* Further reduced padding */
+                font-size: 0.9rem; /* Further reduced font */
+            }
+            .profession-tag {
+                padding: 5px 8px; /* Further reduced padding */
+                font-size: 0.8rem; /* Further reduced font */
+            }
+            .edit-warning-message {
+                font-size: 0.85rem; /* Smaller font */
+                padding: 8px 12px; /* Smaller padding */
+            }
+            .message-box {
+                min-width: 280px; /* Adjusted min-width for very small screens */
+                padding: 20px; /* Reduced padding */
+            }
+            .message-box-content {
+                font-size: 1rem; /* Smaller font */
+            }
+            .message-box-close-button {
+                padding: 6px 12px; /* Smaller padding */
+                font-size: 0.9rem; /* Smaller font */
+            }
+        }
+
+        /* Subtle animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* New styles for the tabbed section */
+        .groups-section {
+            width: 100%;
+            max-width: 800px;
+            margin: 40px auto 0; 
+            background-color: var(--color-pure-white);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            padding: 25px;
+        }
+
+        .groups-section h2 {
+            font-size: 1.8rem;
+            color: var(--color-gentle-black);
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .groups-section h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--color-earth-green), var(--color-dark-green));
+            border-radius: 9999px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap; /* Changed from nowrap to wrap for responsiveness */
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        .tab-button {
+            background-color: #f1f5f9;
+            color: var(--color-gentle-black);
+            padding: 12px 20px;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            flex-grow: 1; 
+            min-width: 100px; 
+            text-align: center;
+        }
+
+        .tab-button:hover {
+            background-color: #e2e8f0;
+            color: var(--color-gentle-black);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, var(--color-earth-green) 0%, var(--color-dark-green) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.12);
+            transform: translateY(-3px);
+        }
+
+        .tab-content {
+            padding: 15px 0;
+            animation: fadeIn 0.5s ease-out; 
+        }
+
+        .tab-content-list {
+            list-style: none;
+            padding: 0;
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            max-height: 200px; 
+            overflow-y: auto; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 0.5rem;
+            padding: 10px; 
+        }
+
+        .tab-content-item {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+            color: var(--color-gentle-black);
+            transition: all 0.15s ease-out;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            cursor: pointer; 
+        }
+
+        .tab-content-item.selected {
+            background-color: #d5f5e3;
+            border-color: var(--color-earth-green);
+            color: var(--color-dark-green);
+            font-weight: 600;
+        }
+
+        .tab-content-item:hover {
+            background-color: #f1f5f9;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .tab-content-item i {
+            color: var(--color-earth-green);
+            font-size: 1.2em;
+            flex-shrink: 0;
+            width: 25px; 
+            text-align: center;
+        }
+
+        /* Styles for selected tags (professions/specialties) */
+        .selected-professions-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px dashed var(--color-earth-green);
+            border-radius: 0.5rem;
+            min-height: 50px;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .profession-tag {
+            background-color: #abebc6;
+            color: var(--color-dark-green);
+            padding: 8px 12px;
+            border-radius: 9999px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            transition: all 0.15s ease-out;
+        }
+
+        .profession-tag .remove-tag-button {
+            background: none;
+            border: none;
+            color: var(--color-earth-green);
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-right: 5px;
+            opacity: 0.8;
+            transition: opacity 0.2s ease;
+        }
+
+        .profession-tag .remove-tag-button:hover {
+            opacity: 1;
+            color: var(--color-red-tomato);
+        }
+
+        .edit-warning-message {
+            background-color: var(--color-digital-gold);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 0.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.95rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--color-pure-white);
+            border-radius: 0.75rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            z-index: 10000;
+            min-width: 300px;
+            max-width: 90%;
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .message-box.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .message-box-content {
+            font-size: 1.1rem;
+            color: var(--color-gentle-black);
+            margin-bottom: 20px;
+        }
+
+        .message-box-close-button {
+            background-color: var(--color-earth-green);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .message-box-close-button:hover {
+            background-color: var(--color-dark-green);
+        }
+
+        /* New styles for profession selection tabs */
+        .profession-tabs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .profession-tab-content {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 10px;
+        }
+
+        .profession-submit-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .profession-submit-button {
+            background-color: var(--color-earth-green);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .profession-submit-button:hover {
+            background-color: var(--color-dark-green);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .profession-selected-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body class="font-vazirmatn text-gentle-black leading-relaxed bg-light-gray min-h-screen flex flex-col">
+    <header class="bg-pure-white shadow-md py-4 px-6 md:px-8 sticky top-0 z-50 transition-all duration-300" id="header" x-data="{ mobileMenuOpen: false }">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3 md:space-x-reverse md:space-x-3 rtl:space-x-reverse rtl:space-x-3">
+                <svg width="45" height="45" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="animate-bounce-custom">
+                    <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" fill="#10b981" opacity="0.8"/>
+                    <path d="M12 2C10.5 4 8 6 8 9C8 12 12 14 12 14C12 14 16 12 16 9C16 6 13.5 4 12 2ZM12 14C12 14 10 16 10 18C10 20 12 22 12 22" fill="#047857"/>
+                </svg>
+                <span class="text-2xl md:text-3xl font-extrabold text-gentle-black font-vazirmatn">EarthCoop</span>
+            </div>
+
+            <!-- Desktop Navigation - Removed 'hidden' class and adjusted spacing -->
+            <nav class="md:flex items-center space-x-4 rtl:space-x-reverse font-vazirmatn text-gentle-black flex-grow justify-center header-nav-desktop">
+                <a href="index.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group flex items-center">
+                    <i class="fas fa-home ml-2 text-earth-green"></i> <span>خانه</span>
+                    <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+                </a>
+                <a href="about.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group flex items-center">
+                    <i class="fas fa-info-circle ml-2 text-earth-green"></i> <span>درباره EarthCoop</span>
+                    <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+                </a>
+                <a href="help.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group flex items-center">
+                    <i class="fas fa-question-circle ml-2 text-earth-green"></i> <span>راهنمای استفاده</span>
+                    <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+                </a>
+                <a href="Collaboration.html" class="relative hover:text-earth-green transition duration-300 font-medium pb-1 group flex items-center">
+                    <i class="fas fa-handshake ml-2 text-earth-green"></i> <span>همکاری</span>
+                    <span class="absolute bottom-0 right-0 w-0 h-0.5 bg-earth-green group-hover:w-full transition-all duration-300"></span>
+                </a>
+            </nav>
+
+            <div class="flex items-center">
+                <!-- Mobile Menu Button (Hamburger Icon) -->
+                <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden text-gentle-black focus:outline-none ml-4">
+                    <i class="fas fa-bars text-2xl" x-show="!mobileMenuOpen"></i>
+                    <i class="fas fa-times text-2xl" x-show="mobileMenuOpen" x-transition></i>
+                </button>
+
+                <!-- User Profile Dropdown -->
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" class="bg-earth-green text-pure-white px-4 py-2 rounded-full shadow-md hover:bg-dark-green transition duration-300 font-vazirmatn font-medium transform hover:scale-105 flex items-center ripple-effect">
+                        <div class="w-8 h-8 bg-pure-white/20 rounded-full flex items-center justify-center text-pure-white text-lg ml-2">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        جان دو
+                        <i class="fas fa-chevron-down mr-2 text-sm transition-transform duration-300" :class="{ 'rotate-180': open }"></i>
+                    </button>
+                    <div x-show="open" @click.away="open = false" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="absolute right-0 mt-2 w-48 bg-pure-white rounded-lg shadow-xl py-2 z-50 text-right font-vazirmatn origin-top-right">
+                        <a href="profile.html" class="block px-4 py-2 hover:bg-light-gray transition duration-200 flex items-center justify-start text-earth-green hover:text-dark-green">
+                            پروفایل <i class="fas fa-user-circle mr-3"></i>
+                        </a>
+                        <a href="asasname.html" class="block px-4 py-2 hover:bg-light-gray transition duration-200 flex items-center justify-start text-earth-green hover:text-dark-green">
+                            اساسنامه <i class="fas fa-file-alt mr-3"></i>
+                        </a>
+                        <hr class="my-1 border-gray-200">
+                        <a href="#" class="block px-4 py-2 hover:bg-light-gray transition duration-200 flex items-center justify-start text-red-tomato hover:text-red-700">
+                            خروج <i class="fas fa-sign-out-alt mr-3"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation (hidden by default, shown with Alpine.js) -->
+        <div x-show="mobileMenuOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2" class="md:hidden mt-4 pb-4 border-t border-gray-200">
+            <nav class="flex flex-col items-center space-y-2 font-vazirmatn text-gentle-black">
+                <a href="index.html" class="block w-full text-center py-2 hover:bg-light-gray rounded-md transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-home ml-2 text-earth-green"></i> <span>خانه</span>
+                </a>
+                <a href="about.html" class="block w-full text-center py-2 hover:bg-light-gray rounded-md transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-info-circle ml-2 text-earth-green"></i> <span>درباره EarthCoop</span>
+                </a>
+                <a href="help.html" class="block w-full text-center py-2 hover:bg-light-gray rounded-md transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-question-circle ml-2 text-earth-green"></i> <span>راهنمای استفاده</span>
+                </a>
+                <a href="Collaboration.html" class="block w-full text-center py-2 hover:bg-light-gray rounded-md transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-handshake ml-2 text-earth-green"></i> <span>همکاری</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container mx-auto flex flex-col lg:flex-row gap-8 p-6 md:p-8 flex-grow">
+        <aside class="w-full lg:w-80 bg-pure-white rounded-2xl shadow-lg p-6 flex-shrink-0 lg:sticky lg:top-24 h-fit border border-gray-200 transition-all duration-300 hover:shadow-xl">
+            <div class="pb-4 mb-4 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-gentle-black font-vazirmatn flex items-center justify-between">
+                    <i class="fas fa-bars text-earth-green"></i>
+                    <span class="mr-3">منو</span>
+                </h2>
+            </div>
+            <nav>
+                <ul class="space-y-2">
+                    <li class="sidebar-menu-item">
+                        <a href="index.html" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black hover:bg-light-gray hover:text-earth-green transition duration-200 flex items-center justify-between relative group">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg bg-earth-green opacity-0 group-hover:opacity-100 transition-all duration-200"></span>
+                            <i class="fas fa-users text-ocean-blue"></i>
+                            <span class="flex-grow text-right mx-3">گروه‌های من</span>
+                            <span class="badge bg-digital-gold text-pure-white text-xs px-2 py-1 rounded-full font-bold">3 جدید</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="Collaboration.html" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black hover:bg-light-gray hover:text-earth-green transition duration-200 flex items-center justify-between relative group">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg bg-earth-green opacity-0 group-hover:opacity-100 transition-all duration-200"></span>
+                            <i class="fas fa-handshake text-digital-gold"></i>
+                            <span class="flex-grow text-right mx-3">مشارکت‌های من</span>
+                            </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="entekhabat.html" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black hover:bg-light-gray hover:text-earth-green transition duration-200 flex items-center justify-between relative group">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg bg-earth-green opacity-0 group-hover:opacity-100 transition-all duration-200"></span>
+                            <i class="fas fa-vote-yea text-earth-green"></i>
+                            <span class="flex-grow text-right mx-3">انتخابات جاری</span>
+                            <span class="badge bg-earth-green text-pure-white text-xs px-2 py-1 rounded-full font-bold">1 فعال</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="nazarsanjiha.html" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black hover:bg-light-gray hover:text-earth-green transition duration-200 flex items-center justify-between relative group">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg bg-earth-green opacity-0 group-hover:opacity-100 transition-all duration-200"></span>
+                            <i class="fas fa-chart-pie text-ocean-blue"></i>
+                            <span class="flex-grow text-right mx-3">نظرسنجی‌های جاری</span>
+                            </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="najm bahar.html" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black hover:bg-light-gray hover:text-earth-green transition duration-200 flex items-center justify-between relative group">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg bg-earth-green opacity-0 group-hover:opacity-100 transition-all duration-200"></span>
+                            <i class="fas fa-wallet text-digital-gold"></i>
+                            <span class="flex-grow text-right mx-3">حساب مالی نجم بهار</span>
+                            </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="davate doostan.html" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black hover:bg-light-gray hover:text-earth-green transition duration-200 flex items-center justify-between relative group">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg bg-earth-green opacity-0 group-hover:opacity-100 transition-all duration-200"></span>
+                            <i class="fas fa-user-plus text-earth-green"></i>
+                            <span class="flex-grow text-right mx-3">دعوت از دوستان</span>
+                            </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="profile.html" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black hover:bg-light-gray hover:text-earth-green transition duration-200 flex items-center justify-between relative group active">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg bg-earth-green transition-all duration-200"></span>
+                            <i class="fas fa-cog text-ocean-blue"></i>
+                            <span class="flex-grow text-right mx-3">ویرایش حساب کاربری</span>
+                            </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="#" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black hover:bg-light-gray hover:text-earth-green transition duration-200 flex items-center justify-between relative group">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg bg-earth-green opacity-0 group-hover:opacity-100 transition-all duration-200"></span>
+                            <i class="fas fa-sign-out-alt text-digital-gold"></i>
+                            <span class="flex-grow text-right mx-3">خروج</span>
+                            </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="mt-6 pt-4 border-t border-gray-200 text-center text-sm text-gray-500 font-vazirmatn">
+                نسخه ۲.۱.۰ - EarthCoop
+            </div>
+        </aside>
+
+        <main class="dashboard-content fade-in-section">
+            <div class="user-profile-section">
+                <div class="profile-header">
+                    <h1>حساب کاربری شما</h1>
+                    <div class="profile-picture-container" id="profilePictureContainer">
+                        <img src="https://placehold.co/150x150/2ECC71/FFFFFF?text=عکس+پروفایل" alt="عکس پروفایل کاربر" id="profileImage" onerror="this.onerror=null; this.src='https://placehold.co/150x150/2ECC71/FFFFFF?text=عکس';">
+                        <!-- Camera button always visible -->
+                        <div class="camera-button-wrapper" onclick="document.getElementById('profileImageUpload').click()">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <input type="file" id="profileImageUpload" accept="image/*" class="hidden">
+                    </div>
+
+                    <!-- New section: تغییر رمز عبور -->
+                    <div class="info-item password-change-section" data-field-type="password-change" style="margin-top: 30px;">
+                        <div class="info-actions">
+                            <button class="action-button ripple-effect toggle-visibility" title="مخفی/نمایش عمومی">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-button ripple-effect toggle-edit" title="تغییر رمز عبور">
+                                <i class="fas fa-key"></i>
+                            </button>
+                        </div>
+                        <span class="info-label"><i class="fas fa-lock"></i>تغییر رمز عبور:</span>
+                        <span class="info-value">***********</span> <!-- Display placeholder for password -->
+                        <div class="password-change-fields hidden">
+                            <input type="password" class="edit-input-field" placeholder="رمز عبور فعلی">
+                            <input type="password" class="edit-input-field" placeholder="رمز جدید">
+                            <input type="password" class="edit-input-field" placeholder="تکرار رمز جدید">
+                            <button class="submit-password-button ripple-effect"><i class="fas fa-check"></i> ثبت رمز عبور جدید</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="profile-info-grid">
+                    <div class="info-item" data-field-type="text">
+                        <div class="info-actions">
+                            <button class="action-button ripple-effect toggle-visibility" title="مخفی/نمایش عمومی">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-button ripple-effect toggle-edit" title="ویرایش">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </div>
+                        <span class="info-label"><i class="fas fa-signature"></i>نام:</span>
+                        <span class="info-value">جان دو</span>
+                    </div>
+
+                    <div class="info-item" data-field-type="text">
+                        <div class="info-actions">
+                            <button class="action-button ripple-effect toggle-visibility" title="مخفی/نمایش عمومی">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-button ripple-effect toggle-edit" title="ویرایش">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </div>
+                        <span class="info-label"><i class="fas fa-at"></i>ایمیل:</span>
+                        <span class="info-value">john.doe@example.com</span>
+                    </div>
+
+                    <div class="info-item" data-field-type="phone">
+                        <div class="info-actions">
+                            <button class="action-button ripple-effect toggle-visibility" title="مخفی/نمایش عمومی">
+                                <i class="fas fa-eye-slash"></i>
+                            </button>
+                            <button class="action-button ripple-effect toggle-edit" title="ویرایش">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </div>
+                        <span class="info-label"><i class="fas fa-phone"></i>شماره تماس:</span>
+                        <span class="info-value">+98 912 345 6789</span>
+                        <div class="edit-phone-fields hidden">
+                            <div class="phone-input-group">
+                                <select class="edit-input-field country-code-select">
+                                    <option value="+98">ایران (+98)</option>
+                                    <option value="+1">آمریکا و کانادا (+1)</option>
+                                    <option value="+44">انگلستان (+44)</option>
+                                    <option value="+49">آلمان (+49)</option>
+                                    <option value="+90">ترکیه (+90)</option>
+                                    <option value="+971">امارات (+971)</option>
+                                    <option value="+964">عراق (+964)</option>
+                                    <option value="+965">کویت (+965)</option>
+                                    <option value="+966">عربستان (+966)</option>
+                                    <option value="+974">قطر (+974)</option>
+                                    <option value="+973">بحرین (+973)</option>
+                                    <option value="+975">بوتان (+975)</option>
+                                    <option value="+976">مغولستان (+976)</option>
+                                    <option value="+977">نپال (+977)</option>
+                                </select>
+                                <input type="text" class="edit-input-field phone-number-input" placeholder="شماره تلفن">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-item" data-field-type="text">
+                        <div class="info-actions">
+                            <button class="action-button ripple-effect toggle-visibility" title="مخفی/نمایش عمومی">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-button ripple-effect toggle-edit" title="ویرایش">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </div>
+                        <span class="info-label"><i class="fas fa-calendar-alt"></i>تاریخ تولد:</span>
+                        <span class="info-value">۱۳۷۰/۰۵/۲۰</span>
+                    </div>
+
+                    <div class="info-item" data-field-type="gender">
+                        <div class="info-actions">
+                            <button class="action-button ripple-effect toggle-visibility" title="مخفی/نمایش عمومی">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-button ripple-effect toggle-edit" title="ویرایش">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </div>
+                        <span class="info-label"><i class="fas fa-venus-mars"></i>جنسیت:</span>
+                        <span class="info-value">مرد</span>
+                        <div class="edit-gender-field hidden">
+                            <select class="edit-input-field gender-select">
+                                <option value="مرد">مرد</option>
+                                <option value="زن">زن</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="info-item" data-field-type="text">
+                        <div class="info-actions">
+                            <button class="action-button ripple-effect toggle-visibility" title="مخفی/نمایش عمومی">
+                                <i class="fas fa-eye-slash"></i>
+                            </button>
+                            <button class="action-button ripple-effect toggle-edit" title="ویرایش">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </div>
+                        <span class="info-label"><i class="fas fa-id-card"></i>کد ملی:</span>
+                        <span class="info-value">۱۲۳۴۵۶۷۸۹۰</span>
+                    </div>
+
+                    <div class="info-item" data-field-type="textarea" style="grid-column: 1 / -1;">
+                        <div class="info-actions">
+                            <button class="action-button ripple-effect toggle-visibility" title="مخفی/نمایش عمومی">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-button ripple-effect toggle-edit" title="ویرایش">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </div>
+                        <span class="info-label"><i class="fas fa-book"></i>بیوگرافی:</span>
+                        <span class="info-value">
+                            یک فرد علاقه‌مند به توسعه پایدار و محیط زیست، با سابقه ۱۰ سال فعالیت در زمینه کشاورزی ارگانیک و ترویج همکاری‌های مردمی.
+                        </span>
+                    </div>
+
+                    <div class="info-item" data-field-type="documents">
+                        <div class="info-actions">
+                            <button class="action-button ripple-effect toggle-visibility" title="مخفی/نمایش عمومی">
+                                <i class="fas fa-eye-slash"></i>
+                            </button>
+                            <button class="action-button ripple-effect toggle-edit" title="ویرایش">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </div>
+                        <span class="info-label"><i class="fas fa-file-invoice"></i>مدارک:</span>
+                        <div class="documents-list info-value">
+                            <span class="document-item"><i class="fas fa-file-pdf"></i>شناسنامه.pdf</span>
+                            <span class="document-item"><i class="fas fa-file-image"></i>گواهینامه.jpg</span>
+                        </div>
+                        <div class="file-upload-container hidden">
+                            <input type="file" id="documentUpload" multiple class="hidden" accept=".pdf,.doc,.docx,.jpg,.png">
+                            <button class="file-upload-button ripple-effect" onclick="document.getElementById('documentUpload').click();">
+                                <i class="fas fa-upload"></i> آپلود مدارک جدید
+                            </button>
+                            <div class="file-list" id="uploadedFileList">
+                                <!-- Uploaded files will be listed here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-item" data-field-type="text">
+                        <div class="info-actions">
+                            <button class="action-button ripple-effect toggle-visibility" title="مخفی/نمایش عمومی">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-button ripple-effect toggle-edit" title="ویرایش">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </div>
+                        <span class="info-label"><i class="fas fa-calendar-check"></i>تاریخ ثبت نام:</span>
+                        <span class="info-value">۱۴۰۲/۱۰/۱۵</span>
+                    </div>
+
+                    <div class="info-item" data-field-type="list">
+                        <div class="info-actions">
+                            <button class="action-button ripple-effect toggle-visibility" title="مخفی/نمایش عمومی">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-button ripple-effect toggle-edit" title="ویرایش">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </div>
+                        <span class="info-label"><i class="fas fa-users-cog"></i>گروه‌ها:</span>
+                        <div class="documents-list info-value">
+                            <span class="document-item"><i class="fas fa-user-circle"></i>اعضای هیئت مدیره</span>
+                            <span class="document-item"><i class="fas fa-user-circle"></i>گروه توسعه کشاورزی</span>
+                        </div>
+                    </div>
+
+                    <div class="info-item" data-field-type="social-media">
+                        <div class="info-actions">
+                            <button class="action-button ripple-effect toggle-visibility" title="مخفی/نمایش عمومی">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-button ripple-effect toggle-edit" title="ویرایش">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </div>
+                        <span class="info-label"><i class="fas fa-share-alt"></i>شبکه‌های اجتماعی:</span>
+                        <div class="social-media-list info-value">
+                            <span class="social-media-item" data-social-platform="instagram">
+                                <i class="fab fa-instagram"></i> اینستاگرام: <a href="https://instagram.com/johndoe" target="_blank">johndoe</a>
+                            </span>
+                            <span class="social-media-item" data-social-platform="telegram">
+                                <i class="fab fa-telegram-plane"></i> تلگرام: <a href="https://t.me/johndoe" target="_blank">johndoe</a>
+                            </span>
+                            <span class="social-media-item" data-social-platform="linkedin">
+                                <i class="fab fa-linkedin"></i> لینکدین: <a href="https://linkedin.com/in/johndoe" target="_blank">johndoe</a>
+                            </span>
+                        </div>
+                        <div class="edit-social-media-fields hidden">
+                            <!-- Social media inputs will be dynamically added here -->
+                            <button class="add-link-button ripple-effect"><i class="fas fa-plus"></i> افزودن لینک جدید</button>
+                        </div>
+                    </div>
+
+                    <!-- New field: صنف و تخصص -->
+                    <div class="info-item" data-field-type="profession-selection" style="grid-column: 1 / -1;">
+                        <div class="info-actions">
+                            <button class="action-button ripple-effect toggle-visibility" title="مخفی/نمایش عمومی">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-button ripple-effect toggle-edit" title="ویرایش" id="editProfessionButton">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </div>
+                        <span class="info-label"><i class="fas fa-briefcase"></i>صنف و تخصص:</span>
+                        <!-- Display area for selected professions -->
+                        <div class="selected-professions-container info-value" id="selectedProfessionsDisplay">
+                            <!-- Selected professions will be displayed here as tags -->
+                            <span class="profession-tag" data-value="کشاورزی ارگانیک">کشاورزی ارگانیک <button class="remove-tag-button"><i class="fas fa-times"></i></button></span>
+                            <span class="profession-tag" data-value="مدیریت محیط زیست">مدیریت محیط زیست <button class="remove-tag-button"><i class="fas fa-times"></i></button></span>
+                        </div>
+                        
+                        <div class="edit-profession-fields hidden">
+                            <p class="edit-warning-message hidden" id="professionEditWarning">
+                                توجه داشته باشید تغییر تخصص و صنف شما به منزله خروج از گروه های فعلی تان می‌باشد
+                            </p>
+                            <span class="info-label" style="margin-top: 15px;"><i class="fas fa-cogs"></i>زمینه فعالیت صنفی:</span>
+                            <div class="profession-tabs-container">
+                                <div class="tab-buttons" style="flex-direction: column; align-items: stretch;">
+                                    <button class="tab-button profession-tab-button active" data-tab="educational-managers">صنف مدیران آموزشی</button>
+                                    <button class="tab-button profession-tab-button" data-tab="cultural-managers">صنف مدیران فرهنگی</button>
+                                    <button class="tab-button profession-tab-button" data-tab="commercial-managers">صنف مدیران تجاری</button>
+                                </div>
+
+                                <div id="profession-tab-content-container">
+                                    <div class="profession-tab-content" id="educational-managers-content">
+                                        <ul class="tab-content-list profession-list">
+                                            <li class="tab-content-item" data-value="صنف معلمان"><i class="fas fa-chalkboard-teacher"></i> صنف معلمان</li>
+                                            <li class="tab-content-item" data-value="صنف صنعتگران"><i class="fas fa-industry"></i> صنف صنعتگران</li>
+                                            <li class="tab-content-item" data-value="صنف کشاورزان"><i class="fas fa-tractor"></i> صنف کشاورزان</li>
+                                            <li class="tab-content-item" data-value="صنف مهندسان"><i class="fas fa-cogs"></i> صنف مهندسان</li>
+                                            <li class="tab-content-item" data-value="صنف پزشکان"><i class="fas fa-user-md"></i> صنف پزشکان</li>
+                                            <li class="tab-content-item" data-value="صنف پرستاران"><i class="fas fa-user-nurse"></i> صنف پرستاران</li>
+                                            <li class="tab-content-item" data-value="صنف داروسازان"><i class="fas fa-pills"></i> صنف داروسازان</li>
+                                            <li class="tab-content-item" data-value="صنف روانشناسان"><i class="fas fa-brain"></i> صنف روانشناسان</li>
+                                            <li class="tab-content-item" data-value="صنف مشاوران"><i class="fas fa-hands-helping"></i> صنف مشاوران</li>
+                                            <li class="tab-content-item" data-value="صنف اساتید دانشگاه"><i class="fas fa-graduation-cap"></i> صنف اساتید دانشگاه</li>
+                                        </ul>
+                                    </div>
+                                    <div class="profession-tab-content hidden" id="cultural-managers-content">
+                                        <ul class="tab-content-list profession-list">
+                                            <li class="tab-content-item" data-value="صنف ناشران"><i class="fas fa-book-open"></i> صنف ناشران</li>
+                                            <li class="tab-content-item" data-value="صنف سینماگران"><i class="fas fa-film"></i> صنف سینماگران</li>
+                                            <li class="tab-content-item" data-value="صنف نقاشان"><i class="fas fa-paint-roller"></i> صنف نقاشان</li>
+                                            <li class="tab-content-item" data-value="صنف موسیقیدانان"><i class="fas fa-music"></i> صنف موسیقیدانان</li>
+                                            <li class="tab-content-item" data-value="صنف نویسندگان"><i class="fas fa-pen-fancy"></i> صنف نویسندگان</li>
+                                            <li class="tab-content-item" data-value="صنف شاعران"><i class="fas fa-pen-alt"></i> صنف شاعران</li>
+                                            <li class="tab-content-item" data-value="صنف عکاسان"><i class="fas fa-camera"></i> صنف عکاسان</li>
+                                            <li class="tab-content-item" data-value="صنف مجسمه سازان"><i class="fas fa-monument"></i> صنف مجسمه سازان</li>
+                                            <li class="tab-content-item" data-value="صنف طراحان"><i class="fas fa-paint-brush"></i> صنف طراحان</li>
+                                            <li class="tab-content-item" data-value="صنف هنرمندان تجسمی"><i class="fas fa-palette"></i> صنف هنرمندان تجسمی</li>
+                                        </ul>
+                                    </div>
+                                    <div class="profession-tab-content hidden" id="commercial-managers-content">
+                                        <ul class="tab-content-list profession-list">
+                                            <li class="tab-content-item" data-value="صنف وارد کنندگان"><i class="fas fa-truck-loading"></i> صنف وارد کنندگان</li>
+                                            <li class="tab-content-item" data-value="صنف صادر کنندگان"><i class="fas fa-ship"></i> صنف صادر کنندگان</li>
+                                            <li class="tab-content-item" data-value="صنف بازاریان"><i class="fas fa-store"></i> صنف بازاریان</li>
+                                            <li class="tab-content-item" data-value="صنف تولیدکنندگان"><i class="fas fa-industry"></i> صنف تولیدکنندگان</li>
+                                            <li class="tab-content-item" data-value="صنف توزیع کنندگان"><i class="fas fa-truck-moving"></i> صنف توزیع کنندگان</li>
+                                            <li class="tab-content-item" data-value="صنف خرده فروشان"><i class="fas fa-shopping-bag"></i> صنف خرده فروشان</li>
+                                            <li class="tab-content-item" data-value="صنف عمده فروشان"><i class="fas fa-boxes"></i> صنف عمده فروشان</li>
+                                            <li class="tab-content-item" data-value="صنف صرافان"><i class="fas fa-money-bill-wave"></i> صنف صرافان</li>
+                                            <li class="tab-content-item" data-value="صنف بیمه گران"><i class="fas fa-shield-alt"></i> صنف بیمه گران</li>
+                                            <li class="tab-content-item" data-value="صنف بانکداران"><i class="fas fa-university"></i> صنف بانکداران</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <div class="profession-submit-section">
+                                    <div class="profession-selected-tags" id="professionSelectedTags">
+                                        <!-- Selected tags will appear here -->
+                                    </div>
+                                    <button class="profession-submit-button ripple-effect" id="professionSubmitButton">
+                                        <i class="fas fa-check"></i> ثبت انتخاب‌ها
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Tabbed Groups Section (Original) -->
+            <div class="groups-section">
+                <h2>گروه‌های همکاری</h2>
+                <div class="tab-buttons">
+                    <button class="tab-button active" data-tab="general-assembly">
+                        گروه‌های مجمع عمومی
+                    </button>
+                    <button class="tab-button" data-tab="professional">
+                        گروه‌های شغلی و صنفی
+                    </button>
+                    <button class="tab-button" data-tab="scientific">
+                        گروه‌های علمی و تجربی
+                    </button>
+                    <button class="tab-button" data-tab="age-groups">
+                        گروه‌های سنی
+                    </button>
+                    <button class="tab-button" data-tab="gender-groups">
+                        گروه‌های جنسیتی
+                    </button>
+                </div>
+
+                <div id="tab-content-container">
+                    <!-- Content for General Assembly Groups -->
+                    <div class="tab-content" id="general-assembly-content">
+                        <ul class="tab-content-list">
+                            <li class="tab-content-item"><i class="fas fa-building"></i> مجمع عمومی جهاتی</li>
+                            <li class="tab-content-item"><i class="fas fa-globe-asia"></i> مجمع عمومی قاره آسیا</li>
+                            <li class="tab-content-item"><i class="fas fa-flag"></i> مجمع عمومی کشور ایران</li>
+                            <li class="tab-content-item"><i class="fas fa-city"></i> مجمع عمومی آذربایجان شرقی</li>
+                        </ul>
+                    </div>
+
+                    <!-- Content for Professional Groups -->
+                    <div class="tab-content hidden" id="professional-content">
+                        <ul class="tab-content-list">
+                            <li class="tab-content-item"><i class="fas fa-users-crown"></i> مجمع صنفی فعالان خبرنگار مکتوب جهانی</li>
+                            <li class="tab-content-item"><i class="fas fa-microphone-alt"></i> مجمع صنفی فعالان خبرنگاران و رسانه‌ای‌ها جهانی</li>
+                            <li class="tab-content-item"><i class="fas fa-palette"></i> مجمع صنفی فعالان صنف هنرمندان، نویسندگان و اهل رسانه جهانی</li>
+                            <li class="tab-content-item"><i class="fas fa-book-reader"></i> مجمع صنفی فعالان خبرنگار مکتوب در قاره آسیا</li>
+                        </ul>
+                    </div>
+
+                    <!-- Content for Scientific Groups -->
+                    <div class="tab-content hidden" id="scientific-content">
+                        <ul class="tab-content-list">
+                            <li class="tab-content-item"><i class="fas fa-paint-brush"></i> مجمع متخصصان نقاشی جهانی</li>
+                            <li class="tab-content-item"><i class="fas fa-drafting-compass"></i> مجمع متخصصان هنرهای تجسمی جهانی</li>
+                            <li class="tab-content-item"><i class="fas fa-archway"></i> مجمع متخصصان هنر و معماری جهانی</li>
+                            <li class="tab-content-item"><i class="fas fa-map-marked-alt"></i> مجمع متخصصان نقاشی در قاره آسیا</li>
+                        </ul>
+                    </div>
+
+                    <!-- Content for Age Groups -->
+                    <div class="tab-content hidden" id="age-groups-content">
+                        <ul class="tab-content-list">
+                            <li class="tab-content-item"><i class="fas fa-child-reaching"></i> مجمع نوجوانان جهانی</li>
+                            <li class="tab-content-item"><i class="fas fa-hands-helping"></i> مجمع نوجوانان قاره آسیا</li>
+                            <li class="tab-content-item"><i class="fas fa-users-class"></i> مجمع نوجوانان کشور ایران</li>
+                            <li class="tab-content-item"><i class="fas fa-map-pin"></i> مجمع نوجوانان استان آذربایجان شرقی</li>
+                        </ul>
+                    </div>
+
+                    <!-- Content for Gender Groups -->
+                    <div class="tab-content hidden" id="gender-groups-content">
+                        <ul class="tab-content-list">
+                            <li class="tab-content-item"><i class="fas fa-male"></i> گروه آقایان جهانی</li>
+                            <li class="tab-content-item"><i class="fas fa-globe-americas"></i> گروه آقایان قاره آسیا</li>
+                            <li class="tab-content-item"><i class="fas fa-flag-usa"></i> گروه آقایان کشور ایران</li>
+                            <li class="tab-content-item"><i class="fas fa-map-marker-alt"></i> گروه آقایان استان آذربایجان شرقی</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Message Box HTML -->
+    <div class="message-box" id="messageBox">
+        <div class="message-box-content" id="messageBoxContent"></div>
+        <button class="message-box-close-button" id="messageBoxCloseButton">بستن</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // User menu functionality
+            const userMenuBtn = document.querySelector('[x-data="{ open: false }"] button');
+            const userDropdown = document.querySelector('[x-data="{ open: false }"] > div');
+
+            // Alpine.js handles the dropdown toggle, so manual JS for this is not needed.
+            // However, if you want to ensure the active class for the header link:
+            const headerLinks = document.querySelectorAll('nav a');
+            headerLinks.forEach(link => {
+                if (link.getAttribute('href') === 'profile.html') {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            // Sidebar menu item active state - Modified to reflect current page
+            const sidebarLinks = document.querySelectorAll('.sidebar-menu-link');
+            sidebarLinks.forEach(link => {
+                // Check if the link's href matches the current page's href
+                if (link.getAttribute('href') === 'profile.html') {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+                // Add click listener for future navigation if needed, though for a static page, it's less critical.
+                link.addEventListener('click', (e) => {
+                    // This part is more for dynamic SPA-like behavior. For multi-page,
+                    // the server renders the correct active state.
+                    // If you want to simulate active state on click without page reload:
+                    sidebarLinks.forEach(l => l.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                });
+            });
+
+            // Ripple effect for buttons
+            const buttons = document.querySelectorAll('.ripple-effect');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const rect = this.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const ripple = document.createElement('span');
+                    ripple.style.width = ripple.style.height = Math.max(rect.width, rect.height) + 'px';
+                    ripple.style.left = `${x}px`;
+                    ripple.style.top = `${y}px`;
+                    this.appendChild(ripple);
+                    
+                    // Remove ripple after animation
+                    ripple.addEventListener('animationend', () => {
+                        ripple.remove();
+                    });
+                });
+            });
+
+            // Header scroll effect
+            window.addEventListener('scroll', () => {
+                const header = document.getElementById('header');
+                if (window.scrollY > 20) {
+                    header.classList.add('bg-pure-white/95', 'backdrop-blur-sm');
+                    header.classList.remove('bg-pure-white');
+                } else {
+                    header.classList.remove('bg-pure-white/95', 'backdrop-blur-sm');
+                    header.classList.add('bg-pure-white');
+                }
+            });
+
+            // Smooth scroll animation for sections (fade-in-section)
+            const sections = document.querySelectorAll('.fade-in-section');
+
+            const observerOptions = {
+                root: null, // viewport
+                rootMargin: '0px',
+                threshold: 0.1 // Trigger when 10% of the section is visible
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target); // Stop observing once visible
+                    }
+                    else {
+                        // Optional: remove 'is-visible' class when element is not intersecting
+                        entry.target.classList.remove('is-visible');
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            // Function to show a custom message box
+            function showMessageBox(message) {
+                const messageBox = document.getElementById('messageBox');
+                const messageBoxContent = document.getElementById('messageBoxContent');
+                messageBoxContent.textContent = message;
+                messageBox.classList.add('visible');
+            }
+
+            // Function to hide the custom message box
+            document.getElementById('messageBoxCloseButton').addEventListener('click', () => {
+                document.getElementById('messageBox').classList.remove('visible');
+            });
+
+
+            // Function to handle visibility toggle for eye icon
+            function handleVisibilityToggle(button) {
+                const infoItem = button.closest('.info-item');
+                // Target the element that holds the actual value or input fields for editing
+                const infoValue = infoItem.querySelector('.info-value');
+                const editFields = infoItem.querySelector('.edit-phone-fields, .edit-gender-field, .file-upload-container, .edit-social-media-fields, .edit-profession-fields, .password-change-fields');
+                const eyeIcon = button.querySelector('i');
+
+                if (infoValue || editFields) { // Ensure at least one of them exists
+                    if (infoValue && infoValue.classList.contains('hidden')) {
+                        infoValue.classList.remove('hidden');
+                        if (editFields) editFields.classList.remove('hidden'); // Show edit fields if they were hidden
+                        eyeIcon.classList.remove('fa-eye-slash');
+                        eyeIcon.classList.add('fa-eye');
+                        button.title = "مخفی/نمایش عمومی";
+                    } else {
+                        if (infoValue) infoValue.classList.add('hidden');
+                        if (editFields) editFields.classList.add('hidden'); // Hide edit fields when content is hidden
+                        eyeIcon.classList.remove('fa-eye');
+                        eyeIcon.classList.add('fa-eye-slash');
+                        button.title = "مخفی/نمایش عمومی (مخفی)";
+                    }
+                }
+            }
+
+            // Function to handle edit/save toggle for pencil/save icon
+            function handleEditToggle(button) {
+                const infoItem = button.closest('.info-item');
+                const actionIcon = button.querySelector('i'); // Get the current icon (pencil or save)
+                const fieldType = infoItem.dataset.fieldType;
+                const infoValueSpan = infoItem.querySelector('.info-value'); // The span displaying the current value
+                
+                // Specific edit field containers
+                const editPhoneFields = infoItem.querySelector('.edit-phone-fields');
+                const editGenderField = infoItem.querySelector('.edit-gender-field');
+                const fileUploadContainer = infoItem.querySelector('.file-upload-container');
+                const editSocialMediaFields = infoItem.querySelector('.edit-social-media-fields');
+                const editProfessionFields = infoItem.querySelector('.edit-profession-fields');
+                const passwordChangeFields = infoItem.querySelector('.password-change-fields');
+                const professionEditWarning = document.getElementById('professionEditWarning');
+
+
+                if (infoItem.dataset.editing === 'true') {
+                    // Currently in edit mode, save changes
+                    actionIcon.classList.remove('fa-save');
+                    actionIcon.classList.add('fa-pencil-alt');
+                    button.title = "ویرایش";
+                    infoItem.dataset.editing = 'false'; // Set editing state to false
+
+                    if (fieldType === 'phone') {
+                        const countryCode = editPhoneFields.querySelector('.country-code-select').value;
+                        const phoneNumber = editPhoneFields.querySelector('.phone-number-input').value;
+                        infoValueSpan.textContent = `${countryCode} ${phoneNumber}`;
+                        editPhoneFields.classList.add('hidden');
+                        infoValueSpan.classList.remove('hidden');
+                    } else if (fieldType === 'gender') {
+                        const selectedGender = editGenderField.querySelector('.gender-select').value;
+                        infoValueSpan.textContent = selectedGender;
+                        editGenderField.classList.add('hidden');
+                        infoValueSpan.classList.remove('hidden');
+                    } else if (fieldType === 'documents') {
+                        // For documents, the display is handled by dynamic list. Just hide the upload interface.
+                        fileUploadContainer.classList.add('hidden');
+                        infoValueSpan.classList.remove('hidden');
+                    } else if (fieldType === 'social-media') {
+                        const newSocialMediaItems = [];
+                        editSocialMediaFields.querySelectorAll('.social-media-edit-input-group').forEach(group => {
+                            const platform = group.dataset.platform;
+                            const linkValue = group.querySelector('input').value;
+                            if (linkValue) {
+                                let iconClass = '';
+                                if (platform === 'instagram') iconClass = 'fab fa-instagram';
+                                else if (platform === 'telegram') iconClass = 'fab fa-telegram-plane';
+                                else if (platform === 'linkedin') iconClass = 'fab fa-linkedin';
+                                else iconClass = 'fas fa-link'; // Default icon for unknown platforms
+                                
+                                const linkPrefix = getSocialMediaPrefix(platform);
+                                newSocialMediaItems.push(`
+                                    <span class="social-media-item" data-social-platform="${platform}">
+                                        <i class="${iconClass}"></i> ${capitalizeFirstLetter(platform)}: <a href="${linkPrefix}${linkValue}" target="_blank">${linkValue}</a>
+                                    </span>
+                                `);
+                            }
+                        });
+                        infoValueSpan.innerHTML = newSocialMediaItems.join(''); // Update the displayed social media list
+                        editSocialMediaFields.classList.add('hidden');
+                        infoValueSpan.classList.remove('hidden');
+                    } else if (fieldType === 'profession-selection') {
+                        // Profession selection: Hide edit fields and warning message
+                        editProfessionFields.classList.add('hidden');
+                        professionEditWarning.classList.add('hidden');
+                        infoValueSpan.classList.remove('hidden');
+
+                        // Clear current display and add selected tags
+                        const selectedProfessions = [];
+                        document.querySelectorAll('.profession-tag').forEach(tag => {
+                            selectedProfessions.push(tag.dataset.value);
+                        });
+                        // You might want to update infoValueSpan.textContent here, but for this specific request,
+                        // the tags themselves are the representation.
+                        // infoValueSpan.textContent = selectedProfessions.join(', '); // Optional: update flat text representation
+                    } else if (fieldType === 'password-change') {
+                        // For password change, we just hide the fields. No actual save logic here.
+                        passwordChangeFields.classList.add('hidden');
+                        infoValueSpan.classList.remove('hidden');
+                        // Reset inputs after "saving" or hiding
+                        passwordChangeFields.querySelectorAll('input').forEach(input => input.value = '');
+                        // Change icon back to key for password field
+                        actionIcon.classList.remove('fa-save');
+                        actionIcon.classList.add('fa-key');
+                        button.title = "تغییر رمز عبور";
+                    } else { // Generic text/textarea field
+                        const inputOrTextarea = infoItem.querySelector('.edit-input-field');
+                        if (inputOrTextarea) {
+                            infoValueSpan.textContent = inputOrTextarea.value;
+                            inputOrTextarea.remove();
+                            infoValueSpan.classList.remove('hidden');
+                        }
+                    }
+
+                } else {
+                    // Currently in view mode, switch to edit mode
+                    actionIcon.classList.remove('fa-pencil-alt');
+                    actionIcon.classList.add('fa-save');
+                    button.title = "ذخیره";
+                    infoItem.dataset.editing = 'true'; // Set editing state to true
+
+                    infoValueSpan.classList.add('hidden'); // Hide the displayed value
+
+                    if (fieldType === 'phone') {
+                        editPhoneFields.classList.remove('hidden');
+                        const currentVal = infoValueSpan.textContent.trim().split(' ');
+                        const currentCode = currentVal[0] || '+98';
+                        const currentNumber = currentVal.slice(1).join(' ') || '';
+                        editPhoneFields.querySelector('.country-code-select').value = currentCode;
+                        editPhoneFields.querySelector('.phone-number-input').value = currentNumber;
+                        editPhoneFields.querySelector('.phone-number-input').focus();
+                    } else if (fieldType === 'gender') {
+                        editGenderField.classList.remove('hidden');
+                        editGenderField.querySelector('.gender-select').value = infoValueSpan.textContent.trim();
+                        editGenderField.querySelector('.gender-select').focus();
+                    } else if (fieldType === 'documents') {
+                        fileUploadContainer.classList.remove('hidden');
+                        // Clear previous file list to prevent duplication on re-edit
+                        fileUploadContainer.querySelector('#uploadedFileList').innerHTML = ''; 
+                        // Populate file list with current items from infoValueSpan
+                        Array.from(infoValueSpan.children).forEach(docItem => {
+                            const fileName = docItem.textContent.trim();
+                            const type = docItem.querySelector('i').classList.contains('fa-file-pdf') ? 'pdf' : 'image'; // Simple type inference
+                            addUploadedFileToDisplay(fileName, type, fileUploadContainer.querySelector('#uploadedFileList'));
+                        });
+
+                    } else if (fieldType === 'social-media') {
+                        editSocialMediaFields.classList.remove('hidden');
+                        // Clear existing inputs before populating
+                        editSocialMediaFields.querySelectorAll('.social-media-edit-input-group').forEach(group => group.remove());
+                        
+                        // Populate with current social media links
+                        infoValueSpan.querySelectorAll('.social-media-item').forEach(item => {
+                            const platform = item.dataset.socialPlatform;
+                            const linkText = item.querySelector('a').textContent; // Get the raw link text
+                            addSocialMediaInputField(platform, linkText, editSocialMediaFields);
+                        });
+                        if (infoValueSpan.children.length === 0) { // If no existing links, add an empty one
+                             addSocialMediaInputField('', '', editSocialMediaFields);
+                        }
+
+                    } else if (fieldType === 'profession-selection') {
+                        editProfessionFields.classList.remove('hidden');
+                        professionEditWarning.classList.remove('hidden'); // Show the warning message
+                        
+                        // Ensure the correct tab is active for the profession selection (e.g., default to first tab)
+                        document.querySelectorAll('.profession-tab-button').forEach(btn => btn.classList.remove('active'));
+                        document.querySelectorAll('#profession-tab-content-container .profession-tab-content').forEach(content => content.classList.add('hidden'));
+                        
+                        const defaultTabButton = document.querySelector('.profession-tab-button[data-tab="educational-managers"]');
+                        if (defaultTabButton) {
+                            defaultTabButton.classList.add('active');
+                            document.getElementById('educational-managers-content').classList.remove('hidden');
+                        }
+
+                        // Mark already selected professions in the lists
+                        const selectedProfessionValues = Array.from(document.querySelectorAll('.profession-tag'))
+                                                            .map(tag => tag.dataset.value);
+                        document.querySelectorAll('.profession-list .tab-content-item').forEach(item => {
+                            if (selectedProfessionValues.includes(item.dataset.value)) {
+                                item.classList.add('selected');
+                            } else {
+                                item.classList.remove('selected');
+                            }
+                        });
+
+                        // Update the selected tags display in the submit section
+                        updateSelectedTagsDisplay();
+
+                    } else if (fieldType === 'password-change') {
+                        passwordChangeFields.classList.remove('hidden');
+                        passwordChangeFields.querySelector('input').focus();
+                        // Change icon to save for password field
+                        actionIcon.classList.remove('fa-key');
+                        actionIcon.classList.add('fa-save');
+                        button.title = "ذخیره";
+                    } else { // Generic text/textarea field
+                        let inputOrTextarea;
+                        if (fieldType === 'textarea') {
+                            inputOrTextarea = document.createElement('textarea');
+                            inputOrTextarea.setAttribute('rows', '4');
+                        } else {
+                            inputOrTextarea = document.createElement('input');
+                            inputOrTextarea.type = 'text';
+                        }
+                        inputOrTextarea.value = infoValueSpan.textContent.trim();
+                        inputOrTextarea.classList.add('edit-input-field');
+                        infoValueSpan.parentNode.insertBefore(inputOrTextarea, infoValueSpan.nextSibling);
+                        inputOrTextarea.focus();
+                    }
+                }
+            }
+
+            // Helper for social media prefixes (for display as clickable links)
+            function getSocialMediaPrefix(platform) {
+                switch (platform) {
+                    case 'instagram': return 'https://instagram.com/';
+                    case 'telegram': return 'https://t.me/';
+                    case 'linkedin': return 'https://linkedin.com/in/';
+                    case 'twitter': return 'https://twitter.com/';
+                    case 'website': return ''; // Websites might have various prefixes
+                    default: return '#';
+                }
+            }
+
+            // Helper to capitalize first letter (for social media platform display)
+            function capitalizeFirstLetter(string) {
+                return string.charAt(0).toUpperCase() + string.slice(1);
+            }
+
+            // Function to add a social media input field in edit mode
+            function addSocialMediaInputField(platform = '', value = '', container) {
+                const socialMediaInputGroup = document.createElement('div');
+                socialMediaInputGroup.classList.add('social-media-edit-input-group');
+                socialMediaInputGroup.dataset.platform = platform; // Store platform in dataset
+                
+                const select = document.createElement('select');
+                select.classList.add('edit-input-field');
+                select.style.flexShrink = '0';
+                select.style.width = '120px'; // Fixed width for platform select
+                
+                const platforms = ['instagram', 'telegram', 'linkedin', 'website', 'twitter']; // Extend as needed
+                platforms.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p;
+                    option.textContent = capitalizeFirstLetter(
+                        p === 'website' ? 'وبسایت' : 
+                        (p === 'instagram' ? 'اینستاگرام' : 
+                        (p === 'telegram' ? 'تلگرام' : 
+                        (p === 'linkedin' ? 'لینکدین' : 
+                        (p === 'twitter' ? 'توییتر' : p)))));
+                    if (p === platform) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.classList.add('edit-input-field');
+                input.value = value;
+                input.placeholder = 'لینک یا نام کاربری';
+
+                const removeButton = document.createElement('button');
+                removeButton.classList.add('action-button', 'remove-social-media-link');
+                removeButton.innerHTML = '<i class="fas fa-times"></i>';
+                removeButton.title = 'حذف لینک';
+                removeButton.addEventListener('click', () => socialMediaInputGroup.remove());
+
+                socialMediaInputGroup.appendChild(select);
+                socialMediaInputGroup.appendChild(input);
+                socialMediaInputGroup.appendChild(removeButton);
+                
+                // Insert before the 'Add New Link' button
+                const addLinkBtn = container.querySelector('.add-link-button');
+                if (addLinkBtn) {
+                    container.insertBefore(socialMediaInputGroup, addLinkBtn);
+                } else {
+                    container.appendChild(socialMediaInputGroup);
+                }
+
+                // Update platform on select change
+                select.addEventListener('change', () => {
+                    socialMediaInputGroup.dataset.platform = select.value;
+                });
+            }
+
+            // Event listener for adding new social media link
+            document.querySelector('.edit-social-media-fields .add-link-button').addEventListener('click', () => {
+                addSocialMediaInputField('', '', document.querySelector('.edit-social-media-fields'));
+            });
+
+            // Handle document upload
+            document.getElementById('documentUpload').addEventListener('change', (event) => {
+                const fileListContainer = document.getElementById('uploadedFileList');
+                // Clear previous list if it's not meant to accumulate
+                fileListContainer.innerHTML = ''; 
+
+                Array.from(event.target.files).forEach(file => {
+                    let fileTypeIcon = 'fas fa-file'; // Default icon
+                    if (file.type.includes('pdf')) {
+                        fileTypeIcon = 'fas fa-file-pdf';
+                    } else if (file.type.includes('image')) {
+                        fileTypeIcon = 'fas fa-file-image';
+                    } else if (file.type.includes('word')) {
+                        fileTypeIcon = 'fas fa-file-word';
+                    }
+
+                    addUploadedFileToDisplay(file.name, fileTypeIcon, fileListContainer);
+                });
+            });
+
+            function addUploadedFileToDisplay(fileName, fileTypeIcon, container) {
+                const fileItem = document.createElement('span');
+                fileItem.classList.add('uploaded-file-item');
+                fileItem.innerHTML = `
+                    <span class="file-name"><i class="${fileTypeIcon}"></i> ${fileName}</span>
+                    <button class="remove-file-button ripple-effect" title="حذف فایل"><i class="fas fa-times"></i></button>
+                `;
+                container.appendChild(fileItem);
+
+                // Add event listener to the remove button for this specific item
+                fileItem.querySelector('.remove-file-button').addEventListener('click', () => {
+                    fileItem.remove();
+                    // Update the main displayed documents list as well
+                    updateDisplayedDocuments();
+                });
+            }
+
+            function updateDisplayedDocuments() {
+                const uploadedFiles = Array.from(document.querySelectorAll('#uploadedFileList .uploaded-file-item'));
+                const mainDocumentsList = document.querySelector('.info-item[data-field-type="documents"] .documents-list');
+                mainDocumentsList.innerHTML = ''; // Clear current display
+
+                uploadedFiles.forEach(item => {
+                    const fileName = item.querySelector('.file-name').textContent.trim();
+                    const iconClass = item.querySelector('.file-name i').className;
+                    const newDocItem = document.createElement('span');
+                    newDocItem.classList.add('document-item');
+                    newDocItem.innerHTML = `<i class="${iconClass}"></i> ${fileName}`;
+                    mainDocumentsList.appendChild(newDocItem);
+                });
+            }
+
+
+            // Attach event listeners to all visibility toggle buttons
+            document.querySelectorAll('.action-button.toggle-visibility').forEach(button => {
+                button.addEventListener('click', () => handleVisibilityToggle(button));
+            });
+
+            // Attach event listeners to all edit toggle buttons
+            document.querySelectorAll('.action-button.toggle-edit').forEach(button => {
+                // For password change field, the icon is different, so handle separately
+                if (button.closest('.info-item').dataset.fieldType === 'password-change') {
+                    // Default icon for password edit is 'key', not pencil.
+                    // The toggleEdit function will handle changing it to 'save' and back.
+                    // No specific action here, just ensuring the listener is attached.
+                }
+                button.addEventListener('click', () => handleEditToggle(button));
+            });
+
+            // Handle password submission (placeholder functionality)
+            document.querySelector('.password-change-section .submit-password-button').addEventListener('click', () => {
+                // In a real application, you would send this data to a backend for processing
+                console.log('Password change initiated (client-side simulation)');
+                // Simulate success and revert to view mode
+                const infoItem = document.querySelector('.password-change-section');
+                const editButton = infoItem.querySelector('.toggle-edit');
+                handleEditToggle(editButton); // Call toggleEdit to switch back to view mode and clear fields
+                // Potentially show a success message here
+            });
+
+            // Handle profile image upload
+            document.getElementById('profileImageUpload').addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        document.getElementById('profileImage').src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // --- Original Tabbed Groups Section Logic (unrelated to profession) ---
+            const tabButtons = document.querySelectorAll('.groups-section > .tab-buttons .tab-button');
+            const tabContents = document.querySelectorAll('#tab-content-container > .tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.add('hidden'));
+
+                    button.classList.add('active');
+                    const targetTabId = button.dataset.tab + '-content';
+                    document.getElementById(targetTabId).classList.remove('hidden');
+                });
+            });
+
+
+            // --- New Profession Selection Logic ---
+            const professionTabButtons = document.querySelectorAll('.edit-profession-fields .profession-tab-button');
+            const professionTabContents = document.querySelectorAll('#profession-tab-content-container .profession-tab-content');
+            const selectedProfessionsDisplay = document.getElementById('selectedProfessionsDisplay');
+            const professionSelectedTags = document.getElementById('professionSelectedTags');
+            const maxSelections = 2; // Maximum number of professions a user can select
+
+            // Function to update the displayed tags for selected professions
+            function updateProfessionTags() {
+                // Clear existing tags
+                selectedProfessionsDisplay.innerHTML = '';
+                
+                // Get all currently selected items from the list
+                const selectedItems = Array.from(document.querySelectorAll('.profession-list .tab-content-item.selected'));
+
+                // Add tags for each selected item
+                selectedItems.forEach(item => {
+                    addProfessionTag(item.dataset.value);
+                });
+
+                // Also update the selected tags in the submit section
+                updateSelectedTagsDisplay();
+            }
+
+            // Function to update the selected tags display in the submit section
+            function updateSelectedTagsDisplay() {
+                professionSelectedTags.innerHTML = '';
+                
+                // Get all currently selected items from the list
+                const selectedItems = Array.from(document.querySelectorAll('.profession-list .tab-content-item.selected'));
+
+                if (selectedItems.length === 0) {
+                    professionSelectedTags.innerHTML = '<span style="color: var(--color-gentle-black);">هیچ موردی انتخاب نشده است</span>';
+                } else {
+                    selectedItems.forEach(item => {
+                        const tag = document.createElement('span');
+                        tag.classList.add('profession-tag');
+                        tag.dataset.value = item.dataset.value;
+                        tag.innerHTML = `
+                            ${item.dataset.value} 
+                            <button class="remove-tag-button"><i class="fas fa-times"></i></button>
+                        `;
+                        professionSelectedTags.appendChild(tag);
+
+                        // Add event listener to the remove button of the new tag
+                        tag.querySelector('.remove-tag-button').addEventListener('click', (event) => {
+                            event.stopPropagation(); // Prevent triggering parent click
+                            removeProfessionTag(item.dataset.value);
+                        });
+                    });
+                }
+            }
+
+            // Function to add a profession tag to the display
+            function addProfessionTag(professionValue) {
+                const tag = document.createElement('span');
+                tag.classList.add('profession-tag');
+                tag.dataset.value = professionValue;
+                tag.innerHTML = `
+                    ${professionValue} 
+                    <button class="remove-tag-button"><i class="fas fa-times"></i></button>
+                `;
+                selectedProfessionsDisplay.appendChild(tag);
+
+                // Add event listener to the remove button of the new tag
+                tag.querySelector('.remove-tag-button').addEventListener('click', (event) => {
+                    event.stopPropagation(); // Prevent triggering parent click
+                    removeProfessionTag(professionValue);
+                });
+            }
+
+            // Function to remove a profession tag
+            function removeProfessionTag(professionValue) {
+                // Find and remove the tag from the display
+                const tagToRemove = document.querySelector(`.profession-tag[data-value="${professionValue}"]`);
+                if (tagToRemove) {
+                    tagToRemove.remove();
+                }
+
+                // Deselect the corresponding item in the lists
+                const listItemToDeselect = document.querySelector(`.profession-list .tab-content-item[data-value="${professionValue}"]`);
+                if (listItemToDeselect) {
+                    listItemToDeselect.classList.remove('selected');
+                }
+
+                // Update the selected tags display in the submit section
+                updateSelectedTagsDisplay();
+            }
+
+            // Event listeners for main profession tab buttons (educational, cultural, commercial)
+            professionTabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    professionTabButtons.forEach(btn => btn.classList.remove('active'));
+                    professionTabContents.forEach(content => content.classList.add('hidden'));
+
+                    button.classList.add('active');
+                    const targetTabId = button.dataset.tab + '-content';
+                    document.getElementById(targetTabId).classList.remove('hidden');
+                });
+            });
+
+            // Event listeners for individual profession list items
+            document.querySelectorAll('.profession-list .tab-content-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const selectedCount = document.querySelectorAll('.profession-list .tab-content-item.selected').length;
+                    const professionValue = item.dataset.value;
+
+                    if (item.classList.contains('selected')) {
+                        // If already selected, deselect it
+                        item.classList.remove('selected');
+                        removeProfessionTag(professionValue);
+                    } else {
+                        // If not selected, try to select it
+                        if (selectedCount < maxSelections) {
+                            item.classList.add('selected');
+                            addProfessionTag(professionValue);
+                            updateSelectedTagsDisplay();
+                        } else {
+                            // Show message if max selections reached
+                            showMessageBox(`حداکثر ${maxSelections} مورد میتوانید انتخاب کنید`);
+                        }
+                    }
+                });
+            });
+
+            // Handle profession submission
+            document.getElementById('professionSubmitButton').addEventListener('click', () => {
+                const selectedItems = Array.from(document.querySelectorAll('.profession-list .tab-content-item.selected'));
+                if (selectedItems.length === 0) {
+                    showMessageBox('لطفاً حداقل یک صنف را انتخاب کنید');
+                    return;
+                }
+
+                // In a real application, you would send the selected professions to the server here
+                console.log('Selected professions:', selectedItems.map(item => item.dataset.value));
+                
+                // Simulate success and revert to view mode
+                const infoItem = document.querySelector('.info-item[data-field-type="profession-selection"]');
+                const editButton = infoItem.querySelector('.toggle-edit');
+                handleEditToggle(editButton);
+                
+                showMessageBox('تغییرات با موفقیت ثبت شد');
+            });
+
+            // Initial call to update profession tags based on existing data
+            updateProfessionTags();
+            updateSelectedTagsDisplay();
+
+        });
+    </script>
+</body>
+</html>

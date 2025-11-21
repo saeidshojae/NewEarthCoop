@@ -16,6 +16,9 @@ class DatabaseSeeder extends Seeder
         // اضافه کردن سیدر LocationSeeder
         $this->call(LocationsSeeder::class);
 
+        // اضافه کردن سیدر StockSeeder
+        $this->call(StockSeeder::class);
+
         // می‌توانید سایر سیدرها را نیز اینجا اضافه کنید
         // \App\Models\User::factory(10)->create();
         // \App\Models\User::factory()->create([

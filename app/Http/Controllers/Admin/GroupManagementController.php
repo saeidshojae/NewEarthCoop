@@ -37,8 +37,10 @@ class GroupManagementController extends Controller
 
     public function manage(Group $group)
     {
+        // با withPivot('role') در relationship، pivot خودکار لود می‌شود
         $users = $group->users()->get();
-        return view('admin.groups.manage', compact('group', 'users'));
+        $blogs = \App\Models\Blog::where('group_id', $group->id)->with('category')->get();
+        return view('admin.groups.manage', compact('group', 'users', 'blogs'));
     }
 
     public function updateRole(Request $request, Group $group, User $user)

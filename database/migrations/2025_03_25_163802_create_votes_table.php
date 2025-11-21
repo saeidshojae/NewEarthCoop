@@ -13,12 +13,21 @@ return new class extends Migration
      */
     public function up()
     {
+        if (Schema::hasTable('votes')) {
+            return; // جدول از قبل وجود دارد
+        }
         Schema::create('votes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('election_id')->constrained()->onDelete('cascade');
-            $table->foreignId('voter_id')->constrained('users')->onDelete('cascade'); // رأی‌دهنده
-            $table->foreignId('candidate_id')->constrained()->onDelete('cascade'); // به کدوم کاندیدا
+            // از FK صرفنظر می‌کنیم تا با جداولی که موتورشان InnoDB نیست تداخل نداشته باشد
+            $table->unsignedBigInteger('election_id');
+            $table->unsignedBigInteger('voter_id'); // رأی‌دهنده
+            $table->unsignedBigInteger('candidate_id'); // به کدام کاندیدا
             $table->timestamps();
+
+            // ایندکس‌های کاربردی
+            $table->index(['election_id']);
+            $table->index(['voter_id']);
+            $table->index(['candidate_id']);
         });
     }
 

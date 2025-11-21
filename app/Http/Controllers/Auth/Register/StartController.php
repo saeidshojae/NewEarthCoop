@@ -25,6 +25,15 @@ class StartController extends Controller
     {
         $code = '';
         $setting = Setting::find(1);
+        
+        // Validate terms acceptance first
+        $request->validate([
+            'terms' => 'required|accepted'
+        ], [
+            'terms.required' => 'لطفاً قوانین و مقررات را بپذیرید',
+            'terms.accepted' => 'لطفاً قوانین و مقررات را بپذیرید'
+        ]);
+        
         if($setting->invation_status == 0){
             $request->validate([
                 'invite_code' => 'nullable|string'
@@ -32,11 +41,14 @@ class StartController extends Controller
         }else{
             $inputs = $request->validate([
                 'invite_code' => 'required|string|exists:invitation_codes,code'
+            ], [
+                'invite_code.required' => 'لطفاً کد دعوت خود را وارد کنید',
+                'invite_code.exists' => 'کد دعوت وارد شده در سیستم وجود ندارد'
             ]);
             
             $invartion = InvitationCode::where('code', $inputs['invite_code'])->where('used', 0)->where('expire_at', '>=', now())->first();
             if($invartion == null){
-                return back()->with('error', 'کد وارد شده نامعتبر است');
+                return redirect()->back()->withErrors(['invite_code' => 'کد دعوت وارد شده نامعتبر، استفاده شده یا منقضی شده است'])->withInput();
             }else{
                 $code = $invartion->code;
             }
@@ -73,6 +85,7 @@ class StartController extends Controller
                 $invartion->update([
                     'used' => 1 ,
                     'used_by' => $user->id,
+                    'used_at' => now(),
                 ]);
             }
         }

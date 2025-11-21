@@ -37,6 +37,14 @@ class CommentController extends Controller
             'parent_id' => $request->parent_id,
         ]);
 
+        // award points for creating a comment
+        try {
+            $service = app(\App\Services\ReputationService::class);
+            $service->applyAction(auth()->user(), 'comment_created', ['comment_id' => $comment->id], $comment->id, 'groups');
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
         return response()->json([
             'status' => 'success',
             'message' => [
