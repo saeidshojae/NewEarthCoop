@@ -25,5 +25,7 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
+        // NajmBahar system accounts
+        $this->call(\Database\Seeders\NajmBaharSeeder::class);
     }
 }

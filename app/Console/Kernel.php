@@ -11,6 +11,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\CreateContactPage::class,
         \App\Console\Commands\CreateFaqPage::class,
         \App\Console\Commands\FundWalletsCommand::class,
+        \App\Console\Commands\NajmBaharProcessScheduled::class,
     ];
 
     /**

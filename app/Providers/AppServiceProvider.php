@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Spring;
+use App\Modules\NajmBahar\Adapters\LegacyNajmAdapter;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -46,6 +48,22 @@ class AppServiceProvider extends ServiceProvider
         Blade::if('isSuperAdmin', function () {
             $user = Auth::user();
             return $user && ($user->is_admin || $user->hasRole('super-admin'));
+        });
+
+        // register listener to mirror legacy Spring creations into NajmBahar module
+        Spring::created(function ($spring) {
+            // dispatch a queued job to handle mirroring (non-blocking)
+            try {
+                \App\Jobs\ProcessSpringCreatedNajm::dispatch($spring->id);
+            } catch (\Throwable $e) {
+                // fallback to synchronous adapter call if dispatch fails
+                try {
+                    LegacyNajmAdapter::onSpringCreated($spring);
+                } catch (\Throwable $ex) {
+                    // log and continue
+                    \Illuminate\Support\Facades\Log::error('Najm adapter fallback failed: ' . $ex->getMessage());
+                }
+            }
         });
     }
 }

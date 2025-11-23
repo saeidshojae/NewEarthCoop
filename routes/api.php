@@ -422,3 +422,8 @@ Route::middleware('auth:sanctum')->prefix('tickets')->group(function () {
 // مسیر Webhook ایمیل (بدون احراز هویت، با signature verification)
 Route::post('email/webhook', [\App\Http\Controllers\API\EmailWebhookController::class, 'webhook']);
 
+// include NajmBahar routes (module)
+if (file_exists(base_path('routes/najm-bahar.php'))) {
+    require base_path('routes/najm-bahar.php');
+}
+

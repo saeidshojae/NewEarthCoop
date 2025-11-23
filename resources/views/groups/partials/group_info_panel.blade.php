@@ -600,8 +600,9 @@
         box-shadow: 0 12px 24px -18px rgba(15, 118, 110, 0.65);
     }
     .panel-tab-contents {
-        position: relative;
-        min-height: 300px;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
     }
     .tab-content {
         display: none;
@@ -922,37 +923,16 @@
         document.getElementById('groupSearch')?.addEventListener('input', performSearch);
     }
 
-    // Tabs functionality - استفاده از کد ساده و کارآمد فایل قدیمی
-    // اطمینان از اینکه کد بعد از بارگذاری DOM اجرا شود
-    function initTabs() {
-        const tabs = document.querySelectorAll('.tab');
-        const contents = document.querySelectorAll('.tab-content');
-        
-        if (tabs.length === 0 || contents.length === 0) {
-            console.warn('Tabs or tab contents not found');
-            return;
-        }
-        
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                // حذف active از همه تب‌ها و محتواها
-                tabs.forEach(t => t.classList.remove('active'));
-                contents.forEach(c => c.classList.remove('active'));
-                
-                // اضافه کردن active به تب و محتوای انتخاب شده
-                tab.classList.add('active');
-                const targetContent = document.getElementById(tab.dataset.tab);
-                if (targetContent) {
-                    targetContent.classList.add('active');
-                    
-                    // اگر تب آمار انتخاب شد، آمار را بارگذاری کن
-                    if (tab.dataset.tab === 'stats') {
-                        loadGroupStats();
-                    }
-                } else {
-                    console.error('Tab content not found for:', tab.dataset.tab);
-                }
-            });
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function () {
+            document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            this.classList.add('active');
+            const target = document.getElementById(this.dataset.tab);
+            if (target) {
+                target.classList.add('active');
+            }
         });
     }
     
