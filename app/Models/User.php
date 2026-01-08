@@ -18,6 +18,20 @@ class User extends Authenticatable
 
     protected $hidden = ['password'];
 
+    protected $casts = [
+        'show_name' => 'boolean',
+        'show_email' => 'boolean',
+        'show_phone' => 'boolean',
+        'show_birthdate' => 'boolean',
+        'show_gender' => 'boolean',
+        'show_national_id' => 'boolean',
+        'show_biografie' => 'boolean',
+        'show_documents' => 'boolean',
+        'show_groups' => 'boolean',
+        'show_created_at' => 'boolean',
+        'show_social_networks' => 'boolean',
+    ];
+
     protected $dates = [
         'last_seen',
         'birth_date',
@@ -42,7 +56,9 @@ class User extends Authenticatable
 
     public function groups()
     {
-        return $this->belongsToMany(Group::class, 'group_user', 'user_id', 'group_id');
+        return $this->belongsToMany(Group::class, 'group_user', 'user_id', 'group_id')
+            ->withPivot('role', 'status', 'expired', 'last_read_message_id')
+            ->withTimestamps();
     }    
 
     public function fullName()
@@ -68,6 +84,11 @@ class User extends Authenticatable
     public function groupUser()
     {
         return $this->hasMany(GroupUser::class);
+    }
+
+    public function notificationSettings()
+    {
+        return $this->hasOne(NotificationSetting::class);
     }
 
     public function profile(){

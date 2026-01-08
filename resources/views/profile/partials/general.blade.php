@@ -206,7 +206,7 @@
         </div>
 
         <!-- Documents -->
-        <div class="form-group-enhanced">
+        <div class="form-group-enhanced" id="documents-form-group">
             <label class="form-label-enhanced">
                 <i class="fas fa-file-upload"></i>
                 افزودن مدارک جدید
@@ -221,11 +221,47 @@
             <div id="documents-box" style="display: none; margin-top: 15px;">
                 @if(auth()->user()->documents && auth()->user()->documents != null)
                     <div class="documents-list-enhanced">
-                        @foreach(explode(',', auth()->user()->documents) as $index => $doc)
+                        @php
+                            $documentsData = auth()->user()->documents;
+                            // بررسی اینکه آیا JSON است یا comma-separated
+                            $decoded = json_decode($documentsData, true);
+                            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                $documents = $decoded;
+                            } else {
+                                // تبدیل comma-separated به فرمت جدید
+                                $files = explode(',', $documentsData);
+                                $documents = [];
+                                foreach ($files as $file) {
+                                    $file = trim($file);
+                                    if (!empty($file)) {
+                                        $extension = pathinfo($file, PATHINFO_EXTENSION);
+                                        $documents[] = [
+                                            'filename' => $file,
+                                            'name' => 'مدرک',
+                                            'type' => strtolower($extension)
+                                        ];
+                                    }
+                                }
+                            }
+                        @endphp
+                        @foreach($documents as $index => $doc)
+                            @php
+                                $filename = is_array($doc) ? $doc['filename'] : $doc;
+                                $docName = is_array($doc) ? ($doc['name'] ?? 'مدرک ' . ($index + 1)) : ('مدرک ' . ($index + 1));
+                                $extension = is_array($doc) ? ($doc['type'] ?? pathinfo($filename, PATHINFO_EXTENSION)) : pathinfo($filename, PATHINFO_EXTENSION);
+                                $isImage = in_array(strtolower($extension), ['png', 'jpg', 'jpeg']);
+                                $isPdf = strtolower($extension) === 'pdf';
+                            @endphp
                             <div class="document-item-enhanced">
-                                <i class="fas fa-file-pdf text-3xl text-red-500"></i>
-                                <a href="{{ asset('images/users/documents/' . $doc) }}" target="_blank" class="text-sm text-ocean-blue hover:underline">
-                                    مدرک {{ $index + 1 }}
+                                @if($isImage)
+                                    <i class="fas fa-file-image text-3xl text-blue-500"></i>
+                                @elseif($isPdf)
+                                    <i class="fas fa-file-pdf text-3xl text-red-500"></i>
+                                @else
+                                    <i class="fas fa-file text-3xl text-gray-500"></i>
+                                @endif
+                                <a href="{{ asset('images/users/documents/' . $filename) }}" target="_blank" class="text-sm text-ocean-blue hover:underline">
+                                    {{ $docName }}
                                 </a>
                                 <button type="button"
                                         class="remove-btn text-sm"
@@ -241,14 +277,24 @@
             </div>
             <input type="file" 
                    name="documents[]" 
+                   id="documents-input"
                    class="form-input-enhanced" 
-                   multiple
+                   multiple="multiple"
                    accept=".pdf,.jpg,.jpeg,.png"
-                   @error('documents') style="border-color: #ef4444;" @enderror>
+                   style="cursor: pointer !important;"
+                   @error('documents') style="border-color: #ef4444; cursor: pointer !important;" @enderror>
+            <div id="selected-files" class="mt-4" style="display: none;"></div>
+            <div id="document-names-container" class="mt-3 space-y-3" style="display: none;"></div>
             @error('documents')
                 <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
             @enderror
-            <small class="text-gray-500 text-sm">حداکثر ۵ فایل - فرمت‌های مجاز: PDF, JPG, PNG</small>
+            @error('document_names.*')
+                <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
+            @enderror
+            <small class="text-gray-500 text-sm">
+                <i class="fas fa-info-circle ml-1"></i>
+                می‌توانید با نگه داشتن Ctrl (یا Cmd در Mac) و کلیک روی فایل‌ها، چند فایل را همزمان انتخاب کنید. حداکثر ۵ فایل - فرمت‌های مجاز: PDF, JPG, PNG
+            </small>
         </div>
     </div>
 
@@ -264,15 +310,29 @@
                        name="avatar" 
                        id="avatar-input" 
                        accept="image/*" 
-                       style="display: none;">
+                       style="display: none; cursor: pointer !important;">
                 <input type="hidden" name="cropped_avatar" id="cropped-avatar">
+                <input type="hidden" name="remove_avatar" id="remove-avatar" value="0">
                 <div id="avatar-preview-container" style="display: none;">
                     <img id="avatar-preview" class="avatar-preview" src="" alt="پیش‌نمایش آواتار">
                 </div>
-                <div id="avatar-placeholder" style="text-align: center;">
-                    <i class="fas fa-camera text-4xl text-earth-green mb-2"></i>
-                    <p class="text-gray-600 font-semibold">برای تغییر آواتار کلیک کنید</p>
-                </div>
+                @if(auth()->user()->avatar)
+                    <div id="avatar-current-container" style="text-align: center; position: relative;">
+                        <img src="{{ asset('images/users/avatars/' . auth()->user()->avatar) }}" 
+                             alt="آواتار فعلی" 
+                             style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 3px solid var(--color-earth-green);">
+                        <button type="button" 
+                                onclick="removeAvatar()" 
+                                class="mt-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm">
+                            <i class="fas fa-trash ml-1"></i>حذف آواتار
+                        </button>
+                    </div>
+                @else
+                    <div id="avatar-placeholder" style="text-align: center;">
+                        <i class="fas fa-camera text-4xl text-earth-green mb-2"></i>
+                        <p class="text-gray-600 font-semibold">برای تغییر آواتار کلیک کنید</p>
+                    </div>
+                @endif
             </div>
             @error('avatar')
                 <div class="text-red-500 text-sm mt-1">{{ $message }}</div>
@@ -313,14 +373,29 @@
 <script>
     function toggleDocumentsBox() {
         const box = document.getElementById('documents-box');
-        box.style.display = box.style.display === 'none' || box.style.display === '' ? 'grid' : 'none';
+        const formGroup = document.getElementById('documents-form-group');
+        if (box.style.display === 'none' || box.style.display === '') {
+            box.style.display = 'block';
+            formGroup.style.gridColumn = '1 / -1';
+        } else {
+            box.style.display = 'none';
+            formGroup.style.gridColumn = '';
+        }
     }
 
     function deleteDocument(index) {
         if (confirm('آیا از حذف این مدرک مطمئن هستید؟')) {
             const form = document.getElementById('delete-document-form');
-            form.action = `/profile/document/${index}`;
+            form.action = `{{ route('profile.document.delete', ':index') }}`.replace(':index', index);
             form.submit();
+        }
+    }
+
+    function removeAvatar() {
+        if (confirm('آیا از حذف آواتار مطمئن هستید؟')) {
+            document.getElementById('remove-avatar').value = '1';
+            document.getElementById('avatar-current-container').style.display = 'none';
+            document.getElementById('avatar-placeholder').style.display = 'block';
         }
     }
 
@@ -340,8 +415,61 @@
                 document.getElementById('avatar-preview').src = e.target.result;
                 document.getElementById('avatar-preview-container').style.display = 'block';
                 document.getElementById('avatar-placeholder').style.display = 'none';
+                if (document.getElementById('avatar-current-container')) {
+                    document.getElementById('avatar-current-container').style.display = 'none';
+                }
+                document.getElementById('remove-avatar').value = '0'; // Reset remove flag when new file selected
             };
             reader.readAsDataURL(file);
+        }
+    });
+
+    // Show selected files for documents and add name inputs
+    document.getElementById('documents-input')?.addEventListener('change', function(e) {
+        const files = e.target.files;
+        const selectedFilesDiv = document.getElementById('selected-files');
+        const documentNamesContainer = document.getElementById('document-names-container');
+        
+        if (files.length > 0) {
+            let fileList = '<strong class="text-gray-700">فایل‌های انتخاب شده:</strong><ul class="list-disc list-inside mt-2 space-y-1">';
+            let nameInputs = '';
+            
+            for (let i = 0; i < files.length; i++) {
+                const fileName = files[i].name;
+                const fileExtension = fileName.split('.').pop().toLowerCase();
+                const isImage = ['png', 'jpg', 'jpeg'].includes(fileExtension);
+                const isPdf = fileExtension === 'pdf';
+                
+                fileList += `<li class="text-sm text-gray-600">${fileName}</li>`;
+                
+                // ایجاد input برای نام مدرک
+                nameInputs += `
+                    <div class="flex items-center gap-3">
+                        <div class="flex-shrink-0 w-8">
+                            ${isImage ? '<i class="fas fa-file-image text-blue-500 text-lg"></i>' : 
+                              isPdf ? '<i class="fas fa-file-pdf text-red-500 text-lg"></i>' : 
+                              '<i class="fas fa-file text-gray-500 text-lg"></i>'}
+                        </div>
+                        <input type="text" 
+                               name="document_names[]" 
+                               class="form-input-enhanced flex-1" 
+                               placeholder="نام مدرک (مثلاً: کارت ملی، گواهینامه، ...)"
+                               value=""
+                               maxlength="100">
+                        <span class="text-xs text-gray-400 flex-shrink-0" style="min-width: 120px;">${fileName}</span>
+                    </div>
+                `;
+            }
+            fileList += '</ul>';
+            
+            selectedFilesDiv.innerHTML = fileList;
+            selectedFilesDiv.style.display = 'block';
+            
+            documentNamesContainer.innerHTML = '<label class="block text-sm font-semibold text-gray-700 mb-2"><i class="fas fa-tag ml-1"></i>نام هر مدرک (اختیاری):</label>' + nameInputs;
+            documentNamesContainer.style.display = 'block';
+        } else {
+            selectedFilesDiv.style.display = 'none';
+            documentNamesContainer.style.display = 'none';
         }
     });
 </script>

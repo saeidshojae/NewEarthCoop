@@ -118,10 +118,17 @@
                     x-transition:leave-end="opacity-0 transform -translate-y-2"
                     class="mr-8 mt-2 space-y-1">
                     <li>
-                        <a href="{{ route('user.support-chat.index') }}" class="sidebar-menu-link block px-4 py-2 rounded-xl text-gentle-black transition duration-200 flex items-center relative group" style="color: var(--color-gentle-black);">
+                        <a href="{{ route('support.kb.index') }}" class="sidebar-menu-link block px-4 py-2 rounded-xl text-gentle-black transition duration-200 flex items-center relative group" style="color: var(--color-gentle-black);">
                             <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg opacity-0 group-hover:opacity-100 transition-all duration-200" style="background-color: var(--color-earth-green);"></span>
-                            <i class="fas fa-comments text-sm ml-2" style="color: var(--color-ocean-blue);"></i>
-                            <span>چت پشتیبانی</span>
+                            <i class="fas fa-book text-sm ml-2" style="color: var(--color-ocean-blue);"></i>
+                            <span>پایگاه دانش</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('user.tickets.create') }}" class="sidebar-menu-link block px-4 py-2 rounded-xl text-gentle-black transition duration-200 flex items-center relative group" style="color: var(--color-gentle-black);">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg opacity-0 group-hover:opacity-100 transition-all duration-200" style="background-color: var(--color-earth-green);"></span>
+                            <i class="fas fa-plus-circle text-sm ml-2" style="color: var(--color-ocean-blue);"></i>
+                            <span>ارسال تیکت</span>
                         </a>
                     </li>
                     <li>
@@ -142,14 +149,14 @@
                             @endif
                         </a>
                     </li>
+                    <li>
+                        <a href="{{ route('user.support-chat.index') }}" class="sidebar-menu-link block px-4 py-2 rounded-xl text-gentle-black transition duration-200 flex items-center relative group" style="color: var(--color-gentle-black);">
+                            <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg opacity-0 group-hover:opacity-100 transition-all duration-200" style="background-color: var(--color-earth-green);"></span>
+                            <i class="fas fa-comments text-sm ml-2" style="color: var(--color-ocean-blue);"></i>
+                            <span>چت پشتیبانی</span>
+                        </a>
+                    </li>
                 </ul>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="{{ route('support.kb.index') }}" class="sidebar-menu-link block px-4 py-3 rounded-xl text-gentle-black transition duration-200 flex items-center justify-between relative group" style="color: var(--color-gentle-black);">
-                    <span class="absolute left-0 top-0 h-full w-1 rounded-l-lg opacity-0 group-hover:opacity-100 transition-all duration-200" style="background-color: var(--color-ocean-blue);"></span>
-                    <i class="fas fa-book" style="color: var(--color-ocean-blue);"></i>
-                    <span class="flex-grow text-right mx-3">پایگاه دانش</span>
-                </a>
             </li>
             
             <!-- Admin Panel (if admin) -->

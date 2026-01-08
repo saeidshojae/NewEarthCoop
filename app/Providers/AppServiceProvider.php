@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Spring;
 use App\Modules\NajmBahar\Adapters\LegacyNajmAdapter;
+use App\Modules\NajmBahar\Models\Transaction as NajmTransaction;
+use App\Observers\NajmBaharTransactionObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -65,5 +67,8 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
         });
+
+        // Register Observer for NajmBahar Transactions
+        NajmTransaction::observe(NajmBaharTransactionObserver::class);
     }
 }

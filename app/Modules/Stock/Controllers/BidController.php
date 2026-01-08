@@ -137,6 +137,14 @@ class BidController extends Controller
             $walletService->release($wallet, $bid->total_value, "Bid cancelled #{$bid->id}", $bid);
 
             $bid->update(['status' => 'lost']);
+            
+            // Dispatch events
+            $user = Auth::user();
+            if ($user) {
+                event(new \App\Events\BidCancelled($bid, $auction, $user));
+                event(new \App\Events\WalletReleased($wallet, $user, $bid->total_value, $bid, "Bid cancelled #{$bid->id}"));
+            }
+            
             return redirect()->route('auction.show', $auction)->with('success', 'پیشنهاد شما لغو شد');
         });
     }

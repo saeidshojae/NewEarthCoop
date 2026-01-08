@@ -23,4 +23,20 @@ class Account extends Model
     ];
 
     public $timestamps = true;
+
+    /**
+     * تراکنش‌های خروجی
+     */
+    public function outgoingTransactions()
+    {
+        return $this->hasMany(Transaction::class, 'from_account_id');
+    }
+
+    /**
+     * تراکنش‌های ورودی
+     */
+    public function incomingTransactions()
+    {
+        return $this->hasMany(Transaction::class, 'to_account_id');
+    }
 }

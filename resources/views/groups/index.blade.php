@@ -294,6 +294,12 @@
         color: #991b1b;
     }
 
+    /* Filter hidden rows */
+    .data-table tbody tr.filter-hidden,
+    .data-table tbody tr[style*="display: none"] {
+        display: none !important;
+    }
+
     /* Sidebar Styles */
     .sidebar {
         width: 320px;
@@ -510,7 +516,7 @@
         'emptyMessage' => 'هیچ گروه تجربی یافت نشد',
         'filters' => $specialtyFilters,
         'tableId' => 'specialty_experience_table',
-        'levelKey' => 'scope',
+        'levelKey' => 'location_level',
         'type' => 'specialty'
     ])->render();
 
@@ -798,15 +804,48 @@
         const tabButtons = document.querySelectorAll('.tab-button');
         const tabContents = document.querySelectorAll('.desktop-tabs .tab-content');
 
+        if (tabButtons.length === 0) {
+            console.warn('No tab buttons found');
+        } else {
+            console.log('Found', tabButtons.length, 'tab buttons');
+        }
+
         tabButtons.forEach(button => {
-            button.addEventListener('click', function () {
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
                 const targetId = this.dataset.target;
+                console.log('Tab clicked:', targetId);
+                
+                if (!targetId) {
+                    console.warn('Tab button has no data-target attribute');
+                    return;
+                }
+                
                 tabButtons.forEach(btn => btn.classList.remove('active'));
                 tabContents.forEach(content => content.classList.remove('active'));
                 this.classList.add('active');
+                
                 const targetContent = document.getElementById(targetId);
                 if (targetContent) {
                     targetContent.classList.add('active');
+                    console.log('Tab content activated:', targetId);
+                    
+                    // When tab changes, initialize filters for open toggles inside this tab
+                    setTimeout(() => {
+                        const openToggles = targetContent.querySelectorAll('.toggle-content.open');
+                        openToggles.forEach(toggle => {
+                            const filterContainer = toggle.querySelector('.filter-buttons');
+                            if (filterContainer) {
+                                const containerId = filterContainer.dataset.target || filterContainer.id || 'unknown';
+                                if (!initializedFilters.has(containerId)) {
+                                    initializeFilters(filterContainer);
+                                    initializedFilters.add(containerId);
+                                }
+                            }
+                        });
+                    }, 100);
+                } else {
+                    console.warn('Tab content not found for ID:', targetId);
                 }
             });
         });
@@ -822,8 +861,145 @@
                 const isActive = content.classList.contains('active');
                 content.classList.toggle('active', !isActive);
                 icon?.classList.toggle('rotate', !isActive);
+                
+                // Initialize filters when accordion opens
+                if (!isActive) {
+                    setTimeout(() => {
+                        const openToggles = content.querySelectorAll('.toggle-content.open');
+                        openToggles.forEach(toggle => {
+                            const filterContainer = toggle.querySelector('.filter-buttons');
+                            if (filterContainer) {
+                                const containerId = filterContainer.dataset.target || filterContainer.id || 'unknown';
+                                if (!initializedFilters.has(containerId)) {
+                                    initializeFilters(filterContainer);
+                                    initializedFilters.add(containerId);
+                                }
+                            }
+                        });
+                        // Also initialize filters directly in accordion-content (not in toggle-content)
+                        const directFilters = content.querySelectorAll('.filter-buttons');
+                        directFilters.forEach(container => {
+                            const containerId = container.dataset.target || container.id || 'unknown';
+                            if (!initializedFilters.has(containerId)) {
+                                initializeFilters(container);
+                                initializedFilters.add(containerId);
+                            }
+                        });
+                    }, 100);
+                }
             });
         });
+
+        // Filters for specialty tables
+        function initializeFilters(container) {
+            if (!container || !container.isConnected) {
+                return;
+            }
+            
+            const targetId = container.dataset.target;
+            if (!targetId) {
+                console.warn('Filter: No target ID found');
+                return;
+            }
+            
+            const table = document.getElementById(targetId);
+            if (!table) {
+                console.warn('Filter: Table not found with ID:', targetId);
+                return;
+            }
+            
+            const rows = table.querySelectorAll('tbody tr[data-filter-value]');
+            const buttons = container.querySelectorAll('.filter-button');
+
+            if (rows.length === 0) {
+                console.warn('Filter: No rows with data-filter-value found in table:', targetId, 'Rows in table:', table.querySelectorAll('tbody tr').length);
+                return;
+            }
+            if (buttons.length === 0) {
+                console.warn('Filter: No filter buttons found for table:', targetId);
+                return;
+            }
+
+            // Remove any existing listeners by cloning buttons
+            buttons.forEach(button => {
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+            });
+
+            const newButtons = container.querySelectorAll('.filter-button');
+
+            newButtons.forEach(button => {
+                button.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const filter = this.dataset.filter;
+                    console.log('Filter button clicked:', filter, 'for table:', targetId);
+                    
+                    newButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Re-query rows - always query, even if parent toggle-content might be closed
+                    // The display style will be set regardless, and will take effect when toggle opens
+                    const currentRows = table.querySelectorAll('tbody tr[data-filter-value]');
+                    console.log('Filtering', currentRows.length, 'rows with filter:', filter);
+                    
+                    let visibleCount = 0;
+                    let hiddenCount = 0;
+                    
+                    currentRows.forEach((row, index) => {
+                        const value = (row.getAttribute('data-filter-value') || row.dataset.filterValue || 'all').trim();
+                        const shouldShow = (filter === 'all' || value === filter);
+                        
+                        // Debug first few rows
+                        if (index < 5) {
+                            console.log(`Row ${index}: data-filter-value="${value}", shouldShow=${shouldShow}, filter="${filter}", match=${value === filter}`);
+                        }
+                        
+                        if (shouldShow) {
+                            row.style.display = '';
+                            row.style.visibility = 'visible';
+                            row.hidden = false;
+                            row.classList.remove('filter-hidden');
+                            visibleCount++;
+                        } else {
+                            row.style.setProperty('display', 'none', 'important');
+                            row.style.visibility = 'hidden';
+                            row.hidden = true;
+                            row.classList.add('filter-hidden');
+                            hiddenCount++;
+                        }
+                    });
+                    
+                    console.log('Filter result - Visible:', visibleCount, 'Hidden:', hiddenCount, 'Total:', currentRows.length);
+                    
+                    // Also check the empty message row
+                    const emptyRow = table.querySelector('tbody tr:not([data-filter-value])');
+                    if (emptyRow) {
+                        emptyRow.style.display = visibleCount > 0 ? 'none' : '';
+                    }
+                });
+            });
+
+            // Activate default button
+            const defaultButton = container.querySelector('.filter-button.active') || newButtons[0];
+            if (defaultButton) {
+                const filter = defaultButton.dataset.filter;
+                const currentRows = table.querySelectorAll('tbody tr[data-filter-value]');
+                currentRows.forEach(row => {
+                    const value = (row.getAttribute('data-filter-value') || row.dataset.filterValue || 'all').trim();
+                    const shouldShow = (filter === 'all' || value === filter);
+                    if (shouldShow) {
+                        row.style.setProperty('display', '', 'important');
+                        row.classList.remove('filter-hidden');
+                    } else {
+                        row.style.setProperty('display', 'none', 'important');
+                        row.classList.add('filter-hidden');
+                    }
+                });
+            }
+            
+            console.log('Filters initialized for table:', targetId, 'with', rows.length, 'rows and', newButtons.length, 'buttons');
+        }
 
         // Inner toggle sections
         const toggleHeaders = document.querySelectorAll('.toggle-header');
@@ -837,37 +1013,92 @@
                 const isOpen = content.classList.contains('open');
                 content.classList.toggle('open', !isOpen);
                 icon?.classList.toggle('rotate', !isOpen);
+                
+                // Re-initialize filters when toggle sections open
+                if (!isOpen) { // Only when opening
+                    setTimeout(() => {
+                        // Find filter container inside this content
+                        const filterContainer = content.querySelector('.filter-buttons');
+                        if (filterContainer) {
+                            const containerId = filterContainer.dataset.target || filterContainer.id || 'unknown';
+                            // Get the currently active filter button before re-initializing
+                            const activeButton = filterContainer.querySelector('.filter-button.active');
+                            const activeFilter = activeButton ? activeButton.dataset.filter : 'all';
+                            
+                            // Reset initialization flag so it can be re-initialized
+                            initializedFilters.delete(containerId);
+                            initializeFilters(filterContainer);
+                            initializedFilters.add(containerId);
+                            
+                            // Re-apply the active filter after initialization
+                            if (activeFilter) {
+                                setTimeout(() => {
+                                    const button = filterContainer.querySelector(`.filter-button[data-filter="${activeFilter}"]`);
+                                    if (button) {
+                                        // Manually trigger filter instead of click to avoid event issues
+                                        const table = document.getElementById(filterContainer.dataset.target);
+                                        if (table) {
+                                            const rows = table.querySelectorAll('tbody tr[data-filter-value]');
+                                            rows.forEach(row => {
+                                                const value = (row.getAttribute('data-filter-value') || row.dataset.filterValue || 'all').trim();
+                                                const shouldShow = (activeFilter === 'all' || value === activeFilter);
+                                                if (shouldShow) {
+                                                    row.style.setProperty('display', '', 'important');
+                                                    row.classList.remove('filter-hidden');
+                                                } else {
+                                                    row.style.setProperty('display', 'none', 'important');
+                                                    row.classList.add('filter-hidden');
+                                                }
+                                            });
+                                            // Update button states
+                                            filterContainer.querySelectorAll('.filter-button').forEach(btn => {
+                                                btn.classList.remove('active');
+                                                if (btn.dataset.filter === activeFilter) {
+                                                    btn.classList.add('active');
+                                                }
+                                            });
+                                        }
+                                    }
+                                }, 100);
+                            }
+                        }
+                    }, 200);
+                }
             });
         });
 
-        // Filters for specialty tables
-        const filterContainers = document.querySelectorAll('.filter-buttons');
-        filterContainers.forEach(container => {
-            const targetId = container.dataset.target;
-            const table = document.getElementById(targetId);
-            if (!table) {
-                return;
-            }
-            const rows = table.querySelectorAll('tbody tr[data-filter-value]');
-            const buttons = container.querySelectorAll('.filter-button');
-
-            buttons.forEach(button => {
-                button.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    const filter = this.dataset.filter;
-                    buttons.forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
-
-                    rows.forEach(row => {
-                        const value = row.dataset.filterValue || 'all';
-                        row.style.display = (filter === 'all' || value === filter) ? '' : 'none';
-                    });
-                });
+        // Track which filter containers have been initialized
+        const initializedFilters = new Set();
+        
+        // Initialize filters for visible containers only
+        function initializeVisibleFilters() {
+            const filterContainers = document.querySelectorAll('.filter-buttons');
+            filterContainers.forEach(container => {
+                const containerId = container.dataset.target || container.id || 'unknown';
+                
+                // Skip if already initialized
+                if (initializedFilters.has(containerId)) {
+                    return;
+                }
+                
+                // Check if container is inside a visible element
+                const toggleContent = container.closest('.toggle-content');
+                const isInOpenToggle = toggleContent && toggleContent.classList.contains('open');
+                const isInActiveAccordion = container.closest('.accordion-content.active');
+                const isNotInToggle = !toggleContent;
+                
+                // For desktop: only initialize if toggle-content is open OR not in toggle-content at all
+                // For mobile: initialize if accordion-content is active
+                // Important: Don't initialize if toggle-content exists but is closed
+                if ((isInOpenToggle || isNotInToggle) || isInActiveAccordion) {
+                    initializeFilters(container);
+                    initializedFilters.add(containerId);
+                }
             });
-
-            const defaultButton = container.querySelector('.filter-button.active') || buttons[0];
-            defaultButton?.dispatchEvent(new Event('click'));
-        });
+        }
+        
+        // Don't initialize filters on page load - wait for toggles to open
+        // initializeVisibleFilters(); // Commented out - filters will be initialized when toggles open
     });
 </script>
 @endpush

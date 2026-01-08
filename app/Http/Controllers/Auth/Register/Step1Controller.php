@@ -99,18 +99,124 @@ class Step1Controller extends Controller
         return $number;
     }
     
+    public function validateData(Request $request)
+    {
+        // اعتبارسنجی داده‌ها بدون ذخیره
+        $rules = [
+            'first_name'   => 'required|string|max:50|regex:/^[\x{0600}-\x{06FF}\s]+$/u',
+            'last_name'    => 'required|string|max:50|regex:/^[\x{0600}-\x{06FF}\s]+$/u',
+            'birth_date'   => 'required|array|min:3',
+            'gender'       => 'required|in:male,female',
+            'nationality'  => 'required|string',
+            'national_id'  => 'required|string|regex:/^\d{10}$/|unique:users,national_id',
+            'country_code' => ['nullable', 'in:+98,+1,+44,+49'],
+            'phone'        => 'required|regex:/^(0)?9\d{9}$/',
+        ];
+        
+        $rules['password'] = auth()->user()->password
+            ? 'nullable|min:6|confirmed'
+            : 'required|min:6|confirmed';
+
+        $messages = [
+            'first_name.required' => 'وارد کردن نام الزامی است.',
+            'first_name.regex' => 'نام باید به زبان فارسی وارد شود.',
+            'last_name.required' => 'وارد کردن نام خانوادگی الزامی است.',
+            'last_name.regex' => 'نام خانوادگی باید به زبان فارسی وارد شود.',
+            'phone.required' => 'وارد کردن شماره تلفن الزامی است.',
+            'phone.regex' => 'شماره تلفن باید دقیقاً ۱۰ رقم باشد و با ۹ شروع شود.',
+            'national_id.required' => 'وارد کردن کد ملی الزامی است.',
+            'national_id.regex' => 'کد ملی باید دقیقاً ۱۰ رقم باشد.',
+            'national_id.unique' => 'این کد ملی قبلاً در سیستم ثبت شده است.',
+            'birth_date.required' => 'وارد کردن تاریخ تولد الزامی است.',
+            'gender.required' => 'انتخاب جنسیت الزامی است.',
+            'nationality.required' => 'انتخاب ملیت الزامی است.',
+            'password.required' => 'وارد کردن رمز عبور الزامی است.',
+            'password.min' => 'رمز عبور باید حداقل ۶ کاراکتر باشد.',
+            'password.confirmed' => 'رمز عبور و تأیید رمز عبور مطابقت ندارند.',
+        ];
+
+        $validated = $request->validate($rules, $messages);
+        
+        // تبدیل اعداد
+        $nationalId = $this->convertNumbersToEnglish($validated['national_id']);
+        $phone = $this->normalizePhoneNumber($this->convertNumbersToEnglish($validated['phone']));
+        
+        // بررسی تکراری بودن شماره تلفن
+        $checkPhoneUser = User::where('phone', $phone)->where('id', '!=', auth()->id())->first();
+        if($checkPhoneUser != null){
+            return response()->json([
+                'success' => false,
+                'errors' => ['phone' => ['شماره تلفن وارد شده قبلاً در سیستم ثبت شده است.']]
+            ], 422);
+        }
+        
+        // اعتبارسنجی کد ملی
+        if (!$this->isValidIranianNationalCode($nationalId)) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['national_id' => ['کد ملی وارد شده معتبر نمی‌باشد.']]
+            ], 422);
+        }
+        
+        // تبدیل تاریخ تولد
+        try {
+            [$day, $month, $year] = array_map(
+                fn($v) => $this->convertNumbersToEnglish($v),
+                $validated['birth_date']
+            );
+            
+            $birthDateMiladi = (new \Morilog\Jalali\Jalalian((int)$year, (int)$month, (int)$day))->toCarbon();
+            
+            // بررسی سن
+            if ($birthDateMiladi->age < 15) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['birth_date' => ['سن شما باید حداقل ۱۵ سال باشد.']]
+                ], 422);
+            }
+            
+            // فرمت تاریخ برای نمایش
+            $months = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+            $birthDateFormatted = $day . ' ' . $months[(int)$month - 1] . ' ' . $year;
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['birth_date' => ['تاریخ تولد وارد شده معتبر نیست.']]
+            ], 422);
+        }
+        
+        // آماده کردن داده‌ها برای نمایش
+        $data = [
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
+            'birth_date' => $birthDateFormatted,
+            'gender' => $validated['gender'] == 'male' ? 'مرد' : 'زن',
+            'nationality' => $validated['nationality'],
+            'national_id' => $nationalId,
+            'phone' => $validated['country_code'] . ' ' . $phone,
+            'email' => auth()->user()->email,
+            'has_password' => !empty($validated['password']),
+        ];
+        
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
+    
     public function process(Request $request)
 {
-    // اعتبارسنجی داده‌ها
+    // اعتبارسنجی داده‌ها با پیام‌های خطای واضح
     $rules = [
-        'first_name'   => 'nullable|string|max:50|regex:/^[\x{0600}-\x{06FF}\s]+$/u',
-        'last_name'    => 'nullable|string|max:50|regex:/^[\x{0600}-\x{06FF}\s]+$/u',
-        'birth_date'   => 'nullable|array|min:3',
-        'gender'       => 'nullable|in:male,female',
-        'nationality'  => 'nullable|string',
-        'national_id'  => 'nullable|string|regex:/^\d{10}$/|unique:users,national_id',
+        'first_name'   => 'required|string|max:50|regex:/^[\x{0600}-\x{06FF}\s]+$/u',
+        'last_name'    => 'required|string|max:50|regex:/^[\x{0600}-\x{06FF}\s]+$/u',
+        'birth_date'   => 'required|array|min:3',
+        'gender'       => 'required|in:male,female',
+        'nationality'  => 'required|string',
+        'national_id'  => 'required|string|regex:/^\d{10}$/|unique:users,national_id',
         'country_code' => ['nullable', 'in:+98,+1,+44,+49'],
-        'phone'        => 'nullable|regex:/^(0)?9\d{9}$/',
+        'phone'        => 'required|regex:/^(0)?9\d{9}$/',
     ];
     
     // بررسی نیاز به رمز عبور
@@ -118,66 +224,120 @@ class Step1Controller extends Controller
         ? 'nullable|min:6|confirmed'
         : 'required|min:6|confirmed';
 
-    $validated = $request->validate($rules);
+    // پیام‌های خطای سفارشی
+    $messages = [
+        'first_name.required' => 'وارد کردن نام الزامی است.',
+        'first_name.regex' => 'نام باید به زبان فارسی وارد شود. لطفاً از حروف فارسی استفاده کنید و از تایپ لاتین خودداری کنید.',
+        'first_name.max' => 'نام نمی‌تواند بیشتر از ۵۰ کاراکتر باشد.',
+        'last_name.required' => 'وارد کردن نام خانوادگی الزامی است.',
+        'last_name.regex' => 'نام خانوادگی باید به زبان فارسی وارد شود. لطفاً از حروف فارسی استفاده کنید و از تایپ لاتین خودداری کنید.',
+        'last_name.max' => 'نام خانوادگی نمی‌تواند بیشتر از ۵۰ کاراکتر باشد.',
+        'phone.required' => 'وارد کردن شماره تلفن الزامی است.',
+        'phone.regex' => 'شماره تلفن باید دقیقاً ۱۰ رقم باشد و با ۹ شروع شود. مثال صحیح: 9123456789',
+        'national_id.required' => 'وارد کردن کد ملی الزامی است.',
+        'national_id.regex' => 'کد ملی باید دقیقاً ۱۰ رقم باشد. لطفاً کد ملی ۱۰ رقمی خود را وارد کنید.',
+        'national_id.unique' => 'این کد ملی قبلاً در سیستم ثبت شده است. لطفاً کد ملی صحیح خود را وارد کنید.',
+        'birth_date.required' => 'وارد کردن تاریخ تولد الزامی است.',
+        'birth_date.min' => 'لطفاً تاریخ تولد را کامل وارد کنید (روز، ماه و سال).',
+        'gender.required' => 'انتخاب جنسیت الزامی است.',
+        'gender.in' => 'لطفاً جنسیت را انتخاب کنید (مرد یا زن).',
+        'nationality.required' => 'انتخاب ملیت الزامی است.',
+        'password.required' => 'وارد کردن رمز عبور الزامی است.',
+        'password.min' => 'رمز عبور باید حداقل ۶ کاراکتر باشد.',
+        'password.confirmed' => 'رمز عبور و تأیید رمز عبور مطابقت ندارند. لطفاً دوباره وارد کنید.',
+    ];
+
+    $validated = $request->validate($rules, $messages);
+    // تبدیل اعداد فارسی به انگلیسی
+    $nationalId = $this->convertNumbersToEnglish($validated['national_id']);
+    $phone = $this->normalizePhoneNumber($this->convertNumbersToEnglish($validated['phone']));
+    
     if($validated['first_name'] != null AND $validated['last_name'] != null AND $validated['gender'] != null AND $validated['national_id'] != null AND $validated['phone'] != null){
        $validated['status'] = 1; 
     }else{
        $validated['status'] = 0; 
     }
     
+    // بررسی تکراری بودن شماره تلفن
     if(isset($validated['phone']) AND $validated['phone'] != null){
-        $checkPhoneUser = User::where('phone', $validated['phone'])->first();
+        $checkPhoneUser = User::where('phone', $phone)->first();
         if($checkPhoneUser != null){
-            return back()->with('error', 'شماره تلفن قبلا ثبت شده است');
+            return back()
+                ->withInput()
+                ->withErrors(['phone' => 'شماره تلفن وارد شده قبلاً در سیستم ثبت شده است. لطفاً شماره تلفن دیگری وارد کنید.']);
         }
     }
-
-    // تبدیل اعداد فارسی به انگلیسی
-    $nationalId = $this->convertNumbersToEnglish($validated['national_id']);
-    $phone = $this->normalizePhoneNumber($this->convertNumbersToEnglish($validated['phone']));
 
     // اعتبارسنجی کد ملی
     if($validated['national_id'] != null){
         if (!$this->isValidIranianNationalCode($nationalId)) {
-            return back()->with('error', 'کد ملی وارد شده معتبر نیست')->withInput();
+            return back()
+                ->withInput()
+                ->withErrors(['national_id' => 'کد ملی وارد شده معتبر نمی‌باشد. لطفاً کد ملی صحیح خود را وارد کنید.']);
         }   
     }
 
     // تبدیل تاریخ تولد شمسی به میلادی
-    [$day, $month, $year] = array_map(
-        fn($v) => $this->convertNumbersToEnglish($v),
-        $validated['birth_date']
-    );
+    try {
+        [$day, $month, $year] = array_map(
+            fn($v) => $this->convertNumbersToEnglish($v),
+            $validated['birth_date']
+        );
 
-    $birthDateMiladi = (new \Morilog\Jalali\Jalalian((int)$year, (int)$month, (int)$day))->toCarbon();
+        // بررسی صحت تاریخ
+        if (!checkdate((int)$month, (int)$day, (int)$year)) {
+            // برای تاریخ شمسی، بررسی ساده‌تر
+            if ((int)$day < 1 || (int)$day > 31 || (int)$month < 1 || (int)$month > 12) {
+                return back()
+                    ->with('error', 'تاریخ تولد وارد شده معتبر نیست. لطفاً تاریخ صحیح را وارد کنید.')
+                    ->withInput()
+                    ->withErrors(['birth_date' => 'تاریخ تولد معتبر نیست.']);
+            }
+        }
+
+        $birthDateMiladi = (new \Morilog\Jalali\Jalalian((int)$year, (int)$month, (int)$day))->toCarbon();
+    } catch (\Exception $e) {
+        return back()
+            ->withInput()
+            ->withErrors(['birth_date' => 'تاریخ تولد وارد شده معتبر نیست. لطفاً تاریخ صحیح را وارد کنید.']);
+    }
 
     // بررسی سن
     if ($birthDateMiladi->age < 15) {
-        return back()->with('error', 'سن شما باید حداقل ۱۵ سال باشد');
+        return back()
+            ->withInput()
+            ->withErrors(['birth_date' => 'سن شما باید حداقل ۱۵ سال باشد. لطفاً تاریخ تولد صحیح خود را وارد کنید.']);
     }
 
     // به‌روزرسانی اطلاعات کاربر
-    $user = User::findOrFail(auth()->id());
+    try {
+        $user = User::findOrFail(auth()->id());
 
-    $userData = [
-        'first_name'   => $validated['first_name'],
-        'last_name'    => $validated['last_name'],
-        'birth_date'   => $birthDateMiladi->toDateString(),
-        'gender'       => $validated['gender'],
-        'nationality'  => $validated['nationality'],
-        'national_id'  => $nationalId,
-        'country_code' => $validated['country_code'],
-        'phone'        => $phone,
-        'status'        => 1,
-    ];
+        $userData = [
+            'first_name'   => $validated['first_name'],
+            'last_name'    => $validated['last_name'],
+            'birth_date'   => $birthDateMiladi->toDateString(),
+            'gender'       => $validated['gender'],
+            'nationality'  => $validated['nationality'],
+            'national_id'  => $nationalId,
+            'country_code' => $validated['country_code'],
+            'phone'        => $phone,
+            'status'        => 1,
+        ];
 
-    if (!empty($validated['password'])) {
-        $userData['password'] = \Illuminate\Support\Facades\Hash::make($validated['password']);
+        if (!empty($validated['password'])) {
+            $userData['password'] = \Illuminate\Support\Facades\Hash::make($validated['password']);
+        }
+
+        $user->update($userData);
+
+        return redirect()->route('register.step2');
+    } catch (\Exception $e) {
+        \Log::error('Error updating user in Step1: ' . $e->getMessage());
+        return back()
+            ->with('error', 'خطایی در ثبت اطلاعات رخ داد. لطفاً دوباره تلاش کنید.')
+            ->withInput();
     }
-
-    $user->update($userData);
-
-    return redirect()->route('register.step2');
 }
 
 protected function isValidIranianNationalCode(string $code): bool

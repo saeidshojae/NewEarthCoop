@@ -101,6 +101,16 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+// Helper function to get CSRF token safely
+function getCsrfToken() {
+    const metaTag = document.querySelector('meta[name="csrf-token"]');
+    if (!metaTag || !metaTag.content) {
+        console.error('CSRF token meta tag not found!');
+        return '';
+    }
+    return metaTag.content;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     console.log("Tabs script loaded ✅");
 
@@ -126,18 +136,47 @@ function submitVote(el) {
 
     if ($(el).hasClass('voted')) return;
 
+    // ذخیره موقعیت scroll قبل از ارسال
+    const chatBox = document.getElementById('chat-box');
+    if (chatBox) {
+        const scrollPosition = chatBox.scrollTop;
+        // استفاده از window.groupId که در chat.blade.php تعریف شده
+        const groupId = window.groupId || (typeof GROUP_ID !== 'undefined' ? GROUP_ID : 'default');
+        const STORAGE_KEY = 'chatScroll_' + groupId;
+        sessionStorage.setItem(STORAGE_KEY, scrollPosition);
+        
+        // همچنین آخرین پیام visible را ذخیره کن
+        const messages = chatBox.querySelectorAll('[data-message-id]');
+        let lastVisibleId = null;
+        for (let i = messages.length - 1; i >= 0; i--) {
+            const msg = messages[i];
+            const rect = msg.getBoundingClientRect();
+            const chatBoxRect = chatBox.getBoundingClientRect();
+            if (rect.top >= chatBoxRect.top && rect.bottom <= chatBoxRect.bottom) {
+                const messageId = parseInt(msg.getAttribute('data-message-id'));
+                if (messageId && !isNaN(messageId)) {
+                    lastVisibleId = messageId;
+                    break;
+                }
+            }
+        }
+        if (lastVisibleId) {
+            sessionStorage.setItem('lastVisibleMessageId_' + groupId, lastVisibleId);
+        }
+    }
+
     $.ajax({
         url: `/polls/${pollId}/vote`,
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            'X-CSRF-TOKEN': getCsrfToken()
         },
         data: {
             option_id: optionId
         },
         success: function(data) {
             if (data.status === 'success') {
-                location.reload(); // می‌تونی اینو با آپدیت داینامیک هم جایگزین کنی
+                location.reload(); // بعد از reload، موقعیت از sessionStorage بازیابی می‌شود
             } else {
               showErrorAlert(data.message || 'خطا در ثبت رأی');
             }
@@ -283,7 +322,7 @@ function sendReaction(blogId, type, container) {
     method: 'POST',
     data: {
       type: type,
-      _token: document.querySelector('meta[name="csrf-token"]').content
+      _token: getCsrfToken()
     },
     success: function (data) {
       if (data.status === 'success') {
@@ -557,66 +596,99 @@ function openPollBox(){
     document.querySelector('#electionOptionsBox').style='display: none'
   }
   
-    window.addEventListener('DOMContentLoaded', function () {
-    const chatBox = document.getElementById('chat-box');
-    chatBox.scrollTop = chatBox.scrollHeight;
-});
+    // این کد حذف شد چون با منطق حفظ موقعیت scroll در chat.blade.php تداخل دارد
+    // window.addEventListener('DOMContentLoaded', function () {
+    //     const chatBox = document.getElementById('chat-box');
+    //     chatBox.scrollTop = chatBox.scrollHeight;
+    // });
     
 
-    setInterval(function() {
-    $.ajax({
-        url: '/api/groups/' + groupId + '/messages',
-        method: 'GET',
-        success: function(data) {
-            // Store the current scroll position
-            const chatBox = document.getElementById('chat-box');
-            const isScrolledToBottom = chatBox.scrollHeight - chatBox.scrollTop === chatBox.clientHeight;
-            
-            // Store the current edit form state if it exists
-            const activeEditForm = document.querySelector('.edit-form[style*="display: block"]');
-            const activeEditFormId = activeEditForm ? activeEditForm.id : null;
-            const activeEditContent = activeEditForm ? document.getElementById(`edit-message-${activeEditFormId.split('-')[2]}`).value : null;
-            
-            // Parse the new messages
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = data;
-            const newMessages = tempDiv.querySelectorAll('.message-wrapper');
-            
-            // Get existing message IDs
-            const existingMessageIds = new Set();
-            document.querySelectorAll('.message-wrapper').forEach(msg => {
-                existingMessageIds.add(msg.getAttribute('data-message-id'));
-            });
-            
-            // Append only new messages
-            newMessages.forEach(msg => {
-                const messageId = msg.getAttribute('data-message-id');
-                if (!existingMessageIds.has(messageId)) {
-                    chatBox.appendChild(msg);
-                }
-            });
-            
-            reapplySkillListState();
-            startPollCountdowns();
+    // صبر کن تا scroll restore کامل شود قبل از شروع polling
+    // این مهم است چون polling نباید موقعیت scroll را تغییر دهد قبل از اینکه restore شود
+    let pollingStarted = false;
+    function startPolling() {
+        if (pollingStarted) return;
+        
+        // بررسی کن که آیا scroll restore شده است
+        // اگر بعد از 5 ثانیه هنوز restore نشده، polling را شروع کن
+        let attempts = 0;
+        const maxAttempts = 10;
+        const checkInterval = setInterval(function() {
+            attempts++;
+            if (window.scrollPositionRestored || attempts >= maxAttempts) {
+                clearInterval(checkInterval);
+                pollingStarted = true;
+                
+                // حالا polling را شروع کن
+                setInterval(function() {
+                    $.ajax({
+                        url: '/api/groups/' + groupId + '/messages',
+                        method: 'GET',
+                        success: function(data) {
+                            // Store the current scroll position
+                            const chatBox = document.getElementById('chat-box');
+                            if (!chatBox) return;
+                            
+                            // بررسی دقیق‌تر "در پایین بودن" - فقط اگر کاربر واقعاً خودش به پایین رفته باشد
+                            const scrollBottom = chatBox.scrollHeight - chatBox.scrollTop;
+                            const threshold = 50;
+                            const isScrolledToBottom = scrollBottom <= chatBox.clientHeight + threshold;
+                            
+                            // Store the current edit form state if it exists
+                            const activeEditForm = document.querySelector('.edit-form[style*="display: block"]');
+                            const activeEditFormId = activeEditForm ? activeEditForm.id : null;
+                            const activeEditContent = activeEditForm ? document.getElementById(`edit-message-${activeEditFormId.split('-')[2]}`).value : null;
+                            
+                            // Parse the new messages
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = data;
+                            const newMessages = tempDiv.querySelectorAll('.message-wrapper');
+                            
+                            // Get existing message IDs
+                            const existingMessageIds = new Set();
+                            document.querySelectorAll('.message-wrapper').forEach(msg => {
+                                existingMessageIds.add(msg.getAttribute('data-message-id'));
+                            });
+                            
+                            // Append only new messages
+                            const hadNewMessages = newMessages.length > 0;
+                            newMessages.forEach(msg => {
+                                const messageId = msg.getAttribute('data-message-id');
+                                if (!existingMessageIds.has(messageId)) {
+                                    chatBox.appendChild(msg);
+                                }
+                            });
+                            
+                            reapplySkillListState();
+                            startPollCountdowns();
 
-            // Restore the edit form state if it existed
-            if (activeEditFormId && activeEditContent) {
-                const editForm = document.getElementById(activeEditFormId);
-                const editInput = document.getElementById(`edit-message-${activeEditFormId.split('-')[2]}`);
-                if (editForm && editInput) {
-                    editForm.style.display = 'block';
-                    editInput.value = activeEditContent;
-                    editInput.focus();
-                }
-            }
+                            // Restore the edit form state if it existed
+                            if (activeEditFormId && activeEditContent) {
+                                const editForm = document.getElementById(activeEditFormId);
+                                const editInput = document.getElementById(`edit-message-${activeEditFormId.split('-')[2]}`);
+                                if (editForm && editInput) {
+                                    editForm.style.display = 'block';
+                                    editInput.value = activeEditContent;
+                                    editInput.focus();
+                                }
+                            }
 
-            // Scroll to bottom if user was already at the bottom
-            if (isScrolledToBottom) {
-                chatBox.scrollTop = chatBox.scrollHeight;
+                            // Scroll to bottom ONLY if:
+                            // 1. Scroll restore کامل شده است
+                            // 2. کاربر واقعاً خودش به پایین رفته باشد (نه در لود اولیه)
+                            // 3. پیام جدید اضافه شده باشد
+                            if (window.scrollPositionRestored && isScrolledToBottom && hadNewMessages) {
+                                chatBox.scrollTop = chatBox.scrollHeight;
+                            }
+                        }
+                    });
+                }, 3000);
             }
-        }
-    });
-}, 3000);
+        }, 500); // هر 500ms چک کن
+    }
+    
+    // شروع polling بعد از کمی تأخیر برای اطمینان از لود کامل
+    setTimeout(startPolling, 1000);
 
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -673,6 +745,11 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            // Sync CKEditor قبل از خواندن محتوا
+            for (var i in CKEDITOR.instances) {
+                CKEDITOR.instances[i].updateElement();
+            }
+            
             const formData = new FormData(form);
             const parentId = document.getElementById('parent_id').value;
             
@@ -680,26 +757,54 @@ document.addEventListener('DOMContentLoaded', function() {
                 formData.append('parent_id', parentId);
             }
 
-            // اگر فایل صوتی انتخاب شده و message خالی است، یک مقدار پیش‌فرض اضافه کن
+            // بررسی محتوای پیام قبل از ارسال
             const hasVoiceFile = voiceFileInput && voiceFileInput.files && voiceFileInput.files.length > 0;
             const messageEditor = CKEDITOR.instances['message_editor'];
             let messageText = '';
+            let messageHtml = '';
             
             if (messageEditor) {
-                messageText = messageEditor.getData().trim();
-                // حذف HTML tags برای بررسی خالی بودن
+                messageHtml = messageEditor.getData().trim();
+                // تبدیل HTML به plain text با حفظ line breaks
                 const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = messageText;
-                const plainText = tempDiv.textContent || tempDiv.innerText || '';
-                messageText = plainText.trim();
+                tempDiv.innerHTML = messageHtml;
+                // تبدیل <br> و <p> به line breaks
+                const brs = tempDiv.querySelectorAll('br');
+                brs.forEach(br => br.replaceWith('\n'));
+                const ps = tempDiv.querySelectorAll('p, div');
+                ps.forEach(p => {
+                    if (p.nextSibling) {
+                        p.appendChild(document.createTextNode('\n'));
+                    }
+                });
+                messageText = tempDiv.textContent || tempDiv.innerText || '';
+                messageText = messageText.trim();
             } else {
                 const messageTextarea = document.getElementById('message_editor');
                 if (messageTextarea) {
                     messageText = messageTextarea.value.trim();
                 }
             }
+            
+            // تنظیم محتوا در formData (اگر CKEditor استفاده می‌شود، plain text را ارسال کن)
+            if (messageEditor && messageText) {
+                formData.set('message', messageText);
+            }
 
-            // اگر فایل صوتی انتخاب شده و message خالی است
+            // اگر هم پیام خالی است و هم فایل صوتی نیست، از ارسال جلوگیری کن
+            if (!messageText && !hasVoiceFile) {
+                alert('پیام نمی‌تواند خالی باشد.');
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                return false;
+            }
+            
+            // ذخیره موقعیت قبل از submit (اگر تابع موجود باشد)
+            if (typeof saveScrollPositionBeforeSubmit === 'function') {
+                saveScrollPositionBeforeSubmit();
+            }
+
+            // اگر فایل صوتی انتخاب شده و message خالی است، یک مقدار پیش‌فرض اضافه کن
             if (hasVoiceFile && !messageText) {
                 if (messageEditor) {
                     messageEditor.setData('🎤 پیام صوتی');
@@ -716,7 +821,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const response = await fetch(form.action, {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-CSRF-TOKEN': getCsrfToken(),
                         'Accept': 'application/json'
                     },
                     body: formData
@@ -734,9 +839,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         const errorMessage = responseData.message || 'خطا در اعتبارسنجی داده‌ها';
                         const errors = responseData.errors ? Object.values(responseData.errors).flat().join('\n') : '';
                         alert(`${errorMessage}\n${errors}`);
+                        return; // جلوگیری از ادامه اجرا
                     } else if (response.status === 500) {
                         console.error('Server Error Details:', responseData);
                         alert('خطا در سرور. لطفاً دوباره تلاش کنید. اگر مشکل ادامه داشت، با پشتیبانی تماس بگیرید.');
+                        return; // جلوگیری از ادامه اجرا
                     } else {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
@@ -784,101 +891,190 @@ function appendMessage(message) {
     const chatBox = document.getElementById('chat-box');
     if (!chatBox) return;
 
-    const messageWrapper = document.createElement('div');
-    messageWrapper.className = 'message-wrapper ' + (message.user_id == authUserId ? 'you' : 'other');
-    messageWrapper.setAttribute('data-message-id', message.id);
-    messageWrapper.id = `msg-${message.id}`;
+    const isMine = message.user_id == authUserId;
+    const senderName = message.sender || 'کاربر';
+    const initials = senderName.split(' ').map(n => n.charAt(0)).join(' ').trim() || '؟';
+    // محتوا از backend با <br> برای line breaks می‌آید، مستقیماً استفاده می‌کنیم
+    const messageContent = message.message || '';
+    const formattedTime = message.created_at || new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
     
-    let messageHtml = '';
-    
-    if (message.user_id != authUserId) {
-        messageHtml += `
-            <div class="group-avatar" style="width: 2rem; height: 2rem; font-size: .6rem; margin: 0;">
-                <span>${message.sender.split(' ').map(n => n.charAt(0)).join(' ')}</span>
-            </div>
-        `;
+    // Escape HTML helper
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
     
-    messageHtml += `
-        <div class="message-content" style="padding: 0">
-            ${message.user_id != authUserId ? `<div class="message-sender" style="margin-left: .4rem">${message.sender}</div>` : ''}
-            <div class="message-bubble">
-                ${message.parent_id ? `
-                    <div class="reply-box" style="border-right: 2px solid #666; padding-right: 8px; margin-bottom: 4px;">
-                        <div class="group-avatar" style="width: 1.5rem; height: 1.5rem; font-size: .6rem; margin: 0;">
-                            <span>${message.parent_sender.split(' ').map(n => n.charAt(0)).join(' ')}</span>
-                        </div>
-                        <div style="display: inline-block; vertical-align: middle;">
-                            <div style="font-weight: bold; font-size: .9rem;">${message.parent_sender}</div>
-                            <div style="font-size: .8rem; color: #666;">${message.parent_content}</div>
+    // Strip HTML helper
+    function stripHtml(html) {
+        const tmp = document.createElement('DIV');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    }
+    
+    // Generate reactions HTML
+    function generateReactionsHTML(messageId, reactions) {
+        if (!reactions || reactions.length === 0) return '';
+        const emojis = { like: '👍', love: '❤️', laugh: '😂', wow: '😮', sad: '😢', angry: '😠' };
+        return `<div class="message-reactions" style="display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap;">${reactions.map(r => {
+            const type = r.type || r.reaction_type || '';
+            const count = r.count || 0;
+            return `<span class="reaction-badge" style="background: #f0f0f0; padding: 2px 6px; border-radius: 12px; font-size: 12px; cursor: pointer;" onclick="if(typeof toggleReaction === 'function') toggleReaction(${messageId}, '${type}')">${emojis[type] || '👍'} ${count}</span>`;
+        }).join('')}</div>`;
+    }
+    
+    const messageRow = document.createElement('div');
+    messageRow.className = `message-row ${isMine ? 'you' : 'other'}`;
+    messageRow.setAttribute('data-message-id', message.id);
+    messageRow.id = `msg-${message.id}`;
+    
+    let messageHTML = '';
+    
+    // آواتار (فقط برای پیام‌های دیگران)
+    if (!isMine) {
+        messageHTML += `<a href="/profile/member/${message.user_id}" class="avatar-link"><span class="avatar"><span>${initials}</span></span></a>`;
+    }
+    
+    // Reply preview
+    let replyPreviewHTML = '';
+    if (message.parent_id && message.parent_sender && message.parent_content) {
+        replyPreviewHTML = `<div class="reply-preview"><div class="reply-sender">${escapeHtml(message.parent_sender)}</div><div class="reply-text">${escapeHtml(message.parent_content.substring(0, 80))}</div></div>`;
+    }
+    
+    // Voice message
+    let voiceMessageHTML = '';
+    if (message.voice_message) {
+        // Convert relative path to full URL if needed
+        let voiceUrl = message.voice_message;
+        if (!voiceUrl.startsWith('http://') && !voiceUrl.startsWith('https://')) {
+            // Remove leading slash if exists
+            voiceUrl = voiceUrl.startsWith('/') ? voiceUrl.substring(1) : voiceUrl;
+            // Build full URL - encode each part separately to handle spaces
+            const pathParts = voiceUrl.split('/');
+            const encodedParts = pathParts.map(part => encodeURIComponent(part));
+            voiceUrl = window.location.origin + '/storage/' + encodedParts.join('/');
+        }
+        const voiceType = message.file_type || 'audio/webm';
+        voiceMessageHTML = `<div class="voice-message-container" style="margin-top: 12px; padding: 12px; background: ${isMine ? '#e3f2fd' : '#f5f5f5'}; border-radius: 12px; border: 1px solid ${isMine ? '#90caf9' : '#e0e0e0'}; direction: ltr;"><div style="display: flex; align-items: center; gap: 12px;"><div style="width: 40px; height: 40px; border-radius: 50%; background: ${isMine ? '#2196f3' : '#757575'}; display: flex; align-items: center; justify-content: center; color: white;"><i class="fas fa-microphone"></i></div><div style="flex: 1;"><div style="font-size: 12px; color: #666; margin-bottom: 4px;"><i class="fas fa-headphones"></i> پیام صوتی</div><audio controls style="width: 100%; height: 40px;" preload="metadata"><source src="${voiceUrl}" type="${voiceType}"><source src="${voiceUrl}" type="audio/webm"><source src="${voiceUrl}" type="audio/ogg"><source src="${voiceUrl}" type="audio/mpeg">مرورگر شما از پخش صدا پشتیبانی نمی‌کند.</audio></div></div></div>`;
+    }
+    
+    messageHTML += `
+        <div class="message-bubble ${isMine ? 'you' : 'other'}" data-message-id="${message.id}" data-user-id="${message.user_id}" data-edit-url="/messages/${message.id}/edit" data-delete-url="/messages/${message.id}/delete" data-report-url="/messages/${message.id}/report" data-content-raw="${escapeHtml(stripHtml(messageContent))}">
+            <div class="message-head">
+                ${isMine ? 
+                    // برای پیام‌های خود کاربر: سه نقطه در سمت چپ، نام در سمت راست
+                    `<div class="action-menu message-action" data-action-menu>
+                        <button type="button" class="action-menu__toggle"><i class="fas fa-ellipsis-v"></i></button>
+                        <div class="action-menu__list">
+                            <button type="button" onclick="replyToMessage('${message.id}', '${escapeHtml(senderName)}', '${escapeHtml(messageContent.substring(0, 50))}')" class="action-menu__item btn-rep"><i class="fas fa-reply"></i> پاسخ</button>
+                            <button type="button" class="action-menu__item btn-reaction"><i class="fas fa-smile"></i> واکنش</button>
+                            <button type="button" class="action-menu__item btn-edit"><i class="fas fa-edit"></i> ویرایش</button>
+                            <button type="button" class="action-menu__item action-menu__item--danger btn-delete"><i class="fas fa-trash"></i> حذف</button>
+                            <div class="menu-meta-time"><div class="menu-meta-time__item"><i class="fas fa-paper-plane" style="font-size: 0.7rem; opacity: 0.6; margin-left: 4px;"></i><span class="menu-meta-time__label">ارسال شده:</span><span class="menu-meta-time__value">${formattedTime}</span></div></div>
                         </div>
                     </div>
-                ` : ''}
-                ${message.file_path ? `
-                    <div class="file-message">
-                        ${message.file_type.startsWith('image/') ? `
-                            <img src="/${message.file_path}" alt="${message.file_name}" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
-                        ` : message.file_type.startsWith('audio/') ? `
-                            <audio controls style="width: 100%;">
-                                <source src="/${message.file_path}" type="${message.file_type}">
-                                مرورگر شما از پخش صدا پشتیبانی نمی‌کند.
-                            </audio>
-                        ` : `
-                            <a href="/${message.file_path}" download="${message.file_name}" class="file-download">
-                                <i class="fas fa-file-download"></i>
-                                ${message.file_name}
-                            </a>
-                        `}
+                    <div class="message-head__info">
+                        <span class="message-sender message-sender--self">شما</span>
+                    </div>` :
+                    // برای پیام‌های دیگران: نام کاربر در سمت چپ، سه نقطه در سمت راست
+                    `<div class="message-head__info">
+                        <a href="/profile-member/${message.user_id}" class="message-sender" onclick="event.stopPropagation(); window.location.href='/profile-member/${message.user_id}'; return false;">${escapeHtml(senderName)}</a>
                     </div>
-                ` : ''}
-                ${message.voice_message ? `
-                    <div class="voice-message-container" style="
-                        margin-top: 12px;
-                        padding: 12px;
-                        background: ${message.user_id == authUserId ? '#e3f2fd' : '#f5f5f5'};
-                        border-radius: 12px;
-                        border: 1px solid ${message.user_id == authUserId ? '#90caf9' : '#e0e0e0'};
-                        direction: ltr;
-                    ">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="
-                                width: 40px;
-                                height: 40px;
-                                border-radius: 50%;
-                                background: ${message.user_id == authUserId ? '#2196f3' : '#757575'};
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                color: white;
-                                flex-shrink: 0;
-                            ">
-                                <i class="fas fa-microphone" style="font-size: 18px;"></i>
-                            </div>
-                            <div style="flex: 1; min-width: 0;">
-                                <div style="font-size: 12px; color: #666; margin-bottom: 4px;">
-                                    <i class="fas fa-headphones"></i> پیام صوتی
-                                </div>
-                                <audio controls style="width: 100%; height: 40px;" preload="metadata">
-                                    <source src="${message.voice_message}" type="${message.file_type || 'audio/webm'}">
-                                    <source src="${message.voice_message}" type="audio/webm">
-                                    <source src="${message.voice_message}" type="audio/ogg">
-                                    <source src="${message.voice_message}" type="audio/mpeg">
-                                    مرورگر شما از پخش صدا پشتیبانی نمی‌کند.
-                                </audio>
-                            </div>
+                    <div class="action-menu message-action" data-action-menu>
+                        <button type="button" class="action-menu__toggle"><i class="fas fa-ellipsis-v"></i></button>
+                        <div class="action-menu__list">
+                            <button type="button" onclick="replyToMessage('${message.id}', '${escapeHtml(senderName)}', '${escapeHtml(messageContent.substring(0, 50))}')" class="action-menu__item btn-rep"><i class="fas fa-reply"></i> پاسخ</button>
+                            <button type="button" class="action-menu__item btn-reaction"><i class="fas fa-smile"></i> واکنش</button>
+                            <button type="button" class="action-menu__item btn-report"><i class="fas fa-flag"></i> گزارش</button>
+                            <div class="menu-meta-time"><div class="menu-meta-time__item"><i class="fas fa-paper-plane" style="font-size: 0.7rem; opacity: 0.6; margin-left: 4px;"></i><span class="menu-meta-time__label">ارسال شده:</span><span class="menu-meta-time__value">${formattedTime}</span></div></div>
                         </div>
-                    </div>
-                ` : ''}
-                ${message.message ? `<p>${message.message}</p>` : ''}
+                    </div>`
+                }
+            </div>
+            ${replyPreviewHTML}
+            <p class="message-content">${messageContent}</p>
+            ${voiceMessageHTML}
+            <div class="message-timestamp" style="display: flex !important; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap; margin-left: -10px !important; margin-right: -10px !important; padding-left: 10px !important; padding-right: 10px !important; justify-content: space-between !important; float: none !important; text-align: left !important; direction: ltr !important;">
+                ${isMine ? '<div class="read-receipt" style="font-size: 10px; text-align: left; direction: ltr; margin-right: auto; margin-left: 0;"><span style="color: #9ca3af;"><i class="fas fa-check"></i> ارسال شده</span></div>' : ''}
+                <div style="display: flex; align-items: center; gap: 4px; flex: 1; justify-content: center;">
+                    ${(message.reactions && message.reactions.length > 0) ? generateReactionsHTML(message.id, message.reactions) : ''}
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px; margin-left: auto;">
+                    <span class="message-time">${formattedTime}</span>
+                </div>
             </div>
         </div>
     `;
     
-    messageWrapper.innerHTML = messageHtml;
-    chatBox.appendChild(messageWrapper);
+    messageRow.innerHTML = messageHTML;
+    chatBox.appendChild(messageRow);
     
-    // Scroll to the bottom of the chat
-    chatBox.scrollTop = chatBox.scrollHeight;
+    // Initialize reaction button for this message
+    if (typeof addReactionButton === 'function') {
+        const messageBubble = messageRow.querySelector('.message-bubble');
+        if (messageBubble) {
+            addReactionButton(message.id);
+        }
+    }
+    
+    // Initialize click handler for profile link
+    const profileLink = messageRow.querySelector('a.message-sender');
+    if (profileLink) {
+        profileLink.addEventListener('click', function(e) {
+            // اجازه بده لینک کار کند
+            e.stopPropagation();
+            e.preventDefault();
+            // اگر href وجود دارد، به آن برو
+            const href = this.getAttribute('href');
+            if (href && !href.includes('#')) {
+                window.location.href = href;
+            }
+        });
+    }
+    
+    // Initialize action menu handlers if function exists
+    if (typeof initializeMessageActions === 'function') {
+        initializeMessageActions(messageRow);
+    }
+    
+    // Initialize action menu toggle
+    const menu = messageRow.querySelector('[data-action-menu]');
+    if (menu) {
+        const toggle = menu.querySelector('.action-menu__toggle');
+        const list = menu.querySelector('.action-menu__list');
+        
+        if (toggle && list) {
+            toggle.addEventListener('click', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                const isOpen = menu.classList.contains('is-open');
+                // Close all other menus
+                document.querySelectorAll('[data-action-menu].is-open').forEach(m => {
+                    if (m !== menu) m.classList.remove('is-open');
+                });
+                menu.classList.toggle('is-open', !isOpen);
+            });
+            
+            // بستن منو هنگام کلیک روی دکمه‌های منو (به جز دکمه واکنش)
+            list.querySelectorAll('button, a').forEach(item => {
+                // برای دکمه واکنش، event listener جداگانه اضافه نمی‌کنیم
+                // چون addReactionButton خودش event handler اضافه می‌کند
+                if (item.classList.contains('btn-reaction')) {
+                    return;
+                }
+                
+                item.addEventListener('click', function(e) {
+                    menu.classList.remove('is-open');
+                    toggle?.setAttribute('aria-expanded', 'false');
+                });
+            });
+        }
+    }
+    
+    // Scroll to the bottom of the chat - فقط اگر scroll restore کامل شده باشد
+    // و کاربر خودش به پایین رفته باشد
+    // در غیر این صورت، scroll restore خودش موقعیت را تنظیم می‌کند
+    // این کد حذف شد چون با scroll restore تداخل دارد
 }
 
 function closeAllModals() {
@@ -986,7 +1182,7 @@ async function startRecording() {
                             const response = await fetch(form.action, {
                                 method: 'POST',
                                 headers: {
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                    'X-CSRF-TOKEN': getCsrfToken(),
                                     'Accept': 'application/json'
                                 },
                                 body: formData
@@ -1071,40 +1267,69 @@ function stopRecording() {
     }
 }
 
-// Add click handler for reply
-document.querySelectorAll('.message-bubble').forEach(bubble => {
-    bubble.addEventListener('click', function(e) {
-        if (e.target.closest('.reply-box')) return;
+// Add click handler for reply (using event delegation for dynamic messages)
+document.addEventListener('DOMContentLoaded', function() {
+    const chatBoxEl = document.getElementById('chat-box');
+    if (chatBoxEl) {
+        // Event listener برای لینک‌های پروفایل - باید اول اجرا شود
+        chatBoxEl.addEventListener('click', function(e) {
+            const link = e.target.closest('a.message-sender');
+            if (link && link.href) {
+                // اجازه بده لینک کار کند - هیچ کاری نکن
+                return;
+            }
+        }, true); // استفاده از capture phase برای اجرای زودتر
         
-        const messageId = this.closest('.message-wrapper').dataset.messageId;
-        document.getElementById('parent_id').value = messageId;
-    });
+        chatBoxEl.addEventListener('click', function(e) {
+            // اگر روی لینک کلیک شده، اجازه بده به پروفایل برود
+            if (e.target.closest('a.message-sender') || e.target.closest('.message-head__info a')) {
+                return; // اجازه بده لینک کار کند
+            }
+            
+            const bubble = e.target.closest('.message-bubble');
+            if (!bubble) return;
+            
+            if (e.target.closest('.reply-box')) return;
+            
+            // Try to find message ID from different possible parent elements
+            const messageRow = bubble.closest('.message-row');
+            const messageWrapper = bubble.closest('.message-wrapper');
+            const messageId = messageRow?.dataset?.messageId || 
+                             messageWrapper?.dataset?.messageId || 
+                             bubble.dataset?.messageId;
+            
+            if (messageId) {
+                const parentIdInput = document.getElementById('parent_id');
+                if (parentIdInput) {
+                    parentIdInput.value = messageId;
+                }
+            }
+        });
+    }
 });
 
 function replyToMessage(messageId, senderName, content) {
-    // Create reply indicator
-    const replyIndicator = document.createElement('div');
-    replyIndicator.className = 'reply-indicator';
-    replyIndicator.innerHTML = `
+    // Find the reply indicator container
+    const replyContainer = document.getElementById('reply-indicator-container');
+    if (!replyContainer) {
+        console.error('Reply indicator container not found');
+        return;
+    }
+
+    // Create reply indicator content directly in container (بدون wrapper اضافی)
+    replyContainer.innerHTML = `
         <div class="reply-info">
-            <div class="group-avatar">
-                <span>${senderName.split(' ').map(n => n.charAt(0)).join(' ')}</span>
+            <div class="reply-arrow"></div>
+            <div style="flex: 1; min-width: 0;">
+                <div class="reply-sender-name">${senderName}</div>
+                <div class="reply-content">${content}</div>
             </div>
-            <div class="reply-content">${content}</div>
         </div>
         <button class="btn-cancel-reply" onclick="cancelReply()">
             <i class="fas fa-times"></i>
         </button>
     `;
-
-    // Remove existing reply indicator if any
-    const existingIndicator = document.querySelector('.reply-indicator');
-    if (existingIndicator) {
-        existingIndicator.remove();
-    }
-
-    // Add new reply indicator
-    document.body.appendChild(replyIndicator);
+    replyContainer.style.display = 'block';
 
     // Set parent_id in form
     const parentIdInput = document.getElementById('parent_id');
@@ -1115,14 +1340,21 @@ function replyToMessage(messageId, senderName, content) {
     // Scroll to input
     const chatForm = document.getElementById('chatForm');
     if (chatForm) {
-        chatForm.scrollIntoView({ behavior: 'smooth' });
+        chatForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 }
 
 function cancelReply() {
-    // Remove reply indicator
+    // Hide reply indicator container
+    const replyContainer = document.getElementById('reply-indicator-container');
+    if (replyContainer) {
+        replyContainer.innerHTML = '';
+        replyContainer.style.display = 'none';
+    }
+    
+    // Remove reply indicator (fallback for old code)
     const replyIndicator = document.querySelector('.reply-indicator');
-    if (replyIndicator) {
+    if (replyIndicator && replyIndicator.parentElement === document.body) {
         replyIndicator.remove();
     }
 
@@ -1182,7 +1414,7 @@ function submitEdit(event, messageId) {
         url: `/messages/${messageId}/edit`,
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            'X-CSRF-TOKEN': getCsrfToken()
         },
         data: {
             content: newContent
@@ -1226,7 +1458,7 @@ function reportMessage(messageId) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'X-CSRF-TOKEN': getCsrfToken()
             },
             body: JSON.stringify({ reason })
         })
@@ -1305,7 +1537,7 @@ async function submitPostEdit(event, postId) {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-CSRF-TOKEN': getCsrfToken(),
                 'Accept': 'application/json'
             },
             body: JSON.stringify({
@@ -1405,7 +1637,7 @@ function clearChatHistory() {
         fetch(`/api/groups/${groupId}/clear-history`, {
             method: 'POST',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-CSRF-TOKEN': getCsrfToken(),
                 'Accept': 'application/json'
             }
         })
@@ -1430,7 +1662,7 @@ function deleteChat() {
         fetch(`/api/groups/${groupId}/delete`, {
             method: 'POST',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-CSRF-TOKEN': getCsrfToken(),
                 'Accept': 'application/json'
             }
         })
@@ -1485,7 +1717,7 @@ function submitReport() {
     fetch(`/api/groups/${groupId}/report`, {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'X-CSRF-TOKEN': getCsrfToken(),
             'Accept': 'application/json',
             'Content-Type': 'application/json'
         },

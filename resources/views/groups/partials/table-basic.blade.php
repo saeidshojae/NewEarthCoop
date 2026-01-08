@@ -48,7 +48,25 @@
                         continue;
                     }
 
-                    $pivotRole = isset($pivot->role) ? (int) $pivot->role : null;
+                    // نقش کاربر را بر اساس location_level تعیین می‌کنیم:
+                    // - سطح محله و پایین‌تر (neighborhood, street, alley) → عضو فعال (role 1)
+                    // - سطح منطقه و بالاتر (region, village, rural, city و ...) → ناظر (role 0)
+                    // این منطق همیشه اعمال می‌شود، صرف نظر از مقدار pivot->role در دیتابیس
+                    $locationLevel = strtolower(trim((string)($group->location_level ?? '')));
+                    
+                    // اگر location_level مشخص نیست، از pivot استفاده می‌کنیم (fallback)
+                    if (empty($locationLevel)) {
+                        $pivotRole = isset($pivot->role) ? (int) $pivot->role : 0;
+                    } else {
+                        // بر اساس location_level تعیین می‌شود
+                        if (in_array($locationLevel, ['neighborhood', 'street', 'alley'], true)) {
+                            $pivotRole = 1; // عضو فعال
+                        } else {
+                            // سطوح منطقه و بالاتر (region, village, rural, city, section, county, province, country, continent, global)
+                            $pivotRole = 0; // ناظر
+                        }
+                    }
+                    
                     $roleText = $roleLabels[$pivotRole] ?? 'عضو';
 
                     $locationApproved = true;
@@ -57,6 +75,8 @@
                         if (!in_array($level, ['continent', 'country', 'province', 'county', 'section', 'city'], true)) {
                             $modelMap = [
                                 'region' => \App\Models\Region::class,
+                                'village' => \App\Models\Village::class,
+                                'rural' => \App\Models\Rural::class,
                                 'neighborhood' => \App\Models\Neighborhood::class,
                                 'street' => \App\Models\Street::class,
                                 'alley' => \App\Models\Alley::class,
@@ -78,7 +98,24 @@
                     }
 
                     $isActiveMembership = (int)($pivot->status ?? 1) === 1;
-                    $pendingApproval = !$locationApproved || !$specialtyApproved;
+
+                    /**
+                     * منطق "در انتظار تأیید" باید بسته به نوع جدول تغییر کند:
+                     * - گروه‌های عمومی: تأیید لوکیشن (محله/منطقه/...) مهم است
+                     * - گروه‌های تخصصی/تجربی: تأیید تخصص/تجربه مهم است (نه لوکیشن)
+                     * - سایر موارد: حالت پیش‌فرض (برای سازگاری)
+                     */
+                    $pendingApproval = match ($type) {
+                        // گروه‌های عمومی: فقط تأیید لوکیشن (در سطوح ریز) مهم است
+                        'general' => !$locationApproved,
+
+                        // گروه‌های تخصصی: تأیید صنف/تخصص مهم است + اگر لوکیشنِ همان گروه هنوز تایید نشده باشد، pending است
+                        // (سطوح قابل ایجاد در استپ۳ مثل region/village/neighborhood/street/alley و... با locationApproved پوشش داده می‌شوند)
+                        'specialty' => (!$specialtyApproved) || !$locationApproved,
+
+                        // سایر موارد: حالت پیش‌فرض (برای سازگاری)
+                        default => (!$locationApproved || !$specialtyApproved),
+                    };
 
                     if (!$isActiveMembership) {
                         $statusClass = 'status-badge inactive';
@@ -91,15 +128,25 @@
                         $statusLabel = 'فعال';
                     }
 
-                    $canAccess = $statusClass === 'status-badge active-status';
+                    $canAccess = $isActiveMembership && !$pendingApproval;
 
                     $filterValue = 'all';
                     if ($levelKey) {
                         $rawValue = data_get($group, $levelKey);
-                        $filterValue = $rawValue ? \Illuminate\Support\Str::lower($rawValue) : 'all';
+                        if ($rawValue) {
+                            $filterValue = \Illuminate\Support\Str::lower(trim((string)$rawValue));
+                            // Handle special cases: if location_level is 'rural' or 'village', map to 'region' for filter
+                            if ($filterValue === 'rural' || $filterValue === 'village') {
+                                $filterValue = 'region';
+                            }
+                            // If filter value doesn't exist in filters array, default to 'all'
+                            if (!empty($filters) && !isset($filters[$filterValue])) {
+                                $filterValue = 'all';
+                            }
+                        }
                     }
                 @endphp
-                <tr @if($levelKey) data-filter-value="{{ $filterValue }}" @endif>
+                <tr data-filter-value="{{ $filterValue }}">
                     <td><i class="{{ $icon }} table-icon"></i></td>
                     <td>
                         @if($canAccess)
@@ -110,14 +157,25 @@
                         @else
                             <span class="text-gray-500">
                                 {{ $group->name }}
-                                @if($statusClass === 'status-badge pending')
+                                @if($statusClass === 'status-badge pending' && !\Illuminate\Support\Str::contains($group->name, 'در انتظار'))
                                     (در انتظار تأیید)
                                 @endif
                             </span>
                         @endif
                     </td>
-                    <td>{{ $roleText }}</td>
-                    <td><span class="{{ $statusClass }}">{{ $statusLabel }}</span></td>
+                    <td>
+                        @if(!$isActiveMembership)
+                            <span class="text-gray-500">خارج شده</span>
+                        @else
+                            {{ $roleText }}
+                        @endif
+                    </td>
+                    <td>
+                        <span class="{{ $statusClass }}">{{ $statusLabel }}</span>
+                        @if(!$isActiveMembership)
+                            <br><a href="{{ route('groups.relogout', $group) }}" class="text-sm text-emerald-600 hover:text-emerald-700 mt-1 inline-block">بازگردانی</a>
+                        @endif
+                    </td>
                     <td>{{ $group->users()->count() }} عضو</td>
                 </tr>
             @empty

@@ -170,10 +170,29 @@ if (!$member || ($groupUserRole === 0 && $group->is_open == 0)) {
         }
 
 
+        // بررسی کن که حداقل یک پیام یا فایل صوتی وجود داشته باشد
+        $messageText = trim($request->message ?? '');
+        $hasVoiceMessage = $request->hasFile('voice_message');
+        
+        if (empty($messageText) && !$hasVoiceMessage) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'پیام نمی‌تواند خالی باشد.'
+            ], 422);
+        }
+        
+        // تبدیل line breaks به <br> برای حفظ سطربندی
+        if (!empty($messageText)) {
+            // Escape HTML برای امنیت
+            $messageText = e($messageText);
+            // تبدیل \n به <br>
+            $messageText = nl2br($messageText);
+        }
+        
         $messageData = [
             'user_id' => $user->id,
             'group_id' => $group->id,
-            'message' => $request->message ?: ($request->hasFile('voice_message') ? '🎤 پیام صوتی' : ''),
+            'message' => $messageText ?: ($hasVoiceMessage ? '🎤 پیام صوتی' : ''),
             'parent_id' => $request->parent_id,
         ];
 
@@ -262,7 +281,12 @@ if (!$member || ($groupUserRole === 0 && $group->is_open == 0)) {
                 'file_path' => $message->file_path,
                 'file_type' => $message->file_type,
                 'file_name' => $message->file_name,
-                'voice_message' => $message->voice_message ? (str_starts_with($message->voice_message, 'http') ? $message->voice_message : asset('storage/' . ltrim($message->voice_message, '/'))) : null,
+                'voice_message' => $message->voice_message ? (str_starts_with($message->voice_message, 'http') ? $message->voice_message : (function($path) {
+                    $path = ltrim($path, '/');
+                    $pathParts = explode('/', $path);
+                    $encodedParts = array_map('rawurlencode', $pathParts);
+                    return asset('storage/' . implode('/', $encodedParts));
+                })($message->voice_message)) : null,
             ]
         ];
         
@@ -299,21 +323,34 @@ if (!$member || ($groupUserRole === 0 && $group->is_open == 0)) {
 
     public function edit(Request $request, Message $message)
     {
-
         $request->validate([
             'content' => 'required|string|max:2000',
         ]);
 
-        $message->message = $request->content;
-        $message->save();
-        $message->update([
-            'message' => $request->content,
-            'edited' => true,
-            'edited_by' => auth()->user()->id
+        // محتوای ویرایش‌شده از مودال به‌صورت متن ساده (با line break های \n) می‌آید.
+        // برای سازگاری با پیام‌های اولیه (که HTML تولید شده توسط CKEditor هستند)،
+        // اینجا متن ساده را به HTML ساده با <br> تبدیل می‌کنیم.
 
+        $plainContent = $request->input('content');
+
+        // Escape HTML تا اسکریپت وارد نشود، سپس \n را به <br> تبدیل کن
+        // توجه: messages در blade با {!! $item->content !!} رندر می‌شود،
+        // بنابراین اینجا باید خودمان Escape را انجام دهیم.
+        $escaped = e($plainContent);
+        $htmlContent = nl2br($escaped);
+
+        // به‌روزرسانی پیام
+        $message->update([
+            'message'   => $htmlContent,
+            'edited'    => true,
+            'edited_by' => auth()->user()->id,
         ]);
 
-        return response(['message' => 'پیام با موفقیت ویرایش شد']);
+        return response()->json([
+            'message' => 'پیام با موفقیت ویرایش شد',
+            'content' => $htmlContent,
+            'edited'  => true,
+        ]);
     }
     
     public function delete(Request $request, Message $message)
@@ -407,7 +444,7 @@ if (!$member || ($groupUserRole === 0 && $group->is_open == 0)) {
             ], 400);
         }
 
-        ReportedMessage::create([
+        $report = ReportedMessage::create([
             'message_id' => $id,
             'reported_by' => auth()->id(),
             'group_id' => $validated['group_id'],
@@ -416,6 +453,12 @@ if (!$member || ($groupUserRole === 0 && $group->is_open == 0)) {
             'status' => 'pending', // ابتدا به مدیران گروه می‌رسد
             'escalated_to_admin' => false
         ]);
+
+        // Dispatch event for notifying managers and inspectors
+        $group = \App\Models\Group::find($validated['group_id']);
+        if ($group) {
+            event(new \App\Events\MessageReported($report, $group, auth()->user()));
+        }
 
         return response()->json([
             'status' => 'success',
@@ -754,6 +797,61 @@ if (!$member || ($groupUserRole === 0 && $group->is_open == 0)) {
     }
 
     /**
+     * Update last read message ID for user in group
+     */
+    public function updateLastReadMessage(Request $request, Group $group)
+    {
+        $request->validate([
+            'message_id' => 'required|exists:messages,id'
+        ]);
+
+        $user = auth()->user();
+        
+        // Verify message belongs to this group
+        $message = Message::where('id', $request->message_id)
+            ->where('group_id', $group->id)
+            ->first();
+        
+        if (!$message) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'پیام یافت نشد یا متعلق به این گروه نیست.'
+            ], 404);
+        }
+
+        // Check if user is member of the group
+        $groupUser = GroupUser::where('group_id', $group->id)
+            ->where('user_id', $user->id)
+            ->first();
+        
+        if (!$groupUser) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'شما عضو این گروه نیستید.'
+            ], 403);
+        }
+
+        // Update last_read_message_id
+        $groupUser->update(['last_read_message_id' => $request->message_id]);
+
+        // Mark message and all previous messages as read
+        $group->messages()
+            ->where('id', '<=', $request->message_id)
+            ->where('user_id', '!=', $user->id) // Don't mark own messages
+            ->get()
+            ->each(function ($msg) use ($user) {
+                if (!$msg->isReadBy($user->id)) {
+                    $msg->markAsRead($user->id);
+                }
+            });
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'آخرین پیام خوانده شده به‌روزرسانی شد.'
+        ]);
+    }
+
+    /**
      * Handle typing indicator
      */
     public function typing(Request $request, Group $group)
@@ -909,6 +1007,14 @@ if (!$member || ($groupUserRole === 0 && $group->is_open == 0)) {
             ->with('user:id,first_name,last_name,avatar')
             ->get()
             ->map(function($reply) {
+                $voiceMessage = $reply->voice_message;
+                if ($voiceMessage && !str_starts_with($voiceMessage, 'http')) {
+                    $voicePath = ltrim($voiceMessage, '/');
+                    // Encode each part of the path to handle spaces and special characters
+                    $pathParts = explode('/', $voicePath);
+                    $encodedParts = array_map('rawurlencode', $pathParts);
+                    $voiceMessage = asset('storage/' . implode('/', $encodedParts));
+                }
                 return [
                     'id' => $reply->id,
                     'user_id' => $reply->user_id,
@@ -918,7 +1024,7 @@ if (!$member || ($groupUserRole === 0 && $group->is_open == 0)) {
                     'created_at' => $reply->created_at->format('Y-m-d H:i:s'),
                     'file_path' => $reply->file_path,
                     'file_type' => $reply->file_type,
-                    'voice_message' => $reply->voice_message,
+                    'voice_message' => $voiceMessage,
                 ];
             });
 

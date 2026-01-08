@@ -2,7 +2,9 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="format-detection" content="telephone=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>مرحله ۲ - زمینه‌های صنفی و تخصصی</title>
     
@@ -83,6 +85,66 @@
             width: 100% !important;
         }
         
+        /* Mobile Responsive Styles */
+        @media (max-width: 640px) {
+            body {
+                padding: 0.25rem !important;
+            }
+            
+            .form-card-gradient {
+                padding: 1rem !important;
+                border-radius: 12px;
+                margin: 0.25rem;
+            }
+            
+            .form-card-gradient::before {
+                border-radius: 12px 12px 0 0;
+            }
+            
+            /* Select2 Mobile */
+            .select2-container--default .select2-selection--single {
+                height: 2.5rem !important;
+                padding: 0.375rem 0.75rem !important;
+                font-size: 0.875rem !important;
+            }
+            
+            .select2-container--default .select2-selection--single .select2-selection__rendered {
+                line-height: 1.75rem !important;
+                font-size: 0.875rem !important;
+                padding-right: 0.5rem !important;
+            }
+            
+            .select2-container--default .select2-selection--single .select2-selection__arrow {
+                height: 2.5rem !important;
+                right: 0.5rem !important;
+            }
+            
+            .select2-dropdown {
+                font-size: 0.875rem !important;
+            }
+            
+            .select2-results__option {
+                padding: 0.5rem 0.75rem !important;
+                font-size: 0.875rem !important;
+            }
+            
+            .select2-search--dropdown .select2-search__field {
+                padding: 0.5rem !important;
+                font-size: 0.875rem !important;
+            }
+            
+            /* Badge Mobile */
+            .field-badge {
+                padding: 0.375rem 0.75rem !important;
+                font-size: 0.8125rem !important;
+                margin: 0.125rem !important;
+            }
+            
+            .remove-badge {
+                font-size: 1rem !important;
+            }
+        }
+        
         /* Badge Styles */
         .field-badge {
             display: inline-flex;
@@ -107,51 +169,51 @@
         }
     </style>
 </head>
-<body class="font-vazirmatn leading-relaxed flex items-center justify-center min-h-screen p-4">
+<body class="font-vazirmatn leading-relaxed flex items-center justify-center min-h-screen p-2 sm:p-4">
 
-    <div class="form-card-gradient w-full max-w-3xl mx-auto p-8 md:p-10">
+    <div class="form-card-gradient w-full max-w-3xl mx-auto p-4 sm:p-6 md:p-8 lg:p-10">
         <!-- Logo -->
-        <div class="flex items-center justify-center space-x-3 rtl:space-x-reverse mb-8">
-            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="animate-bounce-custom">
+        <div class="flex items-center justify-center space-x-2 sm:space-x-3 rtl:space-x-reverse mb-4 sm:mb-6 md:mb-8">
+            <svg width="40" height="40" class="sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="animate-bounce-custom">
                 <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" fill="#10b981" opacity="0.8"/>
                 <path d="M12 2C10.5 4 8 6 8 9C8 12 12 14 12 14C12 14 16 12 16 9C16 6 13.5 4 12 2ZM12 14C12 14 10 16 10 18C10 20 12 22 12 22" fill="#047857"/>
             </svg>
-            <span class="text-4xl font-extrabold text-gentle-black" style="color: var(--color-gentle-black);">EarthCoop</span>
+            <span class="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-gentle-black" style="color: var(--color-gentle-black);">EarthCoop</span>
         </div>
         
         <!-- Step Indicator -->
-        <div class="text-center mb-8">
-            <div class="flex items-center justify-center gap-4 mb-4">
-                <div class="flex items-center opacity-50">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white bg-gray-400">
-                        <i class="fas fa-check"></i>
+        <div class="text-center mb-4 sm:mb-6 md:mb-8">
+            <div class="flex items-center justify-center gap-2 sm:gap-3 md:gap-4 mb-2 sm:mb-4">
+                <div class="flex items-center flex-col sm:flex-row opacity-50">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-white bg-gray-400 text-sm sm:text-base">
+                        <i class="fas fa-check text-xs sm:text-sm"></i>
                     </div>
-                    <span class="mr-2 text-gray-500">هویتی</span>
+                    <span class="mr-0 sm:mr-2 mt-1 sm:mt-0 text-xs sm:text-sm text-gray-500 hidden sm:inline">هویتی</span>
                 </div>
-                <div class="w-8 h-1 bg-gray-300"></div>
-                <div class="flex items-center">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white" style="background-color: var(--color-ocean-blue);">۲</div>
-                    <span class="mr-2 font-bold" style="color: var(--color-ocean-blue);">صنفی</span>
+                <div class="w-4 h-1 sm:w-6 md:w-8 bg-gray-300 hidden sm:block"></div>
+                <div class="flex items-center flex-col sm:flex-row">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-white text-sm sm:text-base" style="background-color: var(--color-ocean-blue);">۲</div>
+                    <span class="mr-0 sm:mr-2 mt-1 sm:mt-0 text-xs sm:text-sm font-bold hidden sm:inline" style="color: var(--color-ocean-blue);">صنفی</span>
                 </div>
-                <div class="w-8 h-1 bg-gray-300"></div>
-                <div class="flex items-center">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-gray-400 bg-gray-200">۳</div>
-                    <span class="mr-2 text-gray-400">مکانی</span>
+                <div class="w-4 h-1 sm:w-6 md:w-8 bg-gray-300 hidden sm:block"></div>
+                <div class="flex items-center flex-col sm:flex-row">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-gray-400 bg-gray-200 text-sm sm:text-base">۳</div>
+                    <span class="mr-0 sm:mr-2 mt-1 sm:mt-0 text-xs sm:text-sm text-gray-400 hidden sm:inline">مکانی</span>
                 </div>
             </div>
         </div>
         
         <!-- Form -->
         <div class="text-right">
-            <h2 class="text-3xl md:text-4xl font-extrabold text-gentle-black mb-4" style="color: var(--color-gentle-black);">
+            <h2 class="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-gentle-black mb-3 sm:mb-4" style="color: var(--color-gentle-black);">
                 مرحله ۲: زمینه‌های صنفی و تخصصی
             </h2>
-            <p class="text-gray-600 mb-8">
+            <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 md:mb-8">
                 لطفا زمینه‌های صنفی و تخصصی خود را تا سه سطح وارد نمایید، از این اطلاعات برای ایجاد گروه‌های صنفی و تخصصی شما استفاده می‌شود.
             </p>
             
             @if ($errors->any())
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+            <div class="bg-red-100 border border-red-400 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg mb-4 sm:mb-6 text-sm sm:text-base">
                 <ul class="list-disc list-inside">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -160,50 +222,50 @@
             </div>
             @endif
             
-            <form action="{{ route('register.step2.process') }}" method="POST" id="step2Form" class="space-y-8">
+            <form action="{{ route('register.step2.process') }}" method="POST" id="step2Form" class="space-y-6 sm:space-y-8">
                 @csrf
                 
                 <!-- زمینه صنفی -->
                 <div id="occupational_container">
-                    <label class="block text-lg font-bold text-gray-800 mb-3">
+                    <label class="block text-sm sm:text-base md:text-lg font-bold text-gray-800 mb-2 sm:mb-3">
                         <i class="fas fa-briefcase ml-2" style="color: var(--color-earth-green);"></i>
                         زمینه فعالیت صنفی:
                     </label>
                     
                     <!-- Selected Fields Display -->
-                    <div id="selected_occupational_fields" class="mb-4 min-h-[3rem] p-3 border-2 border-dashed border-gray-300 rounded-lg">
-                        <span class="text-gray-400 text-sm" id="occ_placeholder">انتخاب‌های شما اینجا نمایش داده می‌شود (حداکثر 2)</span>
+                    <div id="selected_occupational_fields" class="mb-3 sm:mb-4 min-h-[2.5rem] sm:min-h-[3rem] p-2 sm:p-3 border-2 border-dashed border-gray-300 rounded-lg">
+                        <span class="text-gray-400 text-xs sm:text-sm" id="occ_placeholder">انتخاب‌های شما اینجا نمایش داده می‌شود (حداکثر 2)</span>
                     </div>
                     
                     <!-- Error Messages -->
-                    <div id="error_occupational" class="hidden bg-red-100 text-red-700 px-4 py-2 rounded-lg mb-3">
+                    <div id="error_occupational" class="hidden bg-red-100 text-red-700 px-3 sm:px-4 py-2 rounded-lg mb-2 sm:mb-3 text-xs sm:text-sm">
                         شما فقط می‌توانید حداکثر 2 مورد انتخاب کنید.
                     </div>
-                    <div id="duplicate_error_occupational" class="hidden bg-yellow-100 text-yellow-700 px-4 py-2 rounded-lg mb-3">
+                    <div id="duplicate_error_occupational" class="hidden bg-yellow-100 text-yellow-700 px-3 sm:px-4 py-2 rounded-lg mb-2 sm:mb-3 text-xs sm:text-sm">
                         این مورد قبلاً انتخاب شده است.
                     </div>
                     
                     <!-- Level 1 Select with Create Button -->
-                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 mb-3">
-                        <select id="occupational_fields" class="flex-grow px-4 py-3 border border-gray-300 rounded-lg" data-level="1">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <select id="occupational_fields" class="flex-grow px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg" data-level="1">
                             <option value="">انتخاب کنید</option>
                             @foreach($occupationalFields as $field)
                                 <option value="{{ $field->id }}">{{ $field->name }}</option>
                             @endforeach
                         </select>
-                        <button type="button" class="create-field-btn bg-earth-green text-white px-4 sm:px-5 py-2 sm:py-2 rounded-full shadow-md hover:bg-green-700 transition duration-300 font-bold whitespace-nowrap text-sm sm:text-base" 
+                        <button type="button" class="create-field-btn bg-earth-green text-white px-3 sm:px-4 md:px-5 py-2 rounded-full shadow-md hover:bg-green-700 transition duration-300 font-bold whitespace-nowrap text-xs sm:text-sm md:text-base" 
                                 data-level="1" data-parent-id="0" data-is-exp="false" style="background-color: var(--color-earth-green);">
                             + ایجاد کنید
                         </button>
                     </div>
                     
                     <!-- Level 2 Select with Create Button (hidden initially) -->
-                    <div id="occ_level2_container" class="hidden mb-3">
+                    <div id="occ_level2_container" class="hidden mb-2 sm:mb-3">
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-                            <select id="occupational_subfields" class="flex-grow px-4 py-3 border border-gray-300 rounded-lg" data-level="2">
+                            <select id="occupational_subfields" class="flex-grow px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg" data-level="2">
                                 <option value="">زیردسته را انتخاب کنید</option>
                             </select>
-                            <button type="button" class="create-field-btn bg-earth-green text-white px-4 sm:px-5 py-2 sm:py-2 rounded-full shadow-md hover:bg-green-700 transition duration-300 font-bold whitespace-nowrap text-sm sm:text-base" 
+                            <button type="button" class="create-field-btn bg-earth-green text-white px-3 sm:px-4 md:px-5 py-2 rounded-full shadow-md hover:bg-green-700 transition duration-300 font-bold whitespace-nowrap text-xs sm:text-sm md:text-base" 
                                     data-level="2" data-parent-id="" data-is-exp="false" style="background-color: var(--color-earth-green);">
                                 + ایجاد کنید
                             </button>
@@ -211,12 +273,12 @@
                     </div>
                     
                     <!-- Level 3 Select with Create Button (hidden initially) -->
-                    <div id="occ_level3_container" class="hidden mb-3">
+                    <div id="occ_level3_container" class="hidden mb-2 sm:mb-3">
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-                            <select id="occupational_finalfields" class="flex-grow px-4 py-3 border border-gray-300 rounded-lg" data-level="3">
+                            <select id="occupational_finalfields" class="flex-grow px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg" data-level="3">
                                 <option value="">سطح سوم را انتخاب کنید</option>
                             </select>
-                            <button type="button" class="create-field-btn bg-earth-green text-white px-4 sm:px-5 py-2 sm:py-2 rounded-full shadow-md hover:bg-green-700 transition duration-300 font-bold whitespace-nowrap text-sm sm:text-base" 
+                            <button type="button" class="create-field-btn bg-earth-green text-white px-3 sm:px-4 md:px-5 py-2 rounded-full shadow-md hover:bg-green-700 transition duration-300 font-bold whitespace-nowrap text-xs sm:text-sm md:text-base" 
                                     data-level="3" data-parent-id="" data-is-exp="false" style="background-color: var(--color-earth-green);">
                                 + ایجاد کنید
                             </button>
@@ -226,45 +288,45 @@
                 
                 <!-- زمینه تخصصی -->
                 <div id="experience_container">
-                    <label class="block text-lg font-bold text-gray-800 mb-3">
+                    <label class="block text-sm sm:text-base md:text-lg font-bold text-gray-800 mb-2 sm:mb-3">
                         <i class="fas fa-graduation-cap ml-2" style="color: var(--color-digital-gold);"></i>
                         زمینه فعالیت تخصصی:
                     </label>
                     
                     <!-- Selected Fields Display -->
-                    <div id="selected_experience_fields" class="mb-4 min-h-[3rem] p-3 border-2 border-dashed border-gray-300 rounded-lg">
-                        <span class="text-gray-400 text-sm" id="exp_placeholder">انتخاب‌های شما اینجا نمایش داده می‌شود (حداکثر 2)</span>
+                    <div id="selected_experience_fields" class="mb-3 sm:mb-4 min-h-[2.5rem] sm:min-h-[3rem] p-2 sm:p-3 border-2 border-dashed border-gray-300 rounded-lg">
+                        <span class="text-gray-400 text-xs sm:text-sm" id="exp_placeholder">انتخاب‌های شما اینجا نمایش داده می‌شود (حداکثر 2)</span>
                     </div>
                     
                     <!-- Error Messages -->
-                    <div id="error_experience" class="hidden bg-red-100 text-red-700 px-4 py-2 rounded-lg mb-3">
+                    <div id="error_experience" class="hidden bg-red-100 text-red-700 px-3 sm:px-4 py-2 rounded-lg mb-2 sm:mb-3 text-xs sm:text-sm">
                         شما فقط می‌توانید حداکثر 2 مورد انتخاب کنید.
                     </div>
-                    <div id="duplicate_error_experience" class="hidden bg-yellow-100 text-yellow-700 px-4 py-2 rounded-lg mb-3">
+                    <div id="duplicate_error_experience" class="hidden bg-yellow-100 text-yellow-700 px-3 sm:px-4 py-2 rounded-lg mb-2 sm:mb-3 text-xs sm:text-sm">
                         این مورد قبلاً انتخاب شده است.
                     </div>
                     
                     <!-- Level 1 Select with Create Button -->
-                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 mb-3">
-                        <select id="experience_fields" class="flex-grow px-4 py-3 border border-gray-300 rounded-lg" data-level="1">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <select id="experience_fields" class="flex-grow px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg" data-level="1">
                             <option value="">انتخاب کنید</option>
                             @foreach($experienceFields as $field)
                                 <option value="{{ $field->id }}">{{ $field->name }}</option>
                             @endforeach
                         </select>
-                        <button type="button" class="create-field-btn bg-digital-gold text-white px-4 sm:px-5 py-2 sm:py-2 rounded-full shadow-md hover:bg-yellow-600 transition duration-300 font-bold whitespace-nowrap text-sm sm:text-base" 
+                        <button type="button" class="create-field-btn bg-digital-gold text-white px-3 sm:px-4 md:px-5 py-2 rounded-full shadow-md hover:bg-yellow-600 transition duration-300 font-bold whitespace-nowrap text-xs sm:text-sm md:text-base" 
                                 data-level="1" data-parent-id="0" data-is-exp="true" style="background-color: var(--color-digital-gold);">
                             + ایجاد کنید
                         </button>
                     </div>
                     
                     <!-- Level 2 Select with Create Button (hidden initially) -->
-                    <div id="exp_level2_container" class="hidden mb-3">
+                    <div id="exp_level2_container" class="hidden mb-2 sm:mb-3">
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-                            <select id="experience_subfields" class="flex-grow px-4 py-3 border border-gray-300 rounded-lg" data-level="2">
+                            <select id="experience_subfields" class="flex-grow px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg" data-level="2">
                                 <option value="">زیردسته را انتخاب کنید</option>
                             </select>
-                            <button type="button" class="create-field-btn bg-digital-gold text-white px-4 sm:px-5 py-2 sm:py-2 rounded-full shadow-md hover:bg-yellow-600 transition duration-300 font-bold whitespace-nowrap text-sm sm:text-base" 
+                            <button type="button" class="create-field-btn bg-digital-gold text-white px-3 sm:px-4 md:px-5 py-2 rounded-full shadow-md hover:bg-yellow-600 transition duration-300 font-bold whitespace-nowrap text-xs sm:text-sm md:text-base" 
                                     data-level="2" data-parent-id="" data-is-exp="true" style="background-color: var(--color-digital-gold);">
                                 + ایجاد کنید
                             </button>
@@ -272,12 +334,12 @@
                     </div>
                     
                     <!-- Level 3 Select with Create Button (hidden initially) -->
-                    <div id="exp_level3_container" class="hidden mb-3">
+                    <div id="exp_level3_container" class="hidden mb-2 sm:mb-3">
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-                            <select id="experience_finalfields" class="flex-grow px-4 py-3 border border-gray-300 rounded-lg" data-level="3">
+                            <select id="experience_finalfields" class="flex-grow px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg" data-level="3">
                                 <option value="">سطح سوم را انتخاب کنید</option>
                             </select>
-                            <button type="button" class="create-field-btn bg-digital-gold text-white px-4 sm:px-5 py-2 sm:py-2 rounded-full shadow-md hover:bg-yellow-600 transition duration-300 font-bold whitespace-nowrap text-sm sm:text-base" 
+                            <button type="button" class="create-field-btn bg-digital-gold text-white px-3 sm:px-4 md:px-5 py-2 rounded-full shadow-md hover:bg-yellow-600 transition duration-300 font-bold whitespace-nowrap text-xs sm:text-sm md:text-base" 
                                     data-level="3" data-parent-id="" data-is-exp="true" style="background-color: var(--color-digital-gold);">
                                 + ایجاد کنید
                             </button>
@@ -287,7 +349,7 @@
                 
                 <!-- Submit Button -->
                 <button type="submit" id="continueBtn" disabled
-                        class="w-full px-6 py-4 rounded-full text-white font-bold text-lg shadow-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="w-full px-4 sm:px-6 py-3 sm:py-4 rounded-full text-white font-bold text-sm sm:text-base md:text-lg shadow-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                         style="background-color: var(--color-earth-green);">
                     <i class="fas fa-arrow-left ml-2"></i>
                     ادامه
@@ -297,9 +359,9 @@
     </div>
     
     <!-- Modal: Create New Field -->
-    <div id="createFieldModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md mx-auto p-8">
-            <h3 class="text-2xl font-bold text-gentle-black mb-6" style="color: var(--color-gentle-black);">
+    <div id="createFieldModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-md w-full mx-auto p-4 sm:p-6 md:p-8">
+            <h3 class="text-lg sm:text-xl md:text-2xl font-bold text-gentle-black mb-4 sm:mb-6" style="color: var(--color-gentle-black);">
                 ایجاد زمینه فعالیت جدید
             </h3>
             
@@ -307,25 +369,25 @@
                 <input type="hidden" id="field_level">
                 <input type="hidden" id="parent_id">
                 
-                <div class="mb-6">
-                    <label for="field_name" class="block text-lg font-bold text-gray-800 mb-3">نام زمینه فعالیت:</label>
+                <div class="mb-4 sm:mb-6">
+                    <label for="field_name" class="block text-sm sm:text-base md:text-lg font-bold text-gray-800 mb-2 sm:mb-3">نام زمینه فعالیت:</label>
                     <input type="text" id="field_name" required
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-blue"
+                           class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-blue"
                            placeholder="نام را وارد کنید">
                 </div>
                 
-                <div id="create_field_error" class="hidden bg-red-100 text-red-700 px-4 py-2 rounded-lg mb-4">
+                <div id="create_field_error" class="hidden bg-red-100 text-red-700 px-3 sm:px-4 py-2 rounded-lg mb-3 sm:mb-4 text-xs sm:text-sm">
                     خطا در ثبت اطلاعات. لطفاً دوباره تلاش کنید.
                 </div>
                 
-                <div class="flex gap-3">
+                <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
                     <button type="submit"
-                            class="flex-1 px-6 py-3 rounded-full text-white font-bold shadow-lg hover:shadow-xl transition duration-300"
+                            class="flex-1 px-4 sm:px-6 py-2 sm:py-3 rounded-full text-white font-bold text-sm sm:text-base shadow-lg hover:shadow-xl transition duration-300"
                             style="background-color: var(--color-earth-green);">
                         ذخیره
                     </button>
                     <button type="button" onclick="closeCreateModal()"
-                            class="flex-1 px-6 py-3 rounded-full text-gray-700 font-bold border-2 border-gray-300 hover:bg-gray-100 transition duration-300">
+                            class="flex-1 px-4 sm:px-6 py-2 sm:py-3 rounded-full text-gray-700 font-bold text-sm sm:text-base border-2 border-gray-300 hover:bg-gray-100 transition duration-300">
                         لغو
                     </button>
                 </div>

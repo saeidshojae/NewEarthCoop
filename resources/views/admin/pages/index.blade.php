@@ -254,7 +254,12 @@
                 },
                 pageLength: 25,
                 responsive: true,
-                order: [[6, 'desc']] // مرتب‌سازی بر اساس تاریخ ایجاد
+                order: [[6, 'desc']], // مرتب‌سازی بر اساس تاریخ ایجاد
+                columnDefs: [
+                    { orderable: false, targets: [1, 7] }, // عنوان و عملیات را مرتب‌پذیر نمی‌کنیم
+                ],
+                paging: true,
+                searching: false // جستجو را غیرفعال می‌کنیم چون از فرم بالای صفحه استفاده می‌کنیم
             });
         }
     });

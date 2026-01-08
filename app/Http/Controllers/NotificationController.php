@@ -9,10 +9,87 @@ use Illuminate\Notifications\DatabaseNotification;
 class NotificationController extends Controller
 {
     // Show all notifications for the authenticated user
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-        $notifications = $user->notifications()->latest()->paginate(20);
+        $query = $user->notifications()->latest();
+        
+        // Filter by type if provided
+        if ($request->has('type') && $request->type !== 'all') {
+            $type = $request->type;
+            // Handle category filters
+            if ($type === 'group.comment') {
+                $query->where(function($q) {
+                    $q->whereJsonContains('data->type', 'group.comment.new')
+                      ->orWhereJsonContains('data->type', 'group.comment.reply');
+                });
+            } elseif ($type === 'group.manager') {
+                $query->where(function($q) {
+                    $q->whereJsonContains('data->type', 'group.report.message')
+                      ->orWhereJsonContains('data->type', 'group.chat.request');
+                });
+            } elseif ($type === 'group.election') {
+                $query->where(function($q) {
+                    $q->whereJsonContains('data->type', 'group.election.started')
+                      ->orWhereJsonContains('data->type', 'group.election.finished')
+                      ->orWhereJsonContains('data->type', 'group.election.elected')
+                      ->orWhereJsonContains('data->type', 'group.election.accepted')
+                      ->orWhereJsonContains('data->type', 'group.election.reminder');
+                });
+            } elseif ($type === 'chat') {
+                $query->where(function($q) {
+                    $q->whereJsonContains('data->type', 'chat.message')
+                      ->orWhereJsonContains('data->type', 'chat.reply')
+                      ->orWhereJsonContains('data->type', 'chat.mention');
+                });
+            } elseif ($type === 'auction') {
+                $query->where(function($q) {
+                    $q->whereJsonContains('data->type', 'auction.started')
+                      ->orWhereJsonContains('data->type', 'auction.ended')
+                      ->orWhereJsonContains('data->type', 'auction.bid')
+                      ->orWhereJsonContains('data->type', 'auction.won')
+                      ->orWhereJsonContains('data->type', 'auction.outbid')
+                      ->orWhereJsonContains('data->type', 'auction.lost')
+                      ->orWhereJsonContains('data->type', 'auction.cancelled')
+                      ->orWhereJsonContains('data->type', 'auction.reminder');
+                });
+            } elseif ($type === 'wallet') {
+                $query->where(function($q) {
+                    $q->whereJsonContains('data->type', 'wallet.settled')
+                      ->orWhereJsonContains('data->type', 'wallet.released')
+                      ->orWhereJsonContains('data->type', 'wallet.held')
+                      ->orWhereJsonContains('data->type', 'wallet.credited')
+                      ->orWhereJsonContains('data->type', 'wallet.debited');
+                });
+            } elseif ($type === 'shares') {
+                $query->where(function($q) {
+                    $q->whereJsonContains('data->type', 'shares.received')
+                      ->orWhereJsonContains('data->type', 'shares.gifted');
+                });
+            } elseif ($type === 'stock') {
+                $query->whereJsonContains('data->type', 'stock.price_changed');
+            } elseif ($type === 'najm-bahar') {
+                $query->where(function($q) {
+                    $q->whereJsonContains('data->type', 'najm-bahar.transaction')
+                      ->orWhereJsonContains('data->type', 'najm-bahar.low-balance')
+                      ->orWhereJsonContains('data->type', 'najm-bahar.large-transaction')
+                      ->orWhereJsonContains('data->type', 'najm-bahar.scheduled-executed');
+                });
+            } else {
+                $query->whereJsonContains('data->type', $type);
+            }
+        }
+        
+        // Filter by read status
+        if ($request->has('status')) {
+            if ($request->status === 'unread') {
+                $query->whereNull('read_at');
+            } elseif ($request->status === 'read') {
+                $query->whereNotNull('read_at');
+            }
+        }
+        
+        $notifications = $query->paginate(20);
 
         return view('notifications.index', compact('notifications'));
     }

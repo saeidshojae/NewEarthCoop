@@ -6,7 +6,10 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Modules\NajmBahar\Models\ScheduledTransaction;
 use App\Modules\NajmBahar\Models\Transaction as NajmTransaction;
+use App\Modules\NajmBahar\Models\Account;
 use App\Modules\NajmBahar\Services\TransactionService;
+use App\Models\User;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 
 class NajmBaharProcessScheduled extends Command
@@ -46,6 +49,48 @@ class NajmBaharProcessScheduled extends Command
 
                     // perform transfer (TransactionService will create ledger entries and transactions)
                     $tx = $service->transfer($from, $to, $amount, $description, $meta, $idempotency);
+
+                    // Send notification for scheduled transaction execution
+                    // Notify both from and to account users if they exist
+                    if ($from) {
+                        $fromAccount = Account::where('account_number', $from)->first();
+                        if ($fromAccount && $fromAccount->user_id) {
+                            $user = User::find($fromAccount->user_id);
+                            if ($user) {
+                                app(NotificationService::class)->notifyUser(
+                                    $user->id,
+                                    'تراکنش زمان‌بندی شده اجرا شد',
+                                    "تراکنش زمان‌بندی شده شما به مبلغ " . number_format($amount) . " بهار با موفقیت اجرا شد." . ($description ? " توضیحات: " . $description : ""),
+                                    route('najm-bahar.dashboard'),
+                                    'najm-bahar.scheduled-executed',
+                                    [
+                                        'transaction_id' => $tx->id,
+                                        'amount' => $amount,
+                                    ]
+                                );
+                            }
+                        }
+                    }
+                    
+                    if ($to) {
+                        $toAccount = Account::where('account_number', $to)->first();
+                        if ($toAccount && $toAccount->user_id) {
+                            $user = User::find($toAccount->user_id);
+                            if ($user) {
+                                app(NotificationService::class)->notifyUser(
+                                    $user->id,
+                                    'تراکنش زمان‌بندی شده اجرا شد',
+                                    "تراکنش زمان‌بندی شده شما به مبلغ " . number_format($amount) . " بهار با موفقیت اجرا شد." . ($description ? " توضیحات: " . $description : ""),
+                                    route('najm-bahar.dashboard'),
+                                    'najm-bahar.scheduled-executed',
+                                    [
+                                        'transaction_id' => $tx->id,
+                                        'amount' => $amount,
+                                    ]
+                                );
+                            }
+                        }
+                    }
 
                     // mark scheduled item processed
                     $item->status = 'processed';

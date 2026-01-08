@@ -1,4 +1,4 @@
-@extends('layouts.unified')
+@extends('layouts.chat')
 
 @section('title', $blog->title . ' - نظرات')
 
@@ -51,6 +51,9 @@
     min-height: 100vh;
     background: linear-gradient(to bottom, #f8fafc 0%, #ffffff 100%);
   }
+  
+  /* با layout جدید (chat layout) header اصلی حذف شده و header مینی کوچک است */
+  /* padding-top در inline style تنظیم شده است */
   
   /* Group Info Banner - در بخش محتوا، نه header */
   .comment-group-banner {
@@ -843,7 +846,7 @@
   </div>
 
   <!-- Main Content - مشابه صفحه هوم با padding مناسب -->
-  <div class="container mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8" style="direction: rtl; padding-top: 1.5rem; padding-bottom: 2rem;">
+  <div id="group-comment-main-container" class="container mx-auto max-w-5xl px-6 md:px-8 pt-4 pb-8 group-comment-container" style="direction: rtl;">
     
     <!-- Group Info Banner - در بخش محتوا -->
     <div class="comment-group-banner">
@@ -1486,6 +1489,16 @@
     });
   });
 
+  // Helper function to strip HTML and check if message is empty
+  function isMessageEmpty(html) {
+    if (!html) return true;
+    // Create a temporary element to extract text
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    const text = temp.textContent || temp.innerText || '';
+    return text.trim().length === 0;
+  }
+
   // Wait for DOM to be ready
   document.addEventListener('DOMContentLoaded', function() {
     // Form submission handler
@@ -1500,17 +1513,21 @@
         
         // Get message from CKEditor or textarea
         if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['message_editor']) {
-          message = CKEDITOR.instances['message_editor'].getData().trim();
+          message = CKEDITOR.instances['message_editor'].getData();
           // Update hidden textarea for form submission
           CKEDITOR.instances['message_editor'].updateElement();
         } else {
-          message = messageInput ? messageInput.value.trim() : '';
+          message = messageInput ? messageInput.value : '';
         }
         
-        // Validate message
-        if (!message) {
+        // Validate message - strip HTML and check if truly empty
+        if (isMessageEmpty(message)) {
           alert('لطفاً نظر خود را وارد کنید.');
-          messageInput?.focus();
+          if (messageInput) {
+            messageInput.focus();
+          } else if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['message_editor']) {
+            CKEDITOR.instances['message_editor'].focus();
+          }
           return false;
         }
         
@@ -1530,15 +1547,30 @@
           },
           body: formData
         })
-        .then(response => {
-          if (!response.ok) {
-            return response.json().then(data => {
-              throw new Error(data.message || 'خطا در ارسال نظر');
-            }).catch(() => {
-              throw new Error('خطا در ارسال نظر. لطفاً دوباره تلاش کنید.');
-            });
+        .then(async response => {
+          // Try to parse response as JSON
+          let data;
+          try {
+            const text = await response.text();
+            if (!text) {
+              throw new Error('پاسخ خالی از سرور دریافت شد');
+            }
+            data = JSON.parse(text);
+          } catch (parseError) {
+            console.error('Error parsing response:', parseError);
+            throw new Error('خطا در پردازش پاسخ سرور');
           }
-          return response.json();
+          
+          if (!response.ok) {
+            // Handle validation errors
+            if (response.status === 422 && data.errors) {
+              const errorMessages = Object.values(data.errors).flat();
+              throw new Error(errorMessages.join('\n') || data.message || 'خطا در اعتبارسنجی داده‌ها');
+            }
+            throw new Error(data.message || data.error || 'خطا در ارسال نظر');
+          }
+          
+          return data;
         })
         .then(data => {
           if (data.status === 'success') {
@@ -1575,9 +1607,16 @@
     // CKEditor initialization
     if (typeof CKEDITOR !== 'undefined' && document.getElementById('message_editor')) {
       try {
+        // Use inline editor or basic editor without toolbar
         CKEDITOR.replace('message_editor', {
           height: 120,
-          removePlugins: 'toolbar',
+          toolbar: 'Basic',
+          toolbar_Basic: [
+            { name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline' ] },
+            { name: 'paragraph', items: [ 'BulletedList', 'NumberedList' ] },
+            { name: 'links', items: [ 'Link', 'Unlink' ] },
+            { name: 'styles', items: [ 'Format' ] }
+          ],
           on: {
             instanceReady: function(evt) {
               const body = evt.editor.document.getBody();
@@ -1591,20 +1630,8 @@
           },
           language: 'fa',
           contentsCss: 'body { direction: rtl; text-align: right; }',
-          extraPlugins: 'uploadimage',
           removeButtons: '',
-          toolbarGroups: [
-            { name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
-            { name: 'paragraph', groups: [ 'list', 'indent', 'blocks', 'align' ] },
-            { name: 'styles' },
-            { name: 'colors' },
-            { name: 'insert' },
-            { name: 'tools' },
-            { name: 'editing' },
-            { name: 'document', groups: [ 'mode', 'document' ] },
-            { name: 'clipboard', groups: [ 'clipboard', 'undo' ] },
-            { name: 'links' }
-          ]
+          allowedContent: true
         });
       } catch (error) {
         console.error('Error initializing CKEditor:', error);

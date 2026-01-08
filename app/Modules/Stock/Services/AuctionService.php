@@ -86,12 +86,38 @@ class AuctionService
                         'پیشنهاد جدید ثبت شد',
                         "پیشنهاد جدید در حراج #{$auction->id} با قیمت " . number_format($price) . " تومان ثبت شد.",
                         route('admin.auction.show', $auction),
-                        'info',
+                        'auction.bid',
                         ['auction_id' => $auction->id, 'bid_id' => $bid->id]
                     );
                 }
             } catch (\Exception $e) {
                 \Log::warning('Failed to send bid notification: ' . $e->getMessage());
+            }
+            
+            // ارسال اعلان به کاربرانی که پیشنهادشان بالاتر زده شده
+            try {
+                $notificationService = app(\App\Services\NotificationService::class);
+                
+                // پیدا کردن کاربرانی که پیشنهاد فعال دارند و پیشنهادشان کمتر از این پیشنهاد جدید است
+                $outbidUsers = $auction->activeBids()
+                    ->where('user_id', '!=', $userId)
+                    ->where('price', '<', $price)
+                    ->distinct('user_id')
+                    ->pluck('user_id')
+                    ->all();
+                
+                if (!empty($outbidUsers)) {
+                    $notificationService->notifyMany(
+                        $outbidUsers,
+                        'پیشنهاد بالاتری ثبت شد',
+                        "در حراج #{$auction->id} پیشنهاد بالاتری با قیمت " . number_format($price) . " تومان ثبت شد. می‌توانید پیشنهاد خود را افزایش دهید.",
+                        route('auction.show', $auction),
+                        'auction.outbid',
+                        ['auction_id' => $auction->id, 'bid_id' => $bid->id, 'new_price' => $price]
+                    );
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Failed to send outbid notification: ' . $e->getMessage());
             }
             
             return $bid;
@@ -227,6 +253,21 @@ class AuctionService
             $this->settleWinningBid($winningBid);
         }
         
+        // ارسال اعلان به برنده
+        try {
+            $notificationService = app(\App\Services\NotificationService::class);
+            $notificationService->notifyUser(
+                $winningBid->user_id,
+                'تبریک! شما برنده حراج شدید',
+                "شما در حراج #{$auction->id} برنده شدید. قیمت پیشنهادی شما: " . number_format($winningBid->price) . " تومان برای " . number_format($winningBid->quantity) . " سهم.",
+                route('auction.show', $auction),
+                'auction.won',
+                ['auction_id' => $auction->id, 'bid_id' => $winningBid->id, 'price' => $winningBid->price, 'quantity' => $winningBid->quantity]
+            );
+        } catch (\Exception $e) {
+            \Log::warning('Failed to send winner notification: ' . $e->getMessage());
+        }
+        
         return [
             'winners' => [$winningBid],
             'total_settled' => $winningBid->quantity,
@@ -290,6 +331,23 @@ class AuctionService
             }
         }
         
+        // ارسال اعلان به برندگان
+        try {
+            $notificationService = app(\App\Services\NotificationService::class);
+            foreach ($winners as $winningBid) {
+                $notificationService->notifyUser(
+                    $winningBid->user_id,
+                    'تبریک! شما برنده حراج شدید',
+                    "شما در حراج #{$auction->id} برنده شدید. قیمت پیشنهادی شما: " . number_format($winningBid->price) . " تومان برای " . number_format($winningBid->quantity) . " سهم.",
+                    route('auction.show', $auction),
+                    'auction.won',
+                    ['auction_id' => $auction->id, 'bid_id' => $winningBid->id, 'price' => $winningBid->price, 'quantity' => $winningBid->quantity]
+                );
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Failed to send winner notifications: ' . $e->getMessage());
+        }
+        
         return [
             'winners' => $winners,
             'total_settled' => $auction->shares_count - $remainingShares,
@@ -327,12 +385,22 @@ class AuctionService
         foreach ($bids as $bid) {
             if ($remainingShares <= 0) {
                 $bid->update(['status' => 'lost']);
+                $wallet = $this->walletService->getOrCreateWallet($bid->user_id);
+                $user = \App\Models\User::find($bid->user_id);
+                
                 $this->walletService->release(
-                    $this->walletService->getOrCreateWallet($bid->user_id),
+                    $wallet,
                     $bid->total_value,
                     "Bid not filled - auction #{$auction->id}",
                     $bid
                 );
+                
+                // Dispatch events
+                if ($user) {
+                    event(new \App\Events\BidLost($bid, $auction, $user));
+                    event(new \App\Events\WalletReleased($wallet, $user, $bid->total_value, $bid, "Bid not filled - auction #{$auction->id}"));
+                }
+                
                 continue;
             }
             
@@ -347,6 +415,23 @@ class AuctionService
                 $this->settlePartialBid($bid, $allocatedShares, $bid->price);
                 $stock->refresh();
             }
+        }
+        
+        // ارسال اعلان به برندگان
+        try {
+            $notificationService = app(\App\Services\NotificationService::class);
+            foreach ($winners as $winningBid) {
+                $notificationService->notifyUser(
+                    $winningBid->user_id,
+                    'تبریک! شما برنده حراج شدید',
+                    "شما در حراج #{$auction->id} برنده شدید. قیمت پیشنهادی شما: " . number_format($winningBid->price) . " تومان برای " . number_format($winningBid->quantity) . " سهم.",
+                    route('auction.show', $auction),
+                    'auction.won',
+                    ['auction_id' => $auction->id, 'bid_id' => $winningBid->id, 'price' => $winningBid->price, 'quantity' => $winningBid->quantity]
+                );
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Failed to send winner notifications: ' . $e->getMessage());
         }
         
         return [
@@ -365,6 +450,13 @@ class AuctionService
         
         // Transfer shares
         $this->holdingService->settlement($holding, $bid->quantity, "Auction win", $bid);
+        
+        // Dispatch events
+        $user = \App\Models\User::find($bid->user_id);
+        if ($user) {
+            event(new \App\Events\WalletSettled($wallet, $user, $bid->total_value, $bid, "Auction settlement"));
+            event(new \App\Events\SharesReceived($holding, $user, $bid->quantity, $bid->auction, $bid, "Auction win"));
+        }
         
         // Record stock transaction and update stock availability
         \App\Modules\Stock\Models\StockTransaction::create([
@@ -413,6 +505,16 @@ class AuctionService
         
         // Transfer allocated shares
         $this->holdingService->settlement($holding, $allocatedShares, "Auction win", $bid);
+        
+        // Dispatch events
+        $user = \App\Models\User::find($bid->user_id);
+        if ($user) {
+            event(new \App\Events\WalletSettled($wallet, $user, $totalAmount, $bid, "Auction settlement"));
+            if ($remainingAmount > 0) {
+                event(new \App\Events\WalletReleased($wallet, $user, $remainingAmount, $bid, "Unallocated bid amount"));
+            }
+            event(new \App\Events\SharesReceived($holding, $user, $allocatedShares, $bid->auction, $bid, "Auction win"));
+        }
 
         // Record partial stock transaction and update stock availability
         \App\Modules\Stock\Models\StockTransaction::create([
@@ -451,12 +553,21 @@ class AuctionService
             ->get()
             ->each(function ($bid) use ($auction) {
                 $wallet = $this->walletService->getOrCreateWallet($bid->user_id);
+                $user = \App\Models\User::find($bid->user_id);
+                
+                // Release funds
                 $this->walletService->release(
                     $wallet,
                     $bid->total_value,
                     "Bid not filled - auction #{$auction->id}",
                     $bid
                 );
+                
+                // Dispatch events
+                if ($user) {
+                    event(new \App\Events\BidLost($bid, $auction, $user));
+                    event(new \App\Events\WalletReleased($wallet, $user, $bid->total_value, $bid, "Bid not filled - auction #{$auction->id}"));
+                }
             });
     }
 }

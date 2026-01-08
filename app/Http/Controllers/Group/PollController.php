@@ -26,6 +26,7 @@ class PollController extends Controller
         $inputs['created_by'] = auth()->user()->id;
 
         $poll = Poll::create($inputs);
+        $poll->refresh(); // برای اطمینان از بارگذاری روابط
 
         foreach($inputs['options'] as $option){
             PollOption::create([
@@ -33,6 +34,9 @@ class PollController extends Controller
                 'text' => $option,
             ]);
         }
+
+        // Dispatch event for notifications
+        event(new \App\Events\PollCreated($poll, $group, auth()->user()));
     
         return redirect()->back()->with('success', 'نظرسنجی شما با موفقیت ارسال شد!');
     }

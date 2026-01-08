@@ -25,48 +25,32 @@
         </a>
     @endif
 
-    <div class="message-bubble"
+    <div class="message-bubble {{ $isMine ? 'you' : 'other' }}"
          data-message-id="{{ $item->id }}" 
          data-user-id="{{ $item->user_id }}"
-         style="max-width: 65%;"
          data-edit-url="{{ route('groups.messages.edit', $item->id) }}"
          data-delete-url="{{ route('groups.messages.delete', $item->id) }}"
          data-report-url="{{ route('messages.report', $item->id) }}"
          data-content-raw="{{ e(strip_tags($item->content ?? '')) }}">
 
         <div class="message-head">
-            <div class="message-head__info">
-                @if(!$item->user)
-                    <span class="message-sender message-sender--deleted">حساب حذف شده</span>
-                @elseif($isMine)
-                    <span class="message-sender message-sender--self">شما</span>
-                @elseif($sender)
-                    <a href="{{ route('profile.member.show', $item->user_id) }}" class="message-sender">
-                        {{ $senderName }}
-                    </a>
-                @endif
-            </div>
-
-            <div class="action-menu message-action" data-action-menu>
-                <button type="button" class="action-menu__toggle" aria-expanded="false" aria-label="گزینه‌های پیام">
-                    <i class="fas fa-ellipsis-v"></i>
-                </button>
-                <div class="action-menu__list">
-                    <button type="button"
-                            onclick="replyToMessage('{{ $item->id }}', @js($senderName), @js($rawContent))"
-                            class="action-menu__item btn-rep">
-                        <i class="fas fa-reply"></i>
-                        پاسخ
+            @if($isMine)
+                {{-- برای پیام‌های خود کاربر: سه نقطه در سمت چپ، نام در سمت راست --}}
+                <div class="action-menu message-action" data-action-menu>
+                    <button type="button" class="action-menu__toggle" aria-expanded="false" aria-label="گزینه‌های پیام">
+                        <i class="fas fa-ellipsis-v"></i>
                     </button>
-
-                    @unless($isMine)
-                        <button type="button" class="action-menu__item btn-report">
-                            <i class="fas fa-flag"></i>
-                            گزارش
+                    <div class="action-menu__list">
+                        <button type="button"
+                                onclick="replyToMessage('{{ $item->id }}', @js($senderName), @js($rawContent))"
+                                class="action-menu__item btn-rep">
+                            <i class="fas fa-reply"></i>
+                            پاسخ
                         </button>
-                    @endunless
-
-                    @if($isMine)
+                        <button type="button" class="action-menu__item btn-reaction">
+                            <i class="fas fa-smile"></i>
+                            واکنش
+                        </button>
                         <button type="button" class="action-menu__item btn-edit">
                             <i class="fas fa-edit"></i>
                             ویرایش
@@ -75,13 +59,96 @@
                             <i class="fas fa-trash"></i>
                             حذف
                         </button>
-                    @endif
-
-                    <div class="menu-meta-time">
-                        {{ verta(optional($item->created_at)->format('Y-m-d H:i:s')) }}
+                        @php
+                            $createdAt = verta($item->created_at);
+                            $isEdited = false;
+                            if (isset($item->edited)) {
+                                $isEdited = (bool)$item->edited;
+                            } elseif (isset($item->is_edited)) {
+                                $isEdited = (bool)$item->is_edited;
+                            } elseif ($item->updated_at && $item->updated_at != $item->created_at) {
+                                $isEdited = true;
+                            }
+                            $updatedAt = $isEdited && $item->updated_at ? verta($item->updated_at) : null;
+                        @endphp
+                        <div class="menu-meta-time">
+                            <div class="menu-meta-time__item">
+                                <i class="fas fa-paper-plane" style="font-size: 0.7rem; opacity: 0.6; margin-left: 4px;"></i>
+                                <span class="menu-meta-time__label">ارسال شده:</span>
+                                <span class="menu-meta-time__value">{{ $createdAt->format('Y/m/d') }} در {{ $createdAt->format('H:i:s') }}</span>
+                            </div>
+                            @if($isEdited && $updatedAt)
+                                <div class="menu-meta-time__item" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(0,0,0,0.08);">
+                                    <i class="fas fa-edit" style="font-size: 0.7rem; opacity: 0.6; margin-left: 4px;"></i>
+                                    <span class="menu-meta-time__label">ویرایش شده:</span>
+                                    <span class="menu-meta-time__value">{{ $updatedAt->format('Y/m/d') }} در {{ $updatedAt->format('H:i:s') }}</span>
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
-            </div>
+                <div class="message-head__info">
+                    <span class="message-sender message-sender--self">شما</span>
+                </div>
+            @else
+                {{-- برای پیام‌های دیگران: نام کاربر در سمت چپ، سه نقطه در سمت راست --}}
+                <div class="message-head__info">
+                    @if(!$item->user)
+                        <span class="message-sender message-sender--deleted">حساب حذف شده</span>
+                    @elseif($sender)
+                        <a href="{{ route('profile.member.show', $item->user_id) }}" class="message-sender" onclick="console.log('Profile link clicked:', '{{ route('profile.member.show', $item->user_id) }}'); event.stopPropagation(); event.preventDefault(); window.location.href='{{ route('profile.member.show', $item->user_id) }}'; return false;">
+                            {{ $senderName }}
+                        </a>
+                    @endif
+                </div>
+                <div class="action-menu message-action" data-action-menu>
+                    <button type="button" class="action-menu__toggle" aria-expanded="false" aria-label="گزینه‌های پیام">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="action-menu__list">
+                        <button type="button"
+                                onclick="replyToMessage('{{ $item->id }}', @js($senderName), @js($rawContent))"
+                                class="action-menu__item btn-rep">
+                            <i class="fas fa-reply"></i>
+                            پاسخ
+                        </button>
+                        <button type="button" class="action-menu__item btn-reaction">
+                            <i class="fas fa-smile"></i>
+                            واکنش
+                        </button>
+                        <button type="button" class="action-menu__item btn-report">
+                            <i class="fas fa-flag"></i>
+                            گزارش
+                        </button>
+                        @php
+                            $createdAt = verta($item->created_at);
+                            $isEdited = false;
+                            if (isset($item->edited)) {
+                                $isEdited = (bool)$item->edited;
+                            } elseif (isset($item->is_edited)) {
+                                $isEdited = (bool)$item->is_edited;
+                            } elseif ($item->updated_at && $item->updated_at != $item->created_at) {
+                                $isEdited = true;
+                            }
+                            $updatedAt = $isEdited && $item->updated_at ? verta($item->updated_at) : null;
+                        @endphp
+                        <div class="menu-meta-time">
+                            <div class="menu-meta-time__item">
+                                <i class="fas fa-paper-plane" style="font-size: 0.7rem; opacity: 0.6; margin-left: 4px;"></i>
+                                <span class="menu-meta-time__label">ارسال شده:</span>
+                                <span class="menu-meta-time__value">{{ $createdAt->format('Y/m/d') }} در {{ $createdAt->format('H:i:s') }}</span>
+                            </div>
+                            @if($isEdited && $updatedAt)
+                                <div class="menu-meta-time__item" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(0,0,0,0.08);">
+                                    <i class="fas fa-edit" style="font-size: 0.7rem; opacity: 0.6; margin-left: 4px;"></i>
+                                    <span class="menu-meta-time__label">ویرایش شده:</span>
+                                    <span class="menu-meta-time__value">{{ $updatedAt->format('Y/m/d') }} در {{ $updatedAt->format('H:i:s') }}</span>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
 
         {{-- پیش‌نمایش پاسخ --}}
@@ -197,31 +264,95 @@
             </div>
         @endif
 
-        {{-- Read Receipts --}}
-        @if($isMine)
-            @php
-                $readBy = null;
-                if (isset($item->read_by)) {
-                    if (is_string($item->read_by)) {
-                        $readBy = json_decode($item->read_by, true);
-                    } else {
-                        $readBy = $item->read_by;
-                    }
+        {{-- ردیف پایین پیام: زمان، واکنش‌ها و وضعیت ارسال --}}
+        @php
+            $createdAt = verta($item->created_at);
+            $isEdited = false;
+            if (isset($item->edited)) {
+                $isEdited = (bool)$item->edited;
+            } elseif (isset($item->is_edited)) {
+                $isEdited = (bool)$item->is_edited;
+            } elseif ($item->updated_at && $item->updated_at != $item->created_at) {
+                $isEdited = true;
+            }
+            $updatedAt = $isEdited && $item->updated_at ? verta($item->updated_at) : null;
+            $timeStr = $createdAt->format('H:i');
+            
+            $reactions = [];
+            if (isset($item->reactions) && $item->reactions) {
+                if (is_string($item->reactions)) {
+                    $reactions = json_decode($item->reactions, true) ?? [];
+                } elseif (is_object($item->reactions) && method_exists($item->reactions, 'groupBy')) {
+                    $reactions = $item->reactions->groupBy('reaction_type')
+                        ->map(function($group) {
+                            return [
+                                'type' => $group->first()->reaction_type,
+                                'count' => $group->count()
+                            ];
+                        })
+                        ->values()
+                        ->toArray();
+                } elseif (is_array($item->reactions)) {
+                    $reactions = $item->reactions;
                 }
-                $readCount = is_array($readBy) ? count($readBy) : 0;
-            @endphp
-            <div class="read-receipt" style="font-size: 10px; margin-top: 4px; text-align: left; direction: ltr;">
-                @if($readCount > 0)
-                    <span style="color: #10b981;">
-                        <i class="fas fa-check-double"></i> {{ $readCount }} نفر خوانده‌اند
-                    </span>
-                @else
-                    <span style="color: #9ca3af;">
-                        <i class="fas fa-check"></i> ارسال شده
+            }
+            $emojis = ['like' => '👍', 'love' => '❤️', 'laugh' => '😂', 'wow' => '😮', 'sad' => '😢', 'angry' => '😠'];
+            
+            $readBy = null;
+            if ($isMine && isset($item->read_by)) {
+                if (is_string($item->read_by)) {
+                    $readBy = json_decode($item->read_by, true);
+                } else {
+                    $readBy = $item->read_by;
+                }
+            }
+            $readCount = is_array($readBy) ? count($readBy) : 0;
+        @endphp
+        <div class="message-timestamp" style="display: flex !important; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap; margin-left: -10px !important; margin-right: -10px !important; padding-left: 10px !important; padding-right: 10px !important; justify-content: space-between !important; float: none !important; text-align: left !important; direction: ltr !important;">
+            {{-- سمت چپ: ارسال شده (منتها الیه چپ) --}}
+            @if($isMine)
+                <div class="read-receipt" style="font-size: 10px; text-align: left; direction: ltr; margin-right: auto; margin-left: 0;">
+                    @if($readCount > 0)
+                        <span style="color: #10b981;">
+                            <i class="fas fa-check-double"></i> {{ $readCount }} نفر خوانده‌اند
+                        </span>
+                    @else
+                        <span style="color: #9ca3af;">
+                            <i class="fas fa-check"></i> ارسال شده
+                        </span>
+                    @endif
+                </div>
+            @endif
+            
+            {{-- وسط: واکنش‌ها --}}
+            <div style="display: flex; align-items: center; gap: 4px; flex: 1; justify-content: center;">
+                @if(!empty($reactions))
+                    <div class="message-reactions" style="display: flex; gap: 4px; flex-wrap: wrap;">
+                        @foreach($reactions as $reaction)
+                            <span class="reaction-badge" style="
+                                background: #f0f0f0;
+                                padding: 2px 6px;
+                                border-radius: 12px;
+                                font-size: 12px;
+                                cursor: pointer;
+                            " onclick="if(typeof toggleReaction === 'function') toggleReaction({{ $item->id }}, '{{ $reaction['type'] ?? $reaction->type ?? '' }}')">
+                                {{ $emojis[$reaction['type'] ?? $reaction->type ?? ''] ?? '👍' }} {{ $reaction['count'] ?? $reaction->count ?? 0 }}
+                            </span>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+            
+            {{-- سمت راست: زمان --}}
+            <div style="display: flex; align-items: center; gap: 4px; margin-left: auto;">
+                <span class="message-time">{{ $timeStr }}</span>
+                @if($isEdited && $updatedAt)
+                    <span class="message-edited" title="ویرایش شده در {{ $updatedAt->format('Y/m/d H:i:s') }}">
+                        <i class="fas fa-edit"></i>
                     </span>
                 @endif
             </div>
-        @endif
+        </div>
 
         {{-- Thread Reply Count --}}
         @php

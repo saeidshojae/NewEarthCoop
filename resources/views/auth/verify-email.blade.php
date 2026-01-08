@@ -68,6 +68,8 @@
             border-radius: 12px;
             transition: all 0.3s ease;
             background: white;
+            direction: ltr; /* کد از چپ به راست وارد شود */
+            text-align: center; /* متن در مرکز باشد */
         }
 
         .verification-code input:focus {
@@ -155,13 +157,13 @@
             @csrf
             <input type="hidden" name="email" value="{{ $email }}">
             
-            <div class="verification-code flex justify-center gap-3 mb-6">
-                <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+            <div class="verification-code flex justify-center gap-3 mb-6" dir="ltr">
+                <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required dir="ltr" style="direction: ltr; text-align: center;">
+                <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required dir="ltr" style="direction: ltr; text-align: center;">
+                <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required dir="ltr" style="direction: ltr; text-align: center;">
+                <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required dir="ltr" style="direction: ltr; text-align: center;">
+                <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required dir="ltr" style="direction: ltr; text-align: center;">
+                <input type="text" name="code[]" maxlength="1" pattern="[0-9]" inputmode="numeric" required dir="ltr" style="direction: ltr; text-align: center;">
             </div>
 
             @error('verification_code')
@@ -214,8 +216,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     inputs.forEach((input, index) => {
+        // تنظیم direction برای هر input
+        input.setAttribute('dir', 'ltr');
+        input.style.direction = 'ltr';
+        input.style.textAlign = 'center';
+        
         // Handle input and move to next
         input.addEventListener('input', function(e) {
+            // فقط اعداد را بپذیر
+            this.value = this.value.replace(/[^0-9]/g, '');
+            
             if (this.value.length === 1) {
                 if (index < inputs.length - 1) {
                     inputs[index + 1].focus();
@@ -228,6 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.key === 'Backspace' && this.value === '') {
                 if (index > 0) {
                     inputs[index - 1].focus();
+                    inputs[index - 1].value = ''; // پاک کردن مقدار قبلی
                 }
             }
         });
@@ -236,6 +247,27 @@ document.addEventListener('DOMContentLoaded', function() {
         input.addEventListener('keypress', function(e) {
             if (!/[0-9]/.test(e.key)) {
                 e.preventDefault();
+            }
+        });
+        
+        // Handle paste - برای کپی کردن کد کامل
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pastedData = (e.clipboardData || window.clipboardData).getData('text');
+            const numbers = pastedData.replace(/[^0-9]/g, '').split('');
+            
+            numbers.forEach((num, i) => {
+                if (index + i < inputs.length) {
+                    inputs[index + i].value = num;
+                }
+            });
+            
+            // Focus on last filled input or next empty
+            const lastFilledIndex = Math.min(index + numbers.length - 1, inputs.length - 1);
+            if (lastFilledIndex < inputs.length - 1) {
+                inputs[lastFilledIndex + 1].focus();
+            } else {
+                inputs[lastFilledIndex].focus();
             }
         });
     });

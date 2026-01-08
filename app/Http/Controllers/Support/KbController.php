@@ -19,9 +19,39 @@ class KbController extends Controller
             ->where('status', 'published')
             ->orderBy('published_at', 'desc');
 
+        $selectedCategory = null;
+
         // فیلتر بر اساس دسته
         if ($request->filled('category')) {
-            $query->where('category_id', $request->input('category'));
+            $categoryId = (int) $request->input('category');
+            $selectedCategory = KbCategory::where('is_active', true)->find($categoryId);
+
+            if ($selectedCategory) {
+                // همه زیرشاخه‌ها (هر عمق) را هم لحاظ کن تا با کلیک روی دسته والد لیست خالی نشود
+                $allCategories = KbCategory::select(['id', 'parent_id'])
+                    ->where('is_active', true)
+                    ->get();
+
+                $childrenByParent = $allCategories->groupBy('parent_id');
+                $categoryIds = [];
+                $stack = [$selectedCategory->id];
+
+                while (!empty($stack)) {
+                    $pid = array_pop($stack);
+                    if (in_array($pid, $categoryIds, true)) {
+                        continue;
+                    }
+                    $categoryIds[] = $pid;
+
+                    foreach (($childrenByParent[$pid] ?? collect()) as $child) {
+                        $stack[] = $child->id;
+                    }
+                }
+
+                $query->whereIn('category_id', $categoryIds);
+            } else {
+                $query->where('category_id', $categoryId);
+            }
         }
 
         // فیلتر بر اساس تگ
@@ -42,7 +72,20 @@ class KbController extends Controller
         }
 
         $articles = $query->paginate(12)->withQueryString();
-        $categories = KbCategory::where('is_active', true)->orderBy('name')->get();
+
+        // کارت‌ها: فقط دسته‌های سطح اول + زیرمجموعه‌ها (active)
+        $categories = KbCategory::with(['children' => function ($q) {
+                $q->where('is_active', true)->orderBy('sort_order');
+            }])
+            ->whereNull('parent_id')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+
+        // فیلتر dropdown: همه دسته‌های active
+        $categoryOptions = KbCategory::where('is_active', true)->orderBy('name')->get();
+
+        // اگر selectedCategory بالا با children لود نشده بود (مثلا category خالی)، همین مقدار null می‌ماند
         $tags = KbTag::where('is_active', true)->orderBy('name')->get();
         $featuredArticles = KbArticle::where('status', 'published')
             ->where('is_featured', true)
@@ -50,7 +93,7 @@ class KbController extends Controller
             ->take(6)
             ->get();
 
-        return view('support.kb.index', compact('articles', 'categories', 'tags', 'featuredArticles'));
+        return view('support.kb.index', compact('articles', 'categories', 'categoryOptions', 'selectedCategory', 'tags', 'featuredArticles'));
     }
 
     /**

@@ -114,6 +114,25 @@ class Step3Controller extends Controller
 
             Address::create($addressData);
 
+            // Refresh کاربر و لود کردن روابط برای استفاده در گروه‌سازی
+            $user->refresh();
+            $user->load([
+                'address.continent',
+                'address.country',
+                'address.province',
+                'address.county',
+                'address.section',
+                'address.city',
+                'address.rural',
+                'address.region',
+                'address.village',
+                'address.neighborhood',
+                'address.street',
+                'address.alley',
+                'specialties',
+                'experiences'
+            ]);
+
             // اتصال گروه‌ها به کاربر
             $groupService = new GroupService();
             $groupService->generateGroupsForUser($user);

@@ -449,6 +449,15 @@
         color: var(--color-gentle-black);
     }
 
+    /* Fix cursor for file input */
+    input[type="file"].form-input-enhanced {
+        cursor: pointer !important;
+    }
+
+    input[type="file"].form-input-enhanced::-webkit-file-upload-button {
+        cursor: pointer !important;
+    }
+
     .form-input-enhanced:focus {
         outline: none;
         border-color: var(--color-earth-green);
@@ -704,6 +713,20 @@
         color: #e0e0e0;
     }
 
+    /* Ensure cursor is visible for file inputs */
+    input[type="file"] {
+        cursor: pointer !important;
+    }
+
+    input[type="file"]::-webkit-file-upload-button {
+        cursor: pointer !important;
+    }
+
+    /* Fix for Windows file dialog cursor issue */
+    input[type="file"]:focus {
+        cursor: pointer !important;
+    }
+
     body.dark-mode .stepper-item:not(.active):not(.completed) .stepper-circle {
         background: #404040;
         color: #9ca3af;
@@ -722,12 +745,7 @@
         <p class="text-gray-600 text-lg">به‌روزرسانی اطلاعات حساب کاربری خود</p>
     </div>
 
-    @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6" role="alert">
-            <i class="fas fa-check-circle ml-2"></i>
-            {{ session('success') }}
-        </div>
-    @endif
+    {{-- پیام موفقیت در layout (`layouts/unified`) نمایش داده می‌شود؛ اینجا حذف شد تا دوبار نشان داده نشود. --}}
 
     @if ($errors->any())
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6" role="alert">

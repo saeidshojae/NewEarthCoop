@@ -62,10 +62,23 @@ class Stock extends Model
 
         $totalShares = $soldShares + $bidShares;
         if ($totalShares > 0) {
+            $oldPrice = $this->base_share_price;
+            $oldValuation = $this->startup_valuation;
             $newPrice = ($soldValue + $bidValue) / $totalShares;
             $this->base_share_price = $newPrice;
             $this->startup_valuation = $this->base_share_price * $this->total_shares;
             $this->save();
+            
+            // Dispatch event if price changed
+            if ($oldPrice !== null && abs($oldPrice - $newPrice) > 0.01) {
+                event(new \App\Events\StockPriceChanged(
+                    $this,
+                    $oldPrice,
+                    $newPrice,
+                    $oldValuation,
+                    $this->startup_valuation
+                ));
+            }
         }
     }
 }

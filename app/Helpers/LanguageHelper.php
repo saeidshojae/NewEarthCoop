@@ -87,3 +87,23 @@ if (!function_exists('get_locale_flag')) {
         return $flags[app()->getLocale()] ?? '🇮🇷';
     }
 }
+
+if (!function_exists('format_number')) {
+    /**
+     * Format number to short format (e.g., 1.2M, 5.4K, 120)
+     *
+     * @param int|float $number
+     * @param int $decimals
+     * @return string
+     */
+    function format_number($number, $decimals = 1)
+    {
+        if ($number >= 1000000) {
+            return number_format($number / 1000000, $decimals) . 'M';
+        } elseif ($number >= 1000) {
+            return number_format($number / 1000, $decimals) . 'K';
+        }
+        
+        return number_format($number, 0);
+    }
+}

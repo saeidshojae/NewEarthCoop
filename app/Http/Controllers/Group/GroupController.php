@@ -19,23 +19,29 @@ class GroupController extends Controller
 
         return view('groups.index', [
             'generalGroups' => $user->groups()
+                ->withPivot('role', 'status', 'expired', 'last_read_message_id')
                 ->where('group_type', 0)    // فیلتر بر اساس نوع گروه
                 ->get()->reverse(),
             'specialityGroups' => $user->groups()
+                ->withPivot('role', 'status', 'expired', 'last_read_message_id')
                 ->whereNotNull('specialty_id')
                 ->whereNull('experience_id')
                 ->get()->reverse(),
             'experienceGroups' => $user->groups()
+                ->withPivot('role', 'status', 'expired', 'last_read_message_id')
                 ->whereNull('specialty_id')
                 ->whereNotNull('experience_id')
                 ->get()->reverse(),
             'ageGroups' => $user->groups()
+                ->withPivot('role', 'status', 'expired', 'last_read_message_id')
                 ->where('group_type', 3)
                 ->get()->reverse(),
             'genderGroups' => $user->groups()
+                ->withPivot('role', 'status', 'expired', 'last_read_message_id')
                 ->where('group_type', 4)
                 ->get()->reverse(),
             'managedGroups' => $user->groups()
+                ->withPivot('role', 'status', 'expired', 'last_read_message_id')
                 ->where('location_level', 10)  // Filter groups where user is a manager
                 ->get(),
         ]);
@@ -44,17 +50,91 @@ class GroupController extends Controller
 
     public function show(Group $group)
     {
+        // دریافت مدیران (role 3) و بازرسان (role 2)
+        $admins = $group->users()
+            ->withPivot(['role', 'status'])
+            ->whereIn('role', [2, 3])
+            ->wherePivot('status', 1)
+            ->orderBy('role', 'desc') // مدیران اول (3)، سپس بازرسان (2)
+            ->get();
+        
+        // دریافت آخرین فعالیت‌ها
+        $recentMessages = $group->messages()->with('user')->latest()->take(5)->get();
+        $recentPosts = $group->blogs()->latest()->take(5)->get();
+        $recentPolls = $group->polls()->with('options')->where('main_type', 1)->latest()->take(5)->get();
+        $recentElections = $group->elections()->latest()->take(5)->get();
+        
+        // دریافت گروه‌های کاربر (به جز گروه فعلی)
+        $user = auth()->user();
+        
+        // گروه‌های عمومی کاربر (به جز گروه فعلی)
+        $userGeneralGroups = $user->groups()
+            ->withPivot('role', 'status', 'expired', 'last_read_message_id')
+            ->where('group_type', 0)
+            ->where('groups.id', '!=', $group->id)
+            ->wherePivot('status', 1) // فقط گروه‌های فعال
+            ->orderBy('last_activity_at', 'desc')
+            ->take(6)
+            ->get();
+        
+        // گروه‌های تخصصی شغلی کاربر (specialty_id) - به جز گروه فعلی
+        $userSpecialityGroups = $user->groups()
+            ->withPivot('role', 'status', 'expired', 'last_read_message_id')
+            ->whereNotNull('specialty_id')
+            ->whereNull('experience_id')
+            ->where('groups.id', '!=', $group->id)
+            ->wherePivot('status', 1)
+            ->orderBy('last_activity_at', 'desc')
+            ->get();
+        
+        // گروه‌های تجربی/علمی کاربر (experience_id) - به جز گروه فعلی
+        $userExperienceGroups = $user->groups()
+            ->withPivot('role', 'status', 'expired', 'last_read_message_id')
+            ->whereNull('specialty_id')
+            ->whereNotNull('experience_id')
+            ->where('groups.id', '!=', $group->id)
+            ->wherePivot('status', 1)
+            ->orderBy('last_activity_at', 'desc')
+            ->get();
+        
+        // گروه‌های اختصاصی کاربر (location_level = 10) - به جز گروه فعلی
+        $userExclusiveGroups = $user->groups()
+            ->withPivot('role', 'status', 'expired', 'last_read_message_id')
+            ->where('location_level', 10)
+            ->where('groups.id', '!=', $group->id)
+            ->wherePivot('status', 1)
+            ->orderBy('last_activity_at', 'desc')
+            ->get();
+        
+        // ترکیب گروه‌های تخصصی و اختصاصی برای نمایش در بخش "گروه‌های تخصصی پیشنهادی"
+        $userSpecializedAndExclusiveGroups = $userSpecialityGroups
+            ->merge($userExperienceGroups)
+            ->merge($userExclusiveGroups)
+            ->sortByDesc('last_activity_at')
+            ->take(6)
+            ->values();
+        
         return view('groups.show', [
             'group' => $group,
             'messages' => $group->messages()->latest()->get(),
-            'generalGroups' => Group::where('group_type', 'general')->get(),
-            'specializedGroups' => Group::where('group_type', 'specialized')->get(),
-            'exclusiveGroups' => Group::where('group_type', 'exclusive')->get(),
+            'generalGroups' => $userGeneralGroups,
+            'specializedGroups' => $userSpecializedAndExclusiveGroups,
+            'exclusiveGroups' => $userExclusiveGroups,
+            'admins' => $admins,
+            'recentMessages' => $recentMessages,
+            'recentPosts' => $recentPosts,
+            'recentPolls' => $recentPolls,
+            'recentElections' => $recentElections,
         ]);
     }
 
     public function logout(Group $group){
         $groupUserModel = GroupUser::where('group_id', $group->id)->where('user_id', auth()->user()->id)->first();
+        
+        if (!$groupUserModel) {
+            return redirect()->route('groups.index')->with('error', 'رابطه کاربر و گروه یافت نشد');
+        }
+        
         $groupUserModel->update(['status' => 0]);
 
         return redirect()->route('groups.index')->with('success', 'شما با موفقیت از گروه خارج شدید');
@@ -62,9 +142,12 @@ class GroupController extends Controller
 
     public function relogout(Group $group){
         $groupUserModel = GroupUser::where('group_id', $group->id)->where('user_id', auth()->user()->id)->first();
+        if (!$groupUserModel) {
+            return redirect()->route('groups.index')->with('error', 'رابطه کاربر و گروه یافت نشد');
+        }
         $groupUserModel->update(['status' => 1]);
 
-        return redirect()->route('groups.index')->with('success', 'شما با موفقیت وارد گروه خارج شدید');
+        return redirect()->route('groups.index')->with('success', 'شما با موفقیت به گروه بازگشتید');
     }
 
     public function open(Group $group){
@@ -141,6 +224,9 @@ public function addUsersToGroup(Request $request)
     }
 
     $group->users()->attach($user->id, ['role' => '4', 'status' => 0, 'expired' => now()->addHours($request->input('hours'))]); // Adding as guest
+
+    // Dispatch event for group invitation
+    event(new \App\Events\GroupInvitation($group, $user, auth()->user()));
 
     return response()->json(['message' => 'Users added successfully']);
 }

@@ -71,38 +71,210 @@
             
 
             <style>
-                @media (max-width: 990px) {
-   #country_code{
-    width: 25% !important;
-   }
-}
+                .phone-input-wrapper {
+                    position: relative;
+                    display: flex;
+                    align-items: stretch;
+                    width: 100%;
+                    gap: 0;
+                }
+                
+                .country-code-select-wrapper {
+                    position: relative;
+                    flex-shrink: 0;
+                    width: 160px;
+                }
+                
+                .country-code-select {
+                    appearance: none;
+                    -webkit-appearance: none;
+                    -moz-appearance: none;
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23334155' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+                    background-repeat: no-repeat;
+                    background-position: left 14px center;
+                    background-size: 12px;
+                    padding-left: 50px;
+                    padding-right: 14px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    height: 100%;
+                    min-height: 48px;
+                    border: 2px solid #e2e8f0;
+                    border-left: 2px solid #e2e8f0;
+                    border-right: none;
+                    border-radius: 12px 0 0 12px;
+                    background-color: #f8fafc;
+                    transition: all 0.3s ease;
+                    direction: ltr;
+                    text-align: left;
+                    width: 100%;
+                    color: #1e293b;
+                    font-weight: 500;
+                }
+                
+                .country-code-select:hover {
+                    background-color: #f1f5f9;
+                    border-color: #cbd5e1;
+                }
+                
+                .country-code-select:focus {
+                    outline: none;
+                    border-color: #3b82f6;
+                    background-color: #ffffff;
+                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                }
+                
+                .phone-number-input {
+                    flex: 1;
+                    border: 2px solid #e2e8f0;
+                    border-left: none;
+                    border-right: 2px solid #e2e8f0;
+                    border-radius: 0 12px 12px 0;
+                    padding-right: 16px;
+                    padding-left: 16px;
+                    transition: all 0.3s ease;
+                    min-height: 48px;
+                }
+                
+                .phone-number-input:focus {
+                    outline: none;
+                    border-color: #3b82f6;
+                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                }
+                
+                .phone-number-input.error {
+                    border-color: #ef4444;
+                    background-color: #fef2f2;
+                }
+                
+                .country-flag-display {
+                    position: absolute;
+                    left: 14px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    font-size: 24px;
+                    line-height: 1;
+                    pointer-events: none;
+                    z-index: 10;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 32px;
+                    height: 32px;
+                }
+                
+                .country-code-text {
+                    display: inline-block;
+                    margin-right: 8px;
+                }
+                
+                /* برای نمایش پرچم‌ها در dropdown */
+                .country-code-select option {
+                    direction: ltr;
+                    text-align: left;
+                    padding: 8px;
+                    font-size: 14px;
+                }
+                
+                @media (max-width: 768px) {
+                    .country-code-select-wrapper {
+                        width: 130px;
+                    }
+                    
+                    .country-code-select {
+                        font-size: 13px;
+                        padding-right: 40px;
+                        padding-left: 12px;
+                    }
+                    
+                    .country-flag-display {
+                        font-size: 20px;
+                        left: 12px;
+                    }
+                }
             </style>
             
             <div class="form-group mt-3">
-                <label for="phone">شماره تلفن</label>
-                <div style="display: flex; justify-content: space-between; position: relative">
+                <label for="phone" class="block text-lg font-bold text-gray-800 mb-3">
+                    شماره تلفن: <span class="text-red-500">*</span>
+                </label>
+                <div class="phone-input-wrapper">
+                    <input type="text" 
+                           name="phone" 
+                           id="phone" 
+                           required
+                           class="phone-number-input w-full px-4 py-3 text-right @error('phone') error @else border-gray-300 @enderror"
+                           placeholder="برای مثال: 9123456789"
+                           value="{{ old('phone') }}"
+                           style="font-size: 16px;">
                     
-                    <input type="text" name="phone" id="phone"  required
-                    class="form-control"
-                    placeholder="برای مثال: 9123456789"
-                    value="{{ old('phone') }}">
-                    <select name="country_code" class="form-control" id="country_code" onchange="updatePlaceholder()" style="    position: absolute;
-                    left: 1px;
-                    width: 15%;
-                    border: none;
-                    top: 2px;
-                    border-right: 1px solid #33333347;
-                    border-radius: 0;">
-                        @foreach ($countryCodes as $country)
-                            <option value="{{ $country['code'] }}"
-                                data-placeholder="{{ $country['example'] }}"
-                                {{ old('country_code', '+98') == $country['code'] ? 'selected' : '' }}>
-                                {{ $country['flag'] }} {{ $country['name'] }} ({{ $country['code'] }})
-                            </option>
-                        @endforeach
-                    </select>
+                    <div class="country-code-select-wrapper">
+                        <span class="country-flag-display" id="selected-flag">🇮🇷</span>
+                        <select name="country_code" 
+                                class="country-code-select" 
+                                id="country_code" 
+                                onchange="updatePlaceholder()">
+                            @foreach ($countryCodes as $country)
+                                <option value="{{ $country['code'] }}"
+                                    data-flag="{{ $country['flag'] }}"
+                                    data-placeholder="{{ $country['example'] }}"
+                                    data-name="{{ $country['name'] }}"
+                                    {{ old('country_code', '+98') == $country['code'] ? 'selected' : '' }}>
+                                    {{ $country['flag'] }} {{ $country['name'] }} ({{ $country['code'] }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 @error('phone')
-                    <div class="text-danger">{{ $message }}</div>
+                    <div class="mt-2 flex items-center text-red-600 text-sm">
+                        <i class="fas fa-exclamation-triangle ml-2"></i>
+                        <span>{{ $message }}</span>
+                    </div>
                 @enderror
+                <p class="mt-2 text-sm text-gray-500">
+                    <i class="fas fa-info-circle ml-1"></i>
+                    شماره تلفن باید ۱۰ رقم باشد و با ۹ شروع شود (بدون صفر ابتدایی)
+                </p>
             </div>
+            
+            <script>
+                function updatePlaceholder() {
+                    const select = document.getElementById('country_code');
+                    const phoneInput = document.getElementById('phone');
+                    const selectedOption = select.options[select.selectedIndex];
+                    const placeholder = selectedOption.getAttribute('data-placeholder');
+                    const flag = selectedOption.getAttribute('data-flag');
+                    const name = selectedOption.getAttribute('data-name');
+                    
+                    if (placeholder) {
+                        phoneInput.placeholder = 'برای مثال: ' + placeholder;
+                    }
+                    
+                    // به‌روزرسانی پرچم نمایش داده شده
+                    const flagDisplay = document.getElementById('selected-flag');
+                    if (flagDisplay && flag) {
+                        flagDisplay.textContent = flag;
+                    }
+                    
+                    // به‌روزرسانی متن select برای نمایش بهتر
+                    // در برخی مرورگرها emoji در option نمایش داده نمی‌شود
+                    // پس فقط نام و کد را نمایش می‌دهیم
+                }
+                
+                // به‌روزرسانی پرچم هنگام لود صفحه
+                document.addEventListener('DOMContentLoaded', function() {
+                    updatePlaceholder();
+                    
+                    // اطمینان از نمایش پرچم اولیه
+                    const select = document.getElementById('country_code');
+                    if (select) {
+                        const selectedOption = select.options[select.selectedIndex];
+                        const flag = selectedOption ? selectedOption.getAttribute('data-flag') : '🇮🇷';
+                        const flagDisplay = document.getElementById('selected-flag');
+                        if (flagDisplay) {
+                            flagDisplay.textContent = flag || '🇮🇷';
+                        }
+                    }
+                });
+            </script>

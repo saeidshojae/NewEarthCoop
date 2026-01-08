@@ -771,64 +771,124 @@
         if (!actionMenu) return;
 
         // Check if reaction button already exists
-        if (actionMenu.querySelector('.btn-reaction')) return;
+        let reactionBtn = actionMenu.querySelector('.btn-reaction');
+        
+        if (!reactionBtn) {
+            // Create new button if it doesn't exist
+            reactionBtn = document.createElement('button');
+            reactionBtn.type = 'button';
+            reactionBtn.className = 'action-menu__item btn-reaction';
+            reactionBtn.innerHTML = '<i class="fas fa-smile"></i> واکنش';
 
-        const reactionBtn = document.createElement('button');
-        reactionBtn.type = 'button';
-        reactionBtn.className = 'action-menu__item btn-reaction';
-        reactionBtn.innerHTML = '<i class="fas fa-smile"></i> واکنش';
-        reactionBtn.onclick = () => showReactionPicker(messageId);
-
-        // Insert before delete button
-        const deleteBtn = actionMenu.querySelector('.btn-delete');
-        if (deleteBtn) {
-            actionMenu.insertBefore(reactionBtn, deleteBtn);
-        } else {
-            actionMenu.appendChild(reactionBtn);
+            // Insert after reply button (or after first button if reply doesn't exist)
+            const replyBtn = actionMenu.querySelector('.btn-rep');
+            if (replyBtn && replyBtn.nextSibling) {
+                // Insert after reply button
+                actionMenu.insertBefore(reactionBtn, replyBtn.nextSibling);
+            } else if (replyBtn) {
+                // If reply is the last item, append after it
+                actionMenu.appendChild(reactionBtn);
+            } else {
+                // If no reply button, insert before delete button or at the beginning
+                const deleteBtn = actionMenu.querySelector('.btn-delete');
+                if (deleteBtn) {
+                    actionMenu.insertBefore(reactionBtn, deleteBtn);
+                } else {
+                    // Insert at the beginning, before menu-meta-time if exists
+                    const metaTime = actionMenu.querySelector('.menu-meta-time');
+                    if (metaTime) {
+                        actionMenu.insertBefore(reactionBtn, metaTime);
+                    } else {
+                        actionMenu.appendChild(reactionBtn);
+                    }
+                }
+            }
         }
+        
+        // Add or update event handler (even if button already exists in HTML)
+        reactionBtn.onclick = (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            showReactionPicker(messageId, e.target.closest('.message-bubble'));
+        };
     }
 
-    function showReactionPicker(messageId) {
+    function showReactionPicker(messageId, triggerElement) {
         const reactions = ['like', 'love', 'laugh', 'wow', 'sad', 'angry'];
         const emojis = { like: '👍', love: '❤️', laugh: '😂', wow: '😮', sad: '😢', angry: '😠' };
+        
+        // Remove existing picker if any
+        const existingPicker = document.querySelector('.reaction-picker');
+        if (existingPicker) {
+            existingPicker.remove();
+        }
+
+        // Fallback برای پیدا کردن المان پیام
+        const targetElement = triggerElement || document.querySelector(`[data-message-id="${messageId}"]`);
+        if (!targetElement) {
+            return;
+        }
+
+        // اطمینان از این‌که ظرف پیام position: relative دارد تا picker به آن نسبی باشد
+        const container = targetElement.closest('.message-row') || targetElement;
+        if (container && getComputedStyle(container).position === 'static') {
+            container.style.position = 'relative';
+        }
         
         const picker = document.createElement('div');
         picker.className = 'reaction-picker';
         picker.style.cssText = `
-            position: fixed;
+            position: absolute;
             background: white;
             border: 1px solid #ddd;
             border-radius: 12px;
-            padding: 8px;
+            padding: 6px 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 10000;
+            z-index: 1000;
             display: flex;
-            gap: 8px;
+            gap: 6px;
+            align-items: center;
         `;
 
         reactions.forEach(reaction => {
             const btn = document.createElement('button');
             btn.innerHTML = emojis[reaction];
-            btn.style.cssText = 'font-size: 24px; border: none; background: none; cursor: pointer; padding: 4px;';
-            btn.onclick = () => toggleReaction(messageId, reaction);
+            btn.style.cssText = 'font-size: 20px; border: none; background: none; cursor: pointer; padding: 2px;';
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                toggleReaction(messageId, reaction);
+                picker.remove();
+            };
             picker.appendChild(btn);
         });
 
-        document.body.appendChild(picker);
+        // اضافه کردن picker داخل ظرف پیام تا با اسکرول جابه‌جا شود
+        (container || document.body).appendChild(picker);
         
-        // Position picker
-        const rect = event.target.getBoundingClientRect();
-        picker.style.left = (rect.left - 100) + 'px';
-        picker.style.top = (rect.top - 50) + 'px';
+        // Position picker: بالای حباب پیام، با کنترل لبه‌های صفحه در موبایل
+        const bubbleRect = targetElement.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
 
-        // Close on click outside
+        // محاسبه موقعیت افقی نسبت به container
+        let left = bubbleRect.left - containerRect.left + (bubbleRect.width / 2) - (picker.offsetWidth / 2);
+        // اطمینان از این‌که در موبایل/دسکتاپ از صفحه بیرون نزند
+        const minLeft = 8;
+        const maxLeft = viewportWidth - picker.offsetWidth - 8 - containerRect.left;
+        left = Math.min(Math.max(left, minLeft), maxLeft);
+
+        picker.style.left = `${left}px`;
+        picker.style.bottom = `${containerRect.bottom - bubbleRect.top + 8}px`;
+
+        // بستن با کلیک بیرون
         setTimeout(() => {
-            document.addEventListener('click', function closePicker(e) {
-                if (!picker.contains(e.target)) {
+            const closePicker = function(e) {
+                if (!picker.contains(e.target) && !targetElement.contains(e.target)) {
                     picker.remove();
                     document.removeEventListener('click', closePicker);
                 }
-            });
+            };
+            document.addEventListener('click', closePicker);
         }, 100);
     }
 
@@ -853,9 +913,21 @@
 
     function updateReactionsDisplay(messageId, reactions) {
         const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
-        if (!messageElement) return;
+        if (!messageElement) {
+            console.warn('Message element not found for messageId:', messageId);
+            return;
+        }
 
         let reactionDisplay = messageElement.querySelector('.message-reactions');
+        
+        // If no reactions, remove display if exists
+        if (!reactions || reactions.length === 0) {
+            if (reactionDisplay) {
+                reactionDisplay.remove();
+            }
+            return;
+        }
+
         if (!reactionDisplay) {
             reactionDisplay = document.createElement('div');
             reactionDisplay.className = 'message-reactions';
@@ -863,6 +935,8 @@
             const messageBubble = messageElement.querySelector('.message-bubble');
             if (messageBubble) {
                 messageBubble.appendChild(reactionDisplay);
+            } else {
+                messageElement.appendChild(reactionDisplay);
             }
         }
 
@@ -935,35 +1009,53 @@
                     align-items: center;
                     justify-content: center;
                 `;
-                modal.innerHTML = `
-                    <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; direction: rtl;">
-                        <h3 style="margin-bottom: 1rem;">Thread: ${data.reply_count} پاسخ</h3>
-                        <div style="margin-bottom: 1rem; padding: 1rem; background: #f3f4f6; border-radius: 8px;">
-                            <strong>${data.thread_root.sender}</strong>
-                            <p>${data.thread_root.message}</p>
-                            <small>${data.thread_root.created_at}</small>
-                        </div>
-                        <div>
-                            <h4>پاسخ‌ها:</h4>
-                            ${data.replies.map(reply => `
-                                <div style="margin: 1rem 0; padding: 1rem; background: #f9fafb; border-radius: 8px; border-right: 3px solid #10b981;">
-                                    <strong>${reply.sender}</strong>
-                                    <p>${reply.message}</p>
-                                    <small>${reply.created_at}</small>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <button onclick="this.closest('div[style*=\"position: fixed\"]').remove()" 
-                                style="margin-top: 1rem; padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                            بستن
-                        </button>
+                const modalContent = document.createElement('div');
+                modalContent.style.cssText = 'background: white; padding: 2rem; border-radius: 12px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; direction: rtl;';
+                modalContent.innerHTML = `
+                    <h3 style="margin-bottom: 1rem;">Thread: ${data.reply_count} پاسخ</h3>
+                    <div style="margin-bottom: 1rem; padding: 1rem; background: #f3f4f6; border-radius: 8px;">
+                        <strong>${data.thread_root.sender}</strong>
+                        <p>${data.thread_root.message}</p>
+                        <small>${data.thread_root.created_at}</small>
                     </div>
+                    <div>
+                        <h4>پاسخ‌ها:</h4>
+                        ${data.replies.map(reply => `
+                            <div style="margin: 1rem 0; padding: 1rem; background: #f9fafb; border-radius: 8px; border-right: 3px solid #10b981;">
+                                <strong>${reply.sender}</strong>
+                                <p>${reply.message}</p>
+                                <small>${reply.created_at}</small>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button class="thread-modal-close-btn" 
+                            style="margin-top: 1rem; padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                        بستن
+                    </button>
                 `;
+                modal.appendChild(modalContent);
                 document.body.appendChild(modal);
+                
+                // Event listener برای بستن modal با کلیک روی دکمه
+                const closeBtn = modalContent.querySelector('.thread-modal-close-btn');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        modal.remove();
+                    });
+                }
+                
+                // Event listener برای بستن modal با کلیک روی background (فقط روی modal خودش، نه روی content)
                 modal.addEventListener('click', function(e) {
                     if (e.target === modal) {
                         modal.remove();
                     }
+                });
+                
+                // جلوگیری از بسته شدن modal هنگام کلیک روی محتوا
+                modalContent.addEventListener('click', function(e) {
+                    e.stopPropagation();
                 });
             }
         })
@@ -1184,7 +1276,9 @@
     };
 
     // بارگذاری تعداد گزارش‌های در انتظار بررسی هنگام لود صفحه
-    if (typeof groupId !== 'undefined' && groupId) {
+    // فقط برای مدیران (role === 3)
+    const userRole = window.yourRole || (typeof yourRole !== 'undefined' ? yourRole : null);
+    if (typeof groupId !== 'undefined' && groupId && userRole === 3) {
         fetch(`/groups/${groupId}/reports`, {
             method: 'GET',
             headers: {
@@ -1193,14 +1287,23 @@
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok && response.status === 403) {
+                // کاربر مدیر نیست، خطا را ignore کن
+                return null;
+            }
+            return response.json();
+        })
         .then(data => {
-            if (data.status === 'success') {
+            if (data && data.status === 'success') {
                 updateReportsBadge(data.reports.length);
             }
         })
         .catch(error => {
-            console.error('Error loading reports count:', error);
+            // فقط خطاهای غیر 403 را log کن
+            if (error.status !== 403) {
+                console.error('Error loading reports count:', error);
+            }
         });
     }
 

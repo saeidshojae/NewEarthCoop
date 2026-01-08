@@ -18,6 +18,12 @@
                     3 => 'مدیر',
                     4 => 'مهمان',
                     5 => 'فعال ۲',
+                    'observer' => 'ناظر',
+                    'active' => 'فعال',
+                    'inspector' => 'بازرس',
+                    'manager' => 'مدیر',
+                    'guest' => 'مهمان',
+                    default => 'نامشخص',
                 } : null;
                 $fColorAvatar = rand(1,255);
                 $sColorAvatar = rand(1,255);

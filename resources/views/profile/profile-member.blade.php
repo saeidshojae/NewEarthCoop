@@ -482,18 +482,42 @@
                         <th><i class="fas fa-file-alt ml-2"></i> مدارک:</th>
                         <td>
                             <div class="documents-grid">
-                                @foreach(explode(',', $user->documents) as $file)
+                                @php
+                                    $documentsData = $user->documents;
+                                    $decoded = json_decode($documentsData, true);
+                                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                        $documents = $decoded;
+                                    } else {
+                                        $files = explode(',', $documentsData);
+                                        $documents = [];
+                                        foreach ($files as $file) {
+                                            $file = trim($file);
+                                            if (!empty($file)) {
+                                                $extension = pathinfo($file, PATHINFO_EXTENSION);
+                                                $documents[] = [
+                                                    'filename' => $file,
+                                                    'name' => 'مدرک',
+                                                    'type' => strtolower($extension)
+                                                ];
+                                            }
+                                        }
+                                    }
+                                @endphp
+                                @foreach($documents as $doc)
                                     @php
-                                        $fileExtension = explode('.', $file)[1] ?? '';
-                                        $isImage = in_array(strtolower($fileExtension), ['png', 'jpg', 'jpeg']);
+                                        $filename = is_array($doc) ? $doc['filename'] : $doc;
+                                        $docName = is_array($doc) ? ($doc['name'] ?? $filename) : $filename;
+                                        $extension = is_array($doc) ? ($doc['type'] ?? pathinfo($filename, PATHINFO_EXTENSION)) : pathinfo($filename, PATHINFO_EXTENSION);
+                                        $isImage = in_array(strtolower($extension), ['png', 'jpg', 'jpeg']);
                                     @endphp
                                     <div class="document-item">
                                         @if($isImage)
-                                            <img src="{{ asset('images/users/documents/' . $file) }}" alt="Document">
+                                            <img src="{{ asset('images/users/documents/' . $filename) }}" alt="{{ $docName }}">
                                         @else
                                             <img src="https://www.svgrepo.com/show/452084/pdf.svg" alt="PDF Document">
                                         @endif
-                                        <a href="{{ asset('images/users/documents/' . $file) }}" class="document-download-btn" download>
+                                        <div class="document-name">{{ $docName }}</div>
+                                        <a href="{{ asset('images/users/documents/' . $filename) }}" class="document-download-btn" download>
                                             <i class="fas fa-download"></i>
                                             دانلود
                                         </a>

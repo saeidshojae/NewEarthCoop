@@ -11,9 +11,15 @@
             </p>
         </div>
         <div class="flex justify-center mt-12">
-            <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80"
-                 alt="{{ __('langWelcome.mission_image_alt') }}"
-                 class="w-full max-w-2xl rounded-3xl shadow-xl border-4 border-ocean-blue transform hover:scale-105 transition duration-500">
+            @if(file_exists(public_path('images/logo.png')))
+                <img src="{{ asset('images/logo.png') }}"
+                     alt="{{ __('langWelcome.mission_image_alt') }}"
+                     class="w-full max-w-2xl rounded-3xl shadow-xl border-4 border-ocean-blue transform hover:scale-105 transition duration-500">
+            @else
+                <div class="w-full max-w-2xl h-64 rounded-3xl shadow-xl border-4 border-ocean-blue bg-gradient-to-br from-earth-green/20 via-ocean-blue/20 to-digital-gold/20 flex items-center justify-center">
+                    <i class="fas fa-globe-americas text-6xl text-ocean-blue opacity-50"></i>
+                </div>
+            @endif
         </div>
     </div>
 </section>

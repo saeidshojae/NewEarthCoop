@@ -7,6 +7,39 @@
     display: block;
 }
 
+/* Highlight for unread messages */
+.unread-message {
+    position: relative;
+    animation: unreadPulse 2s ease-in-out infinite;
+}
+
+.unread-message::before {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    background: #10b981;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+@keyframes unreadPulse {
+    0%, 100% {
+        background-color: transparent;
+    }
+    50% {
+        background-color: rgba(16, 185, 129, 0.08);
+    }
+}
+
+/* Smooth transition for unread message highlight removal */
+.message-wrapper {
+    transition: background-color 0.3s ease;
+}
+
 /* Modal Shell Styles */
 .modal-shell {
     position: fixed;
@@ -1720,13 +1753,40 @@ audio {
     align-items: center;
     gap: 0.65rem;
     direction: ltr;
+    justify-content: space-between;
 }
 
 .message-head__info {
     flex: 1;
     display: flex;
+    direction: ltr;
+}
+
+/* برای پیام‌های خود کاربر: نام در سمت راست */
+.message-row.you .message-head__info {
     justify-content: flex-end;
-    direction: rtl;
+    margin-left: auto;
+}
+
+/* برای پیام‌های دیگران: نام در سمت چپ */
+.message-row.other .message-head__info {
+    justify-content: flex-start;
+    margin-right: auto;
+}
+
+.message-head__info .message-sender {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto !important;
+    display: inline-block;
+}
+
+.message-head__info .message-sender:hover {
+    text-decoration: underline;
+    opacity: 0.8;
 }
 
 .message-sender--self {
@@ -1741,6 +1801,15 @@ audio {
 
 .message-action {
     position: relative;
+}
+
+/* برای پیام‌های خود کاربر: سه نقطه در سمت چپ */
+.message-row.you .message-action {
+    margin-right: auto;
+}
+
+/* برای پیام‌های دیگران: سه نقطه در سمت راست */
+.message-row.other .message-action {
     margin-left: auto;
 }
 

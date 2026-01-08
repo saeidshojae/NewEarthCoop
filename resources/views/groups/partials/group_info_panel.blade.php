@@ -4,7 +4,11 @@
     $group2 = $group2 ?? $group;
     $guestCount = $group->guestsCount();
     $pollCollection = $group2->polls ?? collect();
-    $blogs = \App\Models\Blog::where('group_id', $group2->id ?? 0)->latest()->take(6)->get();
+    // دریافت همه پست‌ها با eager loading برای reactions، comments و category
+    $blogs = \App\Models\Blog::where('group_id', $group2->id ?? 0)
+        ->with(['reactions', 'comments', 'category'])
+        ->latest()
+        ->get();
     $userMemberList = \App\Models\GroupUser::where('group_id', $group2->id ?? 0)
         ->where('status', 1)
         ->with('user')
@@ -140,6 +144,8 @@
                                 if (!in_array($level, ['continent', 'country', 'province', 'county', 'section', 'city'])) {
                                     $modelMap = [
                                         'region' => \App\Models\Region::class,
+                                        'village' => \App\Models\Village::class,
+                                        'rural' => \App\Models\Rural::class,
                                         'neighborhood' => \App\Models\Neighborhood::class,
                                         'street' => \App\Models\Street::class,
                                         'alley' => \App\Models\Alley::class,
@@ -163,7 +169,26 @@
 
                         @if($pivot)
                             @php
-                                $memberRole = match($pivot->role) {
+                                // نقش کاربر را بر اساس location_level تعیین می‌کنیم:
+                                // - سطح محله و پایین‌تر (neighborhood, street, alley) → عضو فعال (role 1)
+                                // - سطح منطقه و بالاتر (region, village, rural, city و ...) → ناظر (role 0)
+                                // این منطق همیشه اعمال می‌شود، صرف نظر از مقدار pivot->role در دیتابیس
+                                $locationLevel = strtolower(trim((string)($relatedGroup->location_level ?? '')));
+                                
+                                // اگر location_level مشخص نیست، از pivot استفاده می‌کنیم (fallback)
+                                if (empty($locationLevel)) {
+                                    $pivotRole = isset($pivot->role) ? (int) $pivot->role : 0;
+                                } else {
+                                    // بر اساس location_level تعیین می‌شود
+                                    if (in_array($locationLevel, ['neighborhood', 'street', 'alley'], true)) {
+                                        $pivotRole = 1; // عضو فعال
+                                    } else {
+                                        // سطوح منطقه و بالاتر
+                                        $pivotRole = 0; // ناظر
+                                    }
+                                }
+                                
+                                $memberRole = match($pivotRole) {
                                     0 => 'ناظر',
                                     1 => 'فعال',
                                     2 => 'بازرس',
@@ -226,7 +251,27 @@
                             $full = trim(($person->first_name ?? '') . ' ' . ($person->last_name ?? '')) ?: '—';
                             $email = $person->email ?? '';
                             $initial = Str::upper(Str::substr($email ?: $full, 0, 1));
-                            $memberRoleLabel = match((int)($member->role ?? -1)) {
+                            
+                            // تعیین نقش بر اساس location_level:
+                            // - سطح محله و پایین‌تر (neighborhood, street, alley) → عضو فعال (role 1)
+                            // - سطح منطقه و بالاتر (region, village, rural, city و ...) → ناظر (role 0)
+                            // اگر role در pivot وجود داشت و معتبر بود (2, 3, 4, 5)، از همان استفاده می‌کنیم
+                            $pivotRole = isset($member->role) ? (int)$member->role : null;
+                            
+                            if (in_array($pivotRole, [2, 3, 4, 5], true)) {
+                                // نقش‌های خاص (بازرس، مدیر، مهمان، فعال۲) از pivot استفاده می‌شوند
+                                $finalRole = $pivotRole;
+                            } else {
+                                // در غیر این صورت، بر اساس location_level تعیین می‌کنیم
+                                $locationLevel = strtolower(trim((string)($group2->location_level ?? '')));
+                                if (in_array($locationLevel, ['neighborhood', 'street', 'alley'], true)) {
+                                    $finalRole = 1; // عضو فعال
+                                } else {
+                                    $finalRole = 0; // ناظر
+                                }
+                            }
+                            
+                            $memberRoleLabel = match($finalRole) {
                                 0 => 'ناظر',
                                 1 => 'فعال',
                                 2 => 'بازرس',
@@ -296,42 +341,77 @@
             </div>
 
             <div class="tab-content" id="post">
-                @forelse ($blogs as $item)
-                    @php
-                        $type = $item->file_type ? explode('/', $item->file_type)[0] : null;
-                    @endphp
-                    <article class="post-card">
-                        @if($item->img)
-                            <div class="post-card__media">
-                                @if($type === 'image')
-                                    <img src="{{ asset('images/blogs/' . $item->img) }}" alt="{{ $item->title }}">
-                                @elseif($type === 'video')
-                                    <video controls>
-                                        <source src="{{ asset('images/blogs/' . $item->img) }}" type="{{ $item->file_type }}">
-                                    </video>
-                                @elseif($type === 'audio')
-                                    <audio controls>
-                                        <source src="{{ asset('images/blogs/' . $item->img) }}" type="{{ $item->file_type }}">
-                                    </audio>
-                                @endif
-                            </div>
+                <!-- فیلترهای زیرتب -->
+                <div class="post-filters mb-3" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(148, 163, 184, 0.2);">
+                    <button type="button" class="post-filter-btn active" data-filter="all">همه</button>
+                    <button type="button" class="post-filter-btn" data-filter="most-likes">بیشترین لایک</button>
+                    <button type="button" class="post-filter-btn" data-filter="most-dislikes">بیشترین دیسلایک</button>
+                    <button type="button" class="post-filter-btn" data-filter="most-comments">بیشترین نظر</button>
+                    @foreach($categories as $cat)
+                        @if($blogs->contains(fn($b) => $b->category_id == $cat->id))
+                            <button type="button" class="post-filter-btn" data-filter="category-{{ $cat->id }}">دسته {{ $cat->name }}</button>
                         @endif
-                        <div class="post-card__body">
-                            <h3 class="post-card__title">{{ $item->title }}</h3>
-                            <p class="post-card__excerpt">{!! Str::limit(strip_tags($item->content), 200, '…') !!}</p>
-                            <div class="post-card__footer">
-                                <span class="time">{{ verta($item->created_at)->format('Y/m/d H:i') }}</span>
-                                <a href="{{ route('groups.comment', $item) }}" class="post-card__link">
-                                    مشاهده نظرات
-                                </a>
+                    @endforeach
+                </div>
+                
+                <div id="posts-container">
+                    @forelse ($blogs as $item)
+                        @php
+                            $type = $item->file_type ? explode('/', $item->file_type)[0] : null;
+                            $likesCount = $item->likes()->count();
+                            $dislikesCount = $item->dislikes()->count();
+                            $commentsCount = $item->comments()->count();
+                            $categoryId = $item->category_id ?? null;
+                        @endphp
+                        <article class="post-card" 
+                                 data-post-id="{{ $item->id }}"
+                                 data-likes="{{ $likesCount }}"
+                                 data-dislikes="{{ $dislikesCount }}"
+                                 data-comments="{{ $commentsCount }}"
+                                 data-category-id="{{ $categoryId }}"
+                                 data-created-at="{{ $item->created_at->timestamp }}">
+                            @if($item->img)
+                                <div class="post-card__media">
+                                    @if($type === 'image')
+                                        <img src="{{ asset('images/blogs/' . $item->img) }}" alt="{{ $item->title }}">
+                                    @elseif($type === 'video')
+                                        <video controls>
+                                            <source src="{{ asset('images/blogs/' . $item->img) }}" type="{{ $item->file_type }}">
+                                        </video>
+                                    @elseif($type === 'audio')
+                                        <audio controls>
+                                            <source src="{{ asset('images/blogs/' . $item->img) }}" type="{{ $item->file_type }}">
+                                        </audio>
+                                    @endif
+                                </div>
+                            @endif
+                            <div class="post-card__body">
+                                <h3 class="post-card__title">{{ $item->title }}</h3>
+                                <p class="post-card__excerpt">{!! Str::limit(strip_tags($item->content), 200, '…') !!}</p>
+                                <div class="post-card__footer">
+                                    <div class="post-card__stats" style="display: flex; gap: 1rem; font-size: 0.85rem; color: #64748b;">
+                                        <span><i class="fas fa-thumbs-up" style="color: #10b981;"></i> {{ $likesCount }}</span>
+                                        <span><i class="fas fa-thumbs-down" style="color: #ef4444;"></i> {{ $dislikesCount }}</span>
+                                        <span><i class="fas fa-comments" style="color: #3b82f6;"></i> {{ $commentsCount }}</span>
+                                        @if($item->category)
+                                            <span><i class="fas fa-tag" style="color: #8b5cf6;"></i> {{ $item->category->name }}</span>
+                                        @endif
+                                    </div>
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <span class="time">{{ verta($item->created_at)->format('Y/m/d H:i') }}</span>
+                                        <a href="{{ route('groups.comment', $item) }}" class="post-card__link">
+                                            مشاهده نظرات
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
+                        </article>
+                    @empty
+                        <div class="empty-state">
+                            هنوز پستی در این گروه ثبت نشده است.
                         </div>
-                    </article>
-                @empty
-                    <div class="empty-state">
-                        هنوز پستی در این گروه ثبت نشده است.
-                    </div>
-                @endforelse
+                    @endforelse
+                </div>
             </div>
 
             <div class="tab-content" id="poll">
@@ -423,7 +503,9 @@
     </div>
 </div>
 
-@include('chat_request', ['user' => auth()->user()])
+@if(($yourRole ?? 0) == 3)
+    @include('chat_request', ['user' => auth()->user()])
+@endif
 
 @push('styles')
 <style>
@@ -782,6 +864,57 @@
         background: rgba(240, 253, 244, 0.6);
         border-radius: 16px;
     }
+    .post-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    }
+    .post-filter-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        background: rgba(248, 250, 252, 0.9);
+        color: #0f4c3a;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    .post-filter-btn:hover {
+        background: rgba(240, 253, 244, 0.8);
+        border-color: rgba(16, 185, 129, 0.4);
+        transform: translateY(-2px);
+    }
+    .post-filter-btn.active {
+        background: linear-gradient(135deg, #10b981, #0f766e);
+        color: #fff;
+        border-color: transparent;
+        box-shadow: 0 4px 12px -4px rgba(15, 118, 110, 0.4);
+    }
+    .post-card {
+        margin-bottom: 1rem;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .post-card.filter-hidden {
+        display: none !important;
+    }
+    .post-card__stats {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .post-card__stats span {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
     .panel-modal {
         position: fixed;
         inset: 0;
@@ -934,13 +1067,6 @@
                 target.classList.add('active');
             }
         });
-    }
-    
-    // اجرای فوری اگر DOM آماده است، وگرنه منتظر می‌ماند
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initTabs);
-    } else {
-        initTabs();
     }
 
     // بارگذاری آمار گروه
@@ -1246,7 +1372,7 @@
 
         @if (isset($_GET['filter']))
             const groupPanel = document.getElementById('groupInfoPanel');
-            const backdrop = document.getElementById('groupInfoBackdrop');
+            const backdrop = document.getElementById('group-info-backdrop');
             if (groupPanel) {
                 groupPanel.classList.add('is-open');
             }
@@ -1257,7 +1383,108 @@
             const postTab = document.querySelector('[data-tab="post"]');
             postTab?.click();
         @endif
+        
     });
+    
+    // استفاده از event delegation روی document برای فیلترهای پست
+    document.addEventListener('click', function(e) {
+        const filterBtn = e.target.closest('.post-filter-btn');
+        if (!filterBtn) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const filterType = filterBtn.dataset.filter;
+        if (!filterType) return;
+        
+        applyPostFilter(filterType);
+    });
+    
+    // تابع فیلتر پست‌ها
+    function applyPostFilter(filterType) {
+        const postsContainer = document.getElementById('posts-container');
+        if (!postsContainer) return;
+        
+        const postCards = document.querySelectorAll('#posts-container .post-card');
+        if (!postCards.length) return;
+        
+        const postsArray = Array.from(postCards);
+        let filteredAndSorted = postsArray;
+        
+        if (filterType === 'all') {
+            filteredAndSorted = postsArray.sort((a, b) => {
+                const dateA = parseInt(a.dataset.createdAt || 0);
+                const dateB = parseInt(b.dataset.createdAt || 0);
+                return dateB - dateA;
+            });
+        } else if (filterType === 'most-likes') {
+            filteredAndSorted = postsArray.sort((a, b) => {
+                const likesA = parseInt(a.dataset.likes || 0);
+                const likesB = parseInt(b.dataset.likes || 0);
+                if (likesB !== likesA) return likesB - likesA;
+                const dateA = parseInt(a.dataset.createdAt || 0);
+                const dateB = parseInt(b.dataset.createdAt || 0);
+                return dateB - dateA;
+            });
+        } else if (filterType === 'most-dislikes') {
+            filteredAndSorted = postsArray.sort((a, b) => {
+                const dislikesA = parseInt(a.dataset.dislikes || 0);
+                const dislikesB = parseInt(b.dataset.dislikes || 0);
+                if (dislikesB !== dislikesA) return dislikesB - dislikesA;
+                const dateA = parseInt(a.dataset.createdAt || 0);
+                const dateB = parseInt(b.dataset.createdAt || 0);
+                return dateB - dateA;
+            });
+        } else if (filterType === 'most-comments') {
+            filteredAndSorted = postsArray.sort((a, b) => {
+                const commentsA = parseInt(a.dataset.comments || 0);
+                const commentsB = parseInt(b.dataset.comments || 0);
+                if (commentsB !== commentsA) return commentsB - commentsA;
+                const dateA = parseInt(a.dataset.createdAt || 0);
+                const dateB = parseInt(b.dataset.createdAt || 0);
+                return dateB - dateA;
+            });
+        } else if (filterType.startsWith('category-')) {
+            const categoryId = filterType.replace('category-', '');
+            filteredAndSorted = postsArray.filter(card => {
+                return card.dataset.categoryId === categoryId;
+            }).sort((a, b) => {
+                const dateA = parseInt(a.dataset.createdAt || 0);
+                const dateB = parseInt(b.dataset.createdAt || 0);
+                return dateB - dateA;
+            });
+        }
+        
+        postsContainer.innerHTML = '';
+        filteredAndSorted.forEach(card => {
+            card.style.display = '';
+            postsContainer.appendChild(card);
+        });
+        
+        const allFilterButtons = document.querySelectorAll('.post-filter-btn');
+        allFilterButtons.forEach(function(b) {
+            b.classList.remove('active');
+        });
+        const activeBtn = document.querySelector('.post-filter-btn[data-filter="' + filterType + '"]');
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
+        
+        if (filteredAndSorted.length === 0 && filterType !== 'all') {
+            let emptyMessage = postsContainer.querySelector('.empty-state-filter');
+            if (!emptyMessage) {
+                emptyMessage = document.createElement('div');
+                emptyMessage.className = 'empty-state-filter empty-state';
+                emptyMessage.textContent = 'پستی در این فیلتر یافت نشد';
+                postsContainer.appendChild(emptyMessage);
+            }
+            emptyMessage.style.display = 'block';
+        } else {
+            const emptyMessage = postsContainer.querySelector('.empty-state-filter');
+            if (emptyMessage) emptyMessage.style.display = 'none';
+        }
+    }
+    
 </script>
 @endpush
 

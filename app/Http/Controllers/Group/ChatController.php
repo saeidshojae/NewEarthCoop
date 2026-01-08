@@ -27,12 +27,34 @@ class ChatController extends Controller
 {
     public function chat(Group $group)
     {
-        $yourRole = GroupUser::where('group_id', $group->id)
+        $groupUser = GroupUser::where('group_id', $group->id)
             ->where('user_id', auth()->id())
-            ->value('role');
+            ->first();
+        
+        // تعیین نقش بر اساس location_level:
+        // - سطح محله و پایین‌تر (neighborhood, street, alley) → فعال (role 1)
+        // - سطح منطقه و بالاتر (region, village, rural, city و ...) → ناظر (role 0)
+        // اگر role در pivot وجود داشت و معتبر بود (2, 3, 4, 5)، از همان استفاده می‌کنیم
+        $pivotRole = $groupUser ? (int)$groupUser->role : null;
+        
+        if (in_array($pivotRole, [2, 3, 4, 5], true)) {
+            // نقش‌های خاص (بازرس، مدیر، مهمان، فعال۲) از pivot استفاده می‌شوند
+            $yourRole = $pivotRole;
+        } else {
+            // در غیر این صورت، بر اساس location_level تعیین می‌کنیم
+            $locationLevel = strtolower(trim((string)($group->location_level ?? '')));
+            if (in_array($locationLevel, ['neighborhood', 'street', 'alley'], true)) {
+                $yourRole = 1; // عضو فعال
+            } else {
+                $yourRole = 0; // ناظر
+            }
+        }
+        
+        $lastReadMessageId = $groupUser ? $groupUser->last_read_message_id : null;
 
         $messages = $group->messages()
-            ->select('id', 'user_id', 'parent_id', 'message as content', 'removed_by', 'edited_by', 'created_at', 'read_by', 'reply_count', 'voice_message', 'file_path', 'file_type', DB::raw("'message' as type"))
+            ->select('id', 'user_id', 'parent_id', 'message as content', 'removed_by', 'edited_by', 'edited', 'created_at', 'updated_at', 'read_by', 'reply_count', 'voice_message', 'file_path', 'file_type', DB::raw("'message' as type"))
+            ->with('reactions')
             ->orderBy('created_at', 'asc')
             ->get();
 
@@ -112,6 +134,8 @@ class ChatController extends Controller
                 'ends_at' => now()->addDays($groupSetting->election_time),
             ]);
 
+            $wasRecentlyCreated = $election->wasRecentlyCreated;
+
             if($election->ends_at < date('Y-m-d H:i:s')){
                 if($election->second_finish_time == null OR $election->second_finish_time < date('Y-m-d H:i:s'))
                 $election->second_finish_time = date(
@@ -134,6 +158,11 @@ class ChatController extends Controller
                     'election_id' => $election->id,
                     'user_id' => $user->id,
                 ]);
+            }
+
+            // Dispatch event for new elections
+            if ($wasRecentlyCreated) {
+                event(new \App\Events\ElectionStarted($election, $group));
             }
         }else{
             $election = Election::where('group_id', $group->id)
@@ -176,11 +205,18 @@ class ChatController extends Controller
             ->get();
         
         // Build vote counts safely; if there's no active election, use empty collections
+        // فقط رای‌های کاربرانی که status=1 دارند (عضو فعال) شمرده می‌شوند
         if ($election) {
+            $activeMemberIds = \App\Models\GroupUser::where('group_id', $group->id)
+                ->where('status', 1)
+                ->pluck('user_id')
+                ->toArray();
+            
             $managerCounts = \DB::table('votes')
                 ->select('candidate_id', \DB::raw('COUNT(*) as c'))
                 ->where('election_id', $election->id)
                 ->where('position', '1')
+                ->whereIn('voter_id', $activeMemberIds) // فقط رای‌های اعضای فعال
                 ->groupBy('candidate_id')
                 ->pluck('c', 'candidate_id');
 
@@ -188,6 +224,7 @@ class ChatController extends Controller
                 ->select('candidate_id', \DB::raw('COUNT(*) as c'))
                 ->where('election_id', $election->id)
                 ->where('position', '0')
+                ->whereIn('voter_id', $activeMemberIds) // فقط رای‌های اعضای فعال
                 ->groupBy('candidate_id')
                 ->pluck('c', 'candidate_id');
         } else {
@@ -234,7 +271,8 @@ class ChatController extends Controller
             'managerCounts' => $managerCounts,
             'inspectorCounts' => $inspectorCounts,
             'managersSorted' => $managersSorted,
-            'inspectorsSorted' => $inspectorsSorted
+            'inspectorsSorted' => $inspectorsSorted,
+            'lastReadMessageId' => $lastReadMessageId
         ]);
     }
 
@@ -245,7 +283,8 @@ class ChatController extends Controller
         $beforeMessageId = $request->get('before_message_id'); // برای pagination به عقب
 
         $messagesQuery = $group->messages()
-            ->select('id', 'user_id', 'parent_id', 'message as content','removed_by', 'edited_by', 'created_at', 'read_by', 'reply_count', 'voice_message', 'file_path', 'file_type', DB::raw("'message' as type"))
+            ->select('id', 'user_id', 'parent_id', 'message as content','removed_by', 'edited_by', 'edited', 'created_at', 'updated_at', 'read_by', 'reply_count', 'voice_message', 'file_path', 'file_type', DB::raw("'message' as type"))
+            ->with('reactions')
             ->orderBy('created_at', 'desc');
 
         // اگر before_message_id داده شده، فقط پیام‌های قبل از آن را بگیر
@@ -308,6 +347,39 @@ class ChatController extends Controller
 
         // اگر درخواست JSON است، JSON برگردان
         if ($request->wantsJson() || $request->expectsJson()) {
+            // Convert voice_message paths to full URLs for messages and add reactions
+            $combined = $combined->map(function($item) {
+                if ($item->type === 'message') {
+                    // Handle voice message URL
+                    if (isset($item->voice_message) && $item->voice_message) {
+                        if (!str_starts_with($item->voice_message, 'http')) {
+                            $voicePath = ltrim($item->voice_message, '/');
+                            // Encode each part of the path to handle spaces and special characters
+                            $pathParts = explode('/', $voicePath);
+                            $encodedParts = array_map('rawurlencode', $pathParts);
+                            $encodedPath = implode('/', $encodedParts);
+                            $item->voice_message = asset('storage/' . $encodedPath);
+                        }
+                    }
+                    
+                    // Add reactions data
+                    if (isset($item->reactions) && $item->reactions) {
+                        $reactions = $item->reactions->groupBy('reaction_type')
+                            ->map(function($group) {
+                                return [
+                                    'type' => $group->first()->reaction_type,
+                                    'count' => $group->count()
+                                ];
+                            })
+                            ->values();
+                        $item->reactions = $reactions;
+                    } else {
+                        $item->reactions = [];
+                    }
+                }
+                return $item;
+            });
+            
             return response()->json([
                 'messages' => $combined,
                 'has_more' => $hasMore,
@@ -386,14 +458,18 @@ class ChatController extends Controller
             'description' => 'required|string'
         ]);
 
-        ReportedMessage::create([
+        $report = ReportedMessage::create([
             'group_id' => $group->id,
             'user_id' => auth()->user()->id,
             'reason' =>  $request->reason,
             'description' => $request->description,
             'reported_by' => auth()->user()->id,
-            'description' => $request->description,
+            'status' => 'pending',
+            'escalated_to_admin' => false,
         ]);
+
+        // Dispatch event for notifying managers and inspectors
+        event(new \App\Events\MessageReported($report, $group, auth()->user()));
         
         return response()->json([
             'success' => true,

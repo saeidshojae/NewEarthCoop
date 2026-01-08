@@ -2,8 +2,11 @@
 <section class="relative hero-gradient py-20 md:py-32 overflow-hidden fade-in-section text-right">
     <div class="absolute inset-0 overflow-hidden">
         <div class="absolute top-0 right-0 w-full h-full bg-pure-white/5 to-transparent z-0"></div>
-        <div class="absolute top-0 right-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1800&q=80')] bg-cover bg-center opacity-15 z-0"></div>
-        <div class="absolute inset-0 bg-pure-white/10 backdrop-blur-sm z-0"></div>
+        <div class="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-earth-green/10 via-ocean-blue/10 to-digital-gold/10 opacity-15 z-0"></div>
+        <!-- Fallback for browsers that don't support backdrop-blur -->
+        <div class="absolute inset-0 bg-pure-white/30 z-0" style="background-color: rgba(255, 255, 255, 0.3);"></div>
+        <!-- backdrop-blur for modern browsers -->
+        <div class="absolute inset-0 bg-pure-white/10 backdrop-blur-sm z-0" style="backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);"></div>
     </div>
 
     <div class="container mx-auto flex flex-col md:flex-row items-center justify-between px-6 relative z-10">
@@ -42,7 +45,7 @@
                         <i class="fas fa-users"></i>
                     </div>
                     <div class="text-right">
-                        <p class="text-3xl font-bold text-gentle-black font-poppins">1.2M+</p>
+                        <p class="text-3xl font-bold text-gentle-black font-poppins">{{ isset($stats) ? $stats['members_formatted'] . '+' : '0' }}</p>
                         <p class="text-gray-600 font-vazirmatn">{{ __('langWelcome.hero_stats_members_label') }}</p>
                     </div>
                 </div>
@@ -51,7 +54,7 @@
                         <i class="fas fa-seedling"></i>
                     </div>
                     <div class="text-right">
-                        <p class="text-3xl font-bold text-gentle-black font-poppins">5.4K+</p>
+                        <p class="text-3xl font-bold text-gentle-black font-poppins">{{ isset($stats) ? $stats['projects_formatted'] . '+' : '0' }}</p>
                         <p class="text-gray-600 font-vazirmatn">{{ __('langWelcome.hero_stats_projects_label') }}</p>
                     </div>
                 </div>
@@ -60,7 +63,7 @@
                         <i class="fas fa-globe-americas"></i>
                     </div>
                     <div class="text-right">
-                            <p class="text-3xl font-bold text-gentle-black font-poppins">120+</p>
+                            <p class="text-3xl font-bold text-gentle-black font-poppins">{{ isset($stats) ? $stats['countries_formatted'] . '+' : '0' }}</p>
                             <p class="text-gray-600 font-vazirmatn">{{ __('langWelcome.hero_stats_countries_label') }}</p>
                     </div>
                 </div>
@@ -70,7 +73,7 @@
         <!-- Image and floating cards -->
         <div class="md:w-1/2 flex justify-center mt-12 md:mt-0 animate-float">
             <div class="relative w-full max-w-lg">
-            <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+            <img src="{{ asset('images/images (1).jpeg') }}"
                 alt="{{ __('langWelcome.hero_card_image_alt') }}"
                       class="w-full rounded-3xl shadow-2xl border-8 border-white transform rotate-3 hover:rotate-0 transition duration-500">
                 <div class="absolute -bottom-8 -left-8 bg-white p-5 rounded-2xl shadow-xl flex items-center space-x-3 rtl:space-x-reverse transform -rotate-6 hover:rotate-0 transition duration-500 hero-image-card-right">

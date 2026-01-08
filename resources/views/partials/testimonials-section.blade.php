@@ -10,44 +10,81 @@
         </p>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="testimonial-card p-8 flex flex-col items-center text-center">
-                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=250&q=80"
-                      alt="{{ __('langWelcome.testimonials_card1_alt') }}"
-                      class="w-24 h-24 rounded-full mb-6 object-cover border-4 border-earth-green shadow-md">
-                <div class="text-xl text-gray-800 italic mb-5 font-vazirmatn relative z-10 before:content-['"'] before:absolute before:-top-4 before:-right-4 before:text-5xl before:text-gray-200 after:content-['"'] after:absolute after:-bottom-4 after:-left-4 after:text-5xl after:text-gray-200">
-                    {{ __('langWelcome.testimonials_card1_quote') }}
+            @php
+                $borderColors = ['border-earth-green', 'border-ocean-blue', 'border-digital-gold'];
+                
+                // تابع برای ایجاد placeholder avatar
+                $createPlaceholder = function($color) {
+                    $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="250" height="250" viewBox="0 0 250 250"><rect fill="' . $color . '" width="250" height="250"/><circle cx="125" cy="100" r="40" fill="white" opacity="0.9"/><path d="M 50 200 Q 125 160 200 200" stroke="white" stroke-width="30" fill="none" stroke-linecap="round" opacity="0.9"/></svg>';
+                    return 'data:image/svg+xml;base64,' . base64_encode($svg);
+                };
+                
+                // بررسی وجود تصاویر محلی و استفاده از placeholder در صورت عدم وجود
+                $avatarFiles = ['1764726699.jpg', '1767311177.jpg', '1767312014.jpg'];
+                $avatarColors = ['#10b981', '#3b82f6', '#f59e0b'];
+                
+                $getAvatar = function($index) use ($avatarFiles, $avatarColors, $createPlaceholder) {
+                    $filePath = public_path('images/users/avatars/' . $avatarFiles[$index]);
+                    return file_exists($filePath) 
+                        ? asset('images/users/avatars/' . $avatarFiles[$index]) 
+                        : $createPlaceholder($avatarColors[$index]);
+                };
+                
+                $defaultTestimonials = [
+                    [
+                        'quote' => __('langWelcome.testimonials_card1_quote'),
+                        'name' => __('langWelcome.testimonials_card1_name'),
+                        'role' => __('langWelcome.testimonials_card1_role'),
+                        'avatar' => $getAvatar(0),
+                    ],
+                    [
+                        'quote' => __('langWelcome.testimonials_card2_quote'),
+                        'name' => __('langWelcome.testimonials_card2_name'),
+                        'role' => __('langWelcome.testimonials_card2_role'),
+                        'avatar' => $getAvatar(1),
+                    ],
+                    [
+                        'quote' => __('langWelcome.testimonials_card3_quote'),
+                        'name' => __('langWelcome.testimonials_card3_name'),
+                        'role' => __('langWelcome.testimonials_card3_role'),
+                        'avatar' => $getAvatar(2),
+                    ],
+                ];
+                
+                $finalTestimonials = isset($testimonials) && $testimonials->count() > 0 
+                    ? $testimonials->toArray() 
+                    : $defaultTestimonials;
+                
+                // اگر testimonials واقعی کمتر از 3 تا بود، بقیه را از default بگیریم
+                if (isset($testimonials) && $testimonials->count() > 0 && $testimonials->count() < 3) {
+                    $finalTestimonials = array_merge(
+                        $testimonials->toArray(),
+                        array_slice($defaultTestimonials, $testimonials->count(), 3 - $testimonials->count())
+                    );
+                }
+                
+                $finalTestimonials = array_slice($finalTestimonials, 0, 3);
+            @endphp
+            
+            @foreach($finalTestimonials as $index => $testimonial)
+                <div class="testimonial-card p-8 flex flex-col items-center text-center">
+                    <img src="{{ $testimonial['avatar'] }}"
+                          alt="{{ $testimonial['name'] }}"
+                          class="w-24 h-24 rounded-full mb-6 object-cover border-4 {{ $borderColors[$index % 3] }} shadow-md">
+                    <div class="text-xl text-gray-800 italic mb-5 font-vazirmatn relative z-10 before:content-['"'] before:absolute before:-top-4 before:-right-4 before:text-5xl before:text-gray-200 after:content-['"'] after:absolute after:-bottom-4 after:-left-4 after:text-5xl after:text-gray-200">
+                        {{ $testimonial['quote'] }}
+                    </div>
+                    <div class="mt-auto pt-4">
+                        <p class="font-bold text-xl font-vazirmatn text-gentle-black">{{ $testimonial['name'] }}</p>
+                        <p class="text-sm font-vazirmatn text-gray-600">
+                            {{ $testimonial['role'] }}
+                            @if(!empty($testimonial['location']))
+                                {{ '، ' . $testimonial['location'] }}
+                            @endif
+                        </p>
+                    </div>
                 </div>
-                <div class="mt-auto pt-4">
-                    <p class="font-bold text-xl font-vazirmatn text-gentle-black">{{ __('langWelcome.testimonials_card1_name') }}</p>
-                    <p class="text-sm font-vazirmatn text-gray-600">{{ __('langWelcome.testimonials_card1_role') }}</p>
-                </div>
-            </div>
-
-            <div class="testimonial-card p-8 flex flex-col items-center text-center">
-                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=250&q=80"
-                      alt="{{ __('langWelcome.testimonials_card2_alt') }}"
-                      class="w-24 h-24 rounded-full mb-6 object-cover border-4 border-ocean-blue shadow-md">
-                <div class="text-xl text-gray-800 italic mb-5 font-vazirmatn relative z-10 before:content-['"'] before:absolute before:-top-4 before:-right-4 before:text-5xl before:text-gray-200 after:content-['"'] after:absolute after:-bottom-4 after:-left-4 after:text-5xl after:text-gray-200">
-                    {{ __('langWelcome.testimonials_card2_quote') }}
-                </div>
-                <div class="mt-auto pt-4">
-                    <p class="font-bold text-xl font-vazirmatn text-gentle-black">{{ __('langWelcome.testimonials_card2_name') }}</p>
-                    <p class="text-sm font-vazirmatn text-gray-600">{{ __('langWelcome.testimonials_card2_role') }}</p>
-                </div>
-            </div>
-
-            <div class="testimonial-card p-8 flex flex-col items-center text-center">
-                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=250&q=80"
-                      alt="{{ __('langWelcome.testimonials_card3_alt') }}"
-                      class="w-24 h-24 rounded-full mb-6 object-cover border-4 border-digital-gold shadow-md">
-                <div class="text-xl text-gray-800 italic mb-5 font-vazirmatn relative z-10 before:content-['"'] before:absolute before:-top-4 before:-right-4 before:text-5xl before:text-gray-200 after:content-['"'] after:absolute after:-bottom-4 after:-left-4 after:text-5xl after:text-gray-200">
-                    {{ __('langWelcome.testimonials_card3_quote') }}
-                </div>
-                <div class="mt-auto pt-4">
-                    <p class="font-bold text-xl font-vazirmatn text-gentle-black">{{ __('langWelcome.testimonials_card3_name') }}</p>
-                    <p class="text-sm font-vazirmatn text-gray-600">{{ __('langWelcome.testimonials_card3_role') }}</p>
-                </div>
-            </div>
+            @endforeach
         </div>
     </div>
 </section>

@@ -130,6 +130,7 @@ Route::post('/register', [StartController::class, 'processRegister'])->name('reg
 Route::middleware(EnsureEmailIsVerified::class)->group(function () {
     // مرحله ۱: اطلاعات هویتی
     Route::get('/register/step1', [Step1Controller::class, 'show'])->name('register.step1');
+    Route::post('/register/step1/validate', [Step1Controller::class, 'validateData'])->name('register.step1.validate');
     Route::post('/register/step1', [Step1Controller::class, 'process'])->name('register.step1.process');
 
     // مرحله ۲: انتخاب تخصص‌هاpa
@@ -198,6 +199,10 @@ Route::middleware(Authenticate::class)->group(function () {
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.readAll');
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.delete');
     Route::delete('/notifications/clear-read', [NotificationController::class, 'deleteAllRead'])->name('notifications.clearRead');
+    
+    // Notification Settings
+    Route::get('/notifications/settings', [\App\Http\Controllers\NotificationSettingsController::class, 'index'])->name('notifications.settings');
+    Route::put('/notifications/settings', [\App\Http\Controllers\NotificationSettingsController::class, 'update'])->name('notifications.settings.update');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'showProfile'])->name('profile.show');
@@ -224,7 +229,7 @@ Route::middleware(Authenticate::class)->group(function () {
 
 
     Route::post('/profile/send-invitation', [ProfileController::class, 'sendInvitation'])->name('profile.send.invitation');
-    Route::get('/profile/show-info', [ProfileController::class, 'showInfo'])->name(name: 'profile.show.info');
+    Route::match(['GET', 'POST'], '/profile/show-info', [ProfileController::class, 'showInfo'])->name(name: 'profile.show.info');
 
     Route::get('/profile/accept-candidate/{type}', [ProfileController::class, 'acceptCandidate'])->name('profile.accept.candidate');
 
@@ -279,6 +284,11 @@ Route::middleware(Authenticate::class)->group(function () {
     Route::get('/groups/{group}/reports/{report}', [\App\Http\Controllers\Group\ReportController::class, 'show'])->name('groups.reports.show');
     Route::post('/groups/{group}/reports/{report}/review', [\App\Http\Controllers\Group\ReportController::class, 'review'])->name('groups.reports.review');
 
+    // تنظیمات کاربر در گروه
+    Route::get('/groups/{group}/settings', [\App\Http\Controllers\Group\GroupSettingController::class, 'getSettings'])->name('groups.settings');
+    Route::post('/groups/{group}/toggle-mute', [\App\Http\Controllers\Group\GroupSettingController::class, 'toggleMute'])->name('groups.toggle-mute');
+    Route::post('/groups/{group}/toggle-archive', [\App\Http\Controllers\Group\GroupSettingController::class, 'toggleArchive'])->name('groups.toggle-archive');
+
     // چت گروهی
     Route::get('/groups/chat/{group}', [ChatController::class, 'chat'])->name('groups.chat');
     Route::get('/api/groups/{group}/messages', [ChatController::class, 'chatAPI']);
@@ -297,6 +307,11 @@ Route::middleware(Authenticate::class)->group(function () {
     Route::post('/messages/send', [MessageController::class, 'store'])->name('groups.messages.store');
     Route::post('/messages/{message}/edit', [MessageController::class, 'edit'])->name('groups.messages.edit');
     Route::get('/messages/{message}/delete', [MessageController::class, 'delete'])->name('groups.messages.delete');
+    Route::post('/messages/{message}/mark-read', [MessageController::class, 'markAsRead'])->name('messages.mark-read');
+    Route::get('/messages/{message}/thread', [MessageController::class, 'getThreadReplies'])->name('messages.thread');
+    Route::post('/messages/update-last-read/{group}', [MessageController::class, 'updateLastReadMessage'])->name('groups.messages.updateLastRead');
+    Route::post('/groups/{group}/typing', [MessageController::class, 'typing'])->name('groups.messages.typing');
+    Route::post('/messages/{message}/reaction', [MessageController::class, 'toggleReaction'])->name('messages.reaction');
     Route::post('/groups/messages/{message}/pin', [MessageController::class, 'pin'])->name('messages.pin');
     Route::post('/groups/messages/{message}/unpin', [MessageController::class, 'unpin'])->name('messages.unpin');
     Route::post('/groups/messages/{message}/report', [MessageController::class, 'report'])->name('messages.report');
@@ -379,6 +394,31 @@ Route::middleware(Authenticate::class)->group(function () {
     Route::get('holdings', [\App\Modules\Stock\Controllers\HoldingController::class, 'index'])->name('holding.index');
     Route::get('holdings/{stock}', [\App\Modules\Stock\Controllers\HoldingController::class, 'show'])->name('holding.show');
     
+    // Dashboard نجم بهار
+    Route::get('najm-bahar/dashboard', [\App\Http\Controllers\NajmBaharController::class, 'dashboard'])->name('najm-bahar.dashboard');
+    
+    // تنظیمات اعلان‌های نجم بهار (redirect به تنظیمات اصلی - سیستم موقت حذف شد)
+    Route::get('najm-bahar/notification-settings', function () {
+        return redirect()->route('notifications.settings.index');
+    })->name('najm-bahar.notification-settings');
+    Route::put('najm-bahar/notification-settings', function () {
+        return redirect()->route('notifications.settings.index');
+    })->name('najm-bahar.notification-settings.update');
+    
+    // گزارش‌های مالی نجم بهار
+    Route::get('najm-bahar/reports', [\App\Http\Controllers\NajmBaharReportController::class, 'index'])->name('najm-bahar.reports');
+    Route::get('najm-bahar/reports/export-pdf', [\App\Http\Controllers\NajmBaharReportController::class, 'exportPdf'])->name('najm-bahar.reports.export-pdf');
+    Route::get('najm-bahar/reports/export-excel', [\App\Http\Controllers\NajmBaharReportController::class, 'exportExcel'])->name('najm-bahar.reports.export-excel');
+    
+    // حساب‌های فرعی نجم بهار
+    Route::get('najm-bahar/sub-accounts', [\App\Http\Controllers\NajmBaharSubAccountController::class, 'index'])->name('najm-bahar.sub-accounts.index');
+    Route::get('najm-bahar/sub-accounts/create', [\App\Http\Controllers\NajmBaharSubAccountController::class, 'create'])->name('najm-bahar.sub-accounts.create');
+    Route::post('najm-bahar/sub-accounts', [\App\Http\Controllers\NajmBaharSubAccountController::class, 'store'])->name('najm-bahar.sub-accounts.store');
+    Route::get('najm-bahar/sub-accounts/{subAccount}', [\App\Http\Controllers\NajmBaharSubAccountController::class, 'show'])->name('najm-bahar.sub-accounts.show');
+    Route::post('najm-bahar/sub-accounts/{subAccount}/transfer-to', [\App\Http\Controllers\NajmBaharSubAccountController::class, 'transferTo'])->name('najm-bahar.sub-accounts.transfer-to');
+    Route::post('najm-bahar/sub-accounts/{subAccount}/transfer-from', [\App\Http\Controllers\NajmBaharSubAccountController::class, 'transferFrom'])->name('najm-bahar.sub-accounts.transfer-from');
+    Route::post('najm-bahar/sub-accounts/{subAccount}/deactivate', [\App\Http\Controllers\NajmBaharSubAccountController::class, 'deactivate'])->name('najm-bahar.sub-accounts.deactivate');
+    
     Route::get('spring-accounts', function(){
         // بررسی وجود حساب نجم بهار برای کاربر
         $spring = \App\Models\Spring::where('user_id', auth()->user()->id)->first();
@@ -410,8 +450,8 @@ Route::middleware(Authenticate::class)->group(function () {
             return view('terms-spring', compact('agreements', 'springAccount'));
         }
         
-        // اگر توافقنامه امضا شده، نمایش صفحه اصلی حساب
-        return view('spring-accounts');
+        // اگر توافقنامه امضا شده، هدایت به Dashboard
+        return redirect()->route('najm-bahar.dashboard');
     })->name('spring-accounts');
 
     Route::get('spring-accounts/agreement', function () {
@@ -647,6 +687,21 @@ Route::middleware(AdminMiddleware::class)->prefix('admin')->name('admin.')->grou
     Route::get('najm-bahar/{najmBahar}/edit', [NajmBaharController::class, 'edit'])->name('najm-bahar.edit');
     Route::put('najm-bahar/{najmBahar}', [NajmBaharController::class, 'update'])->name('najm-bahar.update');
     Route::delete('najm-bahar/{najmBahar}', [NajmBaharController::class, 'destroy'])->name('najm-bahar.destroy');
+    
+    // مدیریت کارمزدهای نجم بهار
+    Route::get('najm-bahar/fees', [\App\Http\Controllers\Admin\NajmBaharFeeController::class, 'index'])->name('najm-bahar.fees.index');
+    Route::get('najm-bahar/fees/create', [\App\Http\Controllers\Admin\NajmBaharFeeController::class, 'create'])->name('najm-bahar.fees.create');
+    Route::post('najm-bahar/fees', [\App\Http\Controllers\Admin\NajmBaharFeeController::class, 'store'])->name('najm-bahar.fees.store');
+    Route::get('najm-bahar/fees/{fee}/edit', [\App\Http\Controllers\Admin\NajmBaharFeeController::class, 'edit'])->name('najm-bahar.fees.edit');
+    Route::put('najm-bahar/fees/{fee}', [\App\Http\Controllers\Admin\NajmBaharFeeController::class, 'update'])->name('najm-bahar.fees.update');
+    Route::delete('najm-bahar/fees/{fee}', [\App\Http\Controllers\Admin\NajmBaharFeeController::class, 'destroy'])->name('najm-bahar.fees.destroy');
+    Route::post('najm-bahar/fees/test', [\App\Http\Controllers\Admin\NajmBaharFeeController::class, 'test'])->name('najm-bahar.fees.test');
+    
+    // Dashboard ادمین نجم بهار
+    Route::get('najm-bahar/dashboard', [\App\Http\Controllers\Admin\NajmBaharDashboardController::class, 'index'])->name('admin.najm-bahar.dashboard');
+    
+    // گزارش‌های تحلیلی نجم بهار
+    Route::get('najm-bahar/analytics', [\App\Http\Controllers\Admin\NajmBaharAnalyticsController::class, 'index'])->name('admin.najm-bahar.analytics');
     
     // صفحه قدیمی نجم بهار (برای سازگاری با سیستم قدیمی)
     Route::get('/najm-page', function(){

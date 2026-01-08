@@ -106,6 +106,12 @@ class ElectionController
             $candidate->save();
         }
 
+        // Dispatch event for finished election
+        event(new \App\Events\ElectionFinished($election, $election->group, $activeCandidates));
+
+        // Close the election
+        $election->update(['is_closed' => 1]);
+
         return response()->json([
             'status' => 'success',
             'candidates' => $activeCandidates,

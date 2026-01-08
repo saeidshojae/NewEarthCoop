@@ -546,7 +546,7 @@
             <!-- Name -->
             <div class="info-item">
                 <div class="info-actions">
-                    <a href="{{ route('profile.show.info', ['field' => 'name']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                    <a href="{{ route('profile.show.info', ['field' => 'name']) }}" class="action-button js-visibility-toggle" data-field="name" title="مخفی/نمایش عمومی">
                         <i class="{{ Auth::user()->show_name == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
                     </a>
                 </div>
@@ -557,7 +557,7 @@
             <!-- Email -->
             <div class="info-item">
                 <div class="info-actions">
-                    <a href="{{ route('profile.show.info', ['field' => 'email']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                    <a href="{{ route('profile.show.info', ['field' => 'email']) }}" class="action-button js-visibility-toggle" data-field="email" title="مخفی/نمایش عمومی">
                         <i class="{{ Auth::user()->show_email == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
                     </a>
                 </div>
@@ -568,7 +568,7 @@
             <!-- Phone -->
             <div class="info-item">
                 <div class="info-actions">
-                    <a href="{{ route('profile.show.info', ['field' => 'phone']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                    <a href="{{ route('profile.show.info', ['field' => 'phone']) }}" class="action-button js-visibility-toggle" data-field="phone" title="مخفی/نمایش عمومی">
                         <i class="{{ Auth::user()->show_phone == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
                     </a>
                 </div>
@@ -579,7 +579,7 @@
             <!-- Birthdate -->
             <div class="info-item">
                 <div class="info-actions">
-                    <a href="{{ route('profile.show.info', ['field' => 'birthdate']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                    <a href="{{ route('profile.show.info', ['field' => 'birthdate']) }}" class="action-button js-visibility-toggle" data-field="birthdate" title="مخفی/نمایش عمومی">
                         <i class="{{ Auth::user()->show_birthdate == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
                     </a>
                 </div>
@@ -590,7 +590,7 @@
             <!-- Gender -->
             <div class="info-item">
                 <div class="info-actions">
-                    <a href="{{ route('profile.show.info', ['field' => 'gender']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                    <a href="{{ route('profile.show.info', ['field' => 'gender']) }}" class="action-button js-visibility-toggle" data-field="gender" title="مخفی/نمایش عمومی">
                         <i class="{{ Auth::user()->show_gender == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
                     </a>
                 </div>
@@ -601,7 +601,7 @@
             <!-- National ID -->
             <div class="info-item">
                 <div class="info-actions">
-                    <a href="{{ route('profile.show.info', ['field' => 'national_id']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                    <a href="{{ route('profile.show.info', ['field' => 'national_id']) }}" class="action-button js-visibility-toggle" data-field="national_id" title="مخفی/نمایش عمومی">
                         <i class="{{ Auth::user()->show_national_id == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
                     </a>
                 </div>
@@ -613,7 +613,7 @@
             <div class="info-item" style="grid-column: 1 / -1;">
                 <div class="info-actions">
                     @if (Auth::user()->biografie != null)
-                        <a href="{{ route('profile.show.info', ['field' => 'biografie']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                        <a href="{{ route('profile.show.info', ['field' => 'biografie']) }}" class="action-button js-visibility-toggle" data-field="biografie" title="مخفی/نمایش عمومی">
                             <i class="{{ Auth::user()->show_biografie == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
                         </a>
                     @endif
@@ -626,7 +626,7 @@
             <div class="info-item" style="grid-column: 1 / -1;">
                 <div class="info-actions">
                     @if (Auth::user()->documents != null)
-                        <a href="{{ route('profile.show.info', ['field' => 'documents']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                        <a href="{{ route('profile.show.info', ['field' => 'documents']) }}" class="action-button js-visibility-toggle" data-field="documents" title="مخفی/نمایش عمومی">
                             <i class="{{ Auth::user()->show_documents == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
                         </a>
                     @endif
@@ -636,20 +636,43 @@
                     @if(Auth::user()->documents == null)
                         <span>-</span>
                     @else
-                        @foreach(explode(',', auth()->user()->documents) as $file)
+                        @php
+                            $documentsData = auth()->user()->documents;
+                            $decoded = json_decode($documentsData, true);
+                            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                $documents = $decoded;
+                            } else {
+                                $files = explode(',', $documentsData);
+                                $documents = [];
+                                foreach ($files as $file) {
+                                    $file = trim($file);
+                                    if (!empty($file)) {
+                                        $extension = pathinfo($file, PATHINFO_EXTENSION);
+                                        $documents[] = [
+                                            'filename' => $file,
+                                            'name' => 'مدرک',
+                                            'type' => strtolower($extension)
+                                        ];
+                                    }
+                                }
+                            }
+                        @endphp
+                        @foreach($documents as $doc)
                             @php
-                                $extension = explode('.', $file)[1] ?? '';
+                                $filename = is_array($doc) ? $doc['filename'] : $doc;
+                                $docName = is_array($doc) ? ($doc['name'] ?? $filename) : $filename;
+                                $extension = is_array($doc) ? ($doc['type'] ?? pathinfo($filename, PATHINFO_EXTENSION)) : pathinfo($filename, PATHINFO_EXTENSION);
                                 $isImage = in_array(strtolower($extension), ['png', 'jpg', 'jpeg']);
                             @endphp
                             <div class="document-item">
                                 @if($isImage)
                                     <i class="fas fa-file-image"></i>
-                                    <img src="{{ asset('images/users/documents/' . $file) }}" width="50" class="rounded">
+                                    <img src="{{ asset('images/users/documents/' . $filename) }}" width="50" class="rounded">
                                 @else
                                     <i class="fas fa-file-pdf"></i>
                                 @endif
-                                <span>{{ $file }}</span>
-                                <a href="{{ asset('images/users/documents/' . $file) }}" download class="text-earth-green hover:text-dark-green">
+                                <span>{{ $docName }}</span>
+                                <a href="{{ asset('images/users/documents/' . $filename) }}" download class="text-earth-green hover:text-dark-green">
                                     <i class="fas fa-download"></i>
                                 </a>
                             </div>
@@ -661,7 +684,7 @@
             <!-- Created At -->
             <div class="info-item">
                 <div class="info-actions">
-                    <a href="{{ route('profile.show.info', ['field' => 'created_at']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                    <a href="{{ route('profile.show.info', ['field' => 'created_at']) }}" class="action-button js-visibility-toggle" data-field="created_at" title="مخفی/نمایش عمومی">
                         <i class="{{ Auth::user()->show_created_at == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
                     </a>
                 </div>
@@ -672,7 +695,7 @@
             <!-- Groups Count -->
             <div class="info-item">
                 <div class="info-actions">
-                    <a href="{{ route('profile.show.info', ['field' => 'groups']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                    <a href="{{ route('profile.show.info', ['field' => 'groups']) }}" class="action-button js-visibility-toggle" data-field="groups" title="مخفی/نمایش عمومی">
                         <i class="{{ Auth::user()->show_groups == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
                     </a>
                 </div>
@@ -683,7 +706,7 @@
             <!-- Social Networks -->
             <div class="info-item" style="grid-column: 1 / -1;">
                 <div class="info-actions">
-                    <a href="{{ route('profile.show.info', ['field' => 'social']) }}" class="action-button" title="مخفی/نمایش عمومی">
+                    <a href="{{ route('profile.show.info', ['field' => 'social']) }}" class="action-button js-visibility-toggle" data-field="social" title="مخفی/نمایش عمومی">
                         <i class="{{ Auth::user()->show_social_networks == 0 ? 'fas fa-eye' : 'fas fa-eye-slash' }}"></i>
                     </a>
                 </div>
@@ -869,6 +892,52 @@ document.addEventListener('DOMContentLoaded', () => {
             // فعال کردن دکمه و نمایش محتوای مربوطه
             stab.classList.add('active', 'btn-primary');
             document.getElementById(stab.getAttribute('data-subtab')).classList.remove('d-none');
+        });
+    });
+
+    // Toggle profile field visibility بدون رفرش صفحه
+    const toggleUrl = @json(route('profile.show.info'));
+    const csrfToken = @json(csrf_token());
+
+    document.querySelectorAll('a.js-visibility-toggle[data-field]').forEach(link => {
+        link.addEventListener('click', async (e) => {
+            e.preventDefault();
+
+            // جلوگیری از کلیک‌های پشت سرهم
+            if (link.dataset.loading === '1') return;
+            link.dataset.loading = '1';
+            link.classList.add('opacity-50', 'pointer-events-none');
+
+            try {
+                const res = await fetch(toggleUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ field: link.dataset.field })
+                });
+
+                if (!res.ok) throw new Error('Toggle failed');
+                const data = await res.json();
+
+                if (!data || data.ok !== true) throw new Error('Invalid response');
+
+                const icon = link.querySelector('i');
+                if (icon) {
+                    // UI convention in this page: icon shows the *action* (not current state)
+                    // value=1 => show_* enabled => action is "hide" => eye-slash
+                    icon.className = (parseInt(data.value, 10) === 1) ? 'fas fa-eye-slash' : 'fas fa-eye';
+                }
+            } catch (err) {
+                // fallback به رفتار قبلی (با رفرش صفحه) در صورت خطا
+                window.location.assign(link.href);
+            } finally {
+                link.dataset.loading = '0';
+                link.classList.remove('opacity-50', 'pointer-events-none');
+            }
         });
     });
 });

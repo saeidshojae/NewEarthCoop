@@ -43,6 +43,14 @@ class ChatRequestController extends Controller
             'request_to_group' => $request_to_group,
         ]);
 
+        // اگر درخواست برای گروه است، به مدیران گروه اعلان بده
+        if ($request_to_group) {
+            $group = Group::find($request_to_group);
+            if ($group) {
+                event(new \App\Events\ChatRequestToGroup($chatRequest, $group, $currentUser));
+            }
+        }
+
         return back()->with('success', 'درخواست چت ارسال شد');
     }
 

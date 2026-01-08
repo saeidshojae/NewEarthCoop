@@ -1,28 +1,29 @@
 {{-- Unified Header Component - بر اساس طراحی صفحه Home --}}
-<header class="bg-pure-white shadow-md py-4 px-6 md:px-8 sticky top-0 z-50 transition-all duration-300" 
-        style="background-color: var(--color-pure-white);">
-    <div class="container mx-auto flex justify-between items-center gap-4">
+<header class="bg-pure-white shadow-md py-3 md:py-4 px-3 md:px-6 lg:px-8 sticky top-0 z-50 transition-all duration-300" 
+        style="background-color: var(--color-pure-white); overflow: visible;">
+    <div class="container mx-auto flex justify-between items-center gap-2 md:gap-4 header-container" style="align-items: center; flex-wrap: nowrap; overflow: visible; position: relative;">
         
         <!-- Logo Section - لینک به خانه -->
-        <div class="flex items-center space-x-3 md:space-x-reverse rtl:space-x-reverse flex-shrink-0">
+        <div class="flex items-center space-x-2 md:space-x-3 md:space-x-reverse rtl:space-x-reverse flex-shrink-0 header-logo-section" style="align-items: center; min-width: 0; overflow: visible; position: relative; z-index: 1;">
             @if(!request()->routeIs('home'))
                 <a href="{{ url()->previous() == url()->current() ? route('home') : url()->previous() }}" 
-                   class="text-gray-600 hover:text-green-600 transition-colors mr-3">
-                    <i class="fa fa-arrow-left text-xl"></i>
+                   class="text-gray-600 hover:text-green-600 transition-colors header-back-button flex-shrink-0"
+                   style="margin-right: 0.5rem;">
+                    <i class="fa fa-arrow-left text-lg md:text-xl"></i>
                 </a>
             @endif
             
             @php
                 $logoTarget = auth()->check() ? route('home') : route('welcome');
             @endphp
-            <a href="{{ $logoTarget }}" class="flex items-center space-x-3 md:space-x-reverse hover:opacity-80 transition-opacity">
-                <svg width="45" height="45" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="logo-animated">
+            <a href="{{ $logoTarget }}" class="flex items-center space-x-4 md:space-x-5 md:space-x-reverse hover:opacity-80 transition-opacity header-logo-link" style="align-items: center; min-width: 0; flex-shrink: 1;">
+                <svg width="35" height="35" class="md:w-[45px] md:h-[45px] logo-animated" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0; position: relative; z-index: 1;">
                     <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" fill="#10b981" opacity="0.8"/>
                     <path d="M12 2C10.5 4 8 6 8 9C8 12 12 14 12 14C12 14 16 12 16 9C16 6 13.5 4 12 2ZM12 14C12 14 10 16 10 18C10 20 12 22 12 22" fill="#047857"/>
                 </svg>
                 
-                <span class="text-2xl md:text-3xl font-extrabold text-gentle-black" 
-                      style="color: var(--color-gentle-black);">
+                <span class="text-lg md:text-2xl lg:text-3xl font-extrabold text-gentle-black header-logo-text" 
+                      style="color: var(--color-gentle-black); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                     EarthCoop
                 </span>
             </a>
@@ -70,7 +71,7 @@
         </nav>
 
         <!-- User Actions -->
-        <div class="flex items-center gap-3 flex-shrink-0">
+        <div class="flex items-center gap-3 flex-shrink-0" style="align-items: center;">
             <!-- Dark Mode Toggle - Desktop -->
             <div class="hidden md:block">
                 <div class="theme-toggle" onclick="toggleTheme()" title="{{ __('navigation.theme_toggle') }}" style="margin: 0 0.5rem;">
@@ -111,13 +112,27 @@
                     @endforeach
                 </div>
             </div>
+
+            @auth
+                <!-- Knowledge Base Quick Access (Desktop) -->
+                <a href="{{ route('support.kb.index') }}"
+                   class="hidden md:inline-flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50 transition focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                   title="پایگاه دانش"
+                   aria-label="پایگاه دانش">
+                    <i class="fas fa-circle-question" style="color: var(--color-ocean-blue);"></i>
+                </a>
+            @endauth
             
             <!-- Mobile Menu Button -->
             <button @click="mobileMenuOpen = !mobileMenuOpen" 
-                    class="md:hidden text-gentle-black focus:outline-none" 
-                    style="color: var(--color-gentle-black);">
-                <i class="fas fa-bars text-2xl" x-show="!mobileMenuOpen"></i>
-                <i class="fas fa-times text-2xl" x-show="mobileMenuOpen" x-transition></i>
+                    class="md:hidden text-gentle-black focus:outline-none flex items-center justify-center mobile-menu-button" 
+                    style="color: var(--color-gentle-black); width: 45px; height: 45px; flex-shrink: 0; display: flex !important; visibility: visible !important; opacity: 1 !important; position: relative;">
+                <i class="fas fa-bars text-2xl mobile-menu-icon-bars" 
+                   :class="{ 'hidden': mobileMenuOpen }"
+                   style="display: inline-block;"></i>
+                <i class="fas fa-times text-2xl mobile-menu-icon-times" 
+                   :class="{ 'hidden': !mobileMenuOpen }"
+                   style="display: none; position: absolute;"></i>
             </button>
 
             @auth
@@ -179,6 +194,15 @@
                     <span>{{ $page->translated_title }}</span>
                 </a>
             @endforeach
+
+            @auth
+                <a href="{{ route('support.kb.index') }}"
+                   @click="mobileMenuOpen = false"
+                   class="block w-full text-center py-2 hover:bg-gray-50 rounded-md transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-circle-question ml-2" style="color: var(--color-ocean-blue);"></i>
+                    <span>پایگاه دانش</span>
+                </a>
+            @endauth
             
             <hr class="w-full border-t border-gray-200 my-2">
             

@@ -101,7 +101,15 @@
         @endif
 
         @php
-            $totalVotes = $item->votes->count();
+            // فقط رای‌های کاربرانی که status=1 دارند (عضو فعال) شمرده می‌شوند
+            $activeMemberIds = \App\Models\GroupUser::where('group_id', $group->id)
+                ->where('status', 1)
+                ->pluck('user_id')
+                ->toArray();
+            
+            $totalVotes = \App\Models\PollVote::where('poll_id', $item->id)
+                ->whereIn('user_id', $activeMemberIds)
+                ->count();
             if ($isSpecialized) {
                 $delegationCount = \App\Models\Delegation::where('poll_id', $item->id)->count();
                 $totalVotes += $delegationCount;
@@ -111,7 +119,10 @@
         <div class="poll-options" {{ $isVotingDisabled ? 'data-disabled=true' : '' }}>
             @foreach($item->options as $option)
                 @php
-                    $optionVotes = $option->votes->count();
+                    $optionVotes = \App\Models\PollVote::where('poll_id', $item->id)
+                        ->where('option_id', $option->id)
+                        ->whereIn('user_id', $activeMemberIds)
+                        ->count();
                     if ($isSpecialized) {
                         $expertDelegations = \App\Models\Delegation::where('poll_id', $item->id)->where('expert_id', $option->user_id)->count();
                         $optionVotes += $expertDelegations;

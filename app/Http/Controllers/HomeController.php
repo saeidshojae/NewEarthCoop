@@ -33,10 +33,24 @@ class HomeController extends Controller
         $groups = auth()->user()->groups;
         
         // دسته‌بندی گروه‌ها بر اساس نوع
-        // '0' = عمومی (general), '1' = تخصصی (specialized), '2' = اختصاصی (exclusive)
+        // '0' = عمومی (general)
+        // '1' = صنفی (specialty_id دارد)
+        // '2' = علمی/تجربی (experience_id دارد)
+        // '3' = سنی (age_group_id دارد)
+        // '4' = جنسیتی (gender دارد)
+        
+        // گروه‌های عمومی: group_type = '0'
         $generalGroups = $groups->where('group_type', '0');
-        $specializedGroups = $groups->where('group_type', '1');
-        $exclusiveGroups = $groups->where('group_type', '2');
+        
+        // گروه‌های تخصصی: شامل صنفی (group_type='1') و علمی (group_type='2')
+        $specializedGroups = $groups->filter(function($group) {
+            return $group->group_type == '1' || $group->group_type == '2';
+        });
+        
+        // گروه‌های اختصاصی: شامل سنی (group_type='3') و جنسیتی (group_type='4')
+        $exclusiveGroups = $groups->filter(function($group) {
+            return $group->group_type == '3' || $group->group_type == '4';
+        });
         
         // دریافت حراج‌های فعال
         $activeAuctions = \App\Modules\Stock\Models\Auction::where('status', 'running')

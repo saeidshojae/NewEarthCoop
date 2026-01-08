@@ -202,6 +202,13 @@ class ProfileController
     $candidate->accept_status = 2;
     $candidate->save();
 
+    // Dispatch event for accepted candidate
+    $candidate->refresh();
+    $election = $candidate->election;
+    $group = $election->group;
+    $user = $candidate->user;
+    event(new \App\Events\CandidateAccepted($candidate, $election, $group, $user));
+
     return redirect()->back()->with('success', 'شما با موفقیت پذیرفته شدید');
 }
 elseif($type == 'reject'){
@@ -433,13 +440,33 @@ protected function isValidIranianNationalCode(string $code): bool
             'phone' => 'nullable|regex:/^(0)?9\d{9}$/|unique:users,phone,' . auth()->user()->id,
             // 'email' => 'required|email|unique:users,email,' . auth()->user()->id,
             'documents.*'        => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:4084',
+            'document_names.*'   => 'nullable|string|max:100',
             'avatar'           => 'nullable|image|mimes:jpg,jpeg,png|max:4084',
             'biografie'              => 'nullable|string|max:1000',
         ]);
 
-        if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
+        // Handle avatar removal
+        if ($request->has('remove_avatar') && $request->remove_avatar == '1') {
+            $oldAvatar = auth()->user()->avatar;
+            if ($oldAvatar) {
+                $oldAvatarPath = public_path('images/users/avatars/' . $oldAvatar);
+                if (file_exists($oldAvatarPath)) {
+                    unlink($oldAvatarPath);
+                }
+            }
+            $inputs['avatar'] = null;
+        } elseif ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
             $file = $request->file('avatar');
             $name = time() . '.' . $file->getClientOriginalExtension();
+            
+            // Delete old avatar if exists
+            $oldAvatar = auth()->user()->avatar;
+            if ($oldAvatar) {
+                $oldAvatarPath = public_path('images/users/avatars/' . $oldAvatar);
+                if (file_exists($oldAvatarPath)) {
+                    unlink($oldAvatarPath);
+                }
+            }
             
             // Move the cropped image directly to the destination
             $file->move(public_path('images/users/avatars/'), $name);
@@ -447,21 +474,58 @@ protected function isValidIranianNationalCode(string $code): bool
             $inputs['avatar'] = $name;
         }
         
-        // چک کردن تعداد فایل‌ها
-        if ($request->hasFile('documents') && count($request->file('documents')) > 5) {
-            return response()->json(['message' => 'شما می‌توانید حداکثر ۵ فایل آپلود کنید.'], 400);
-        }
-        
+        // چک کردن تعداد فایل‌ها (با در نظر گرفتن فایل‌های موجود)
         if ($request->hasFile('documents')) {
-            $files = $request->file(key: 'documents');
-            $documentPaths = auth()->user()->documents ? explode(',', auth()->user()->documents) : []; // Array to store the file paths
-            foreach($files as $file){
-                $name = time() . '.' . $file->getClientOriginalExtension();
-                array_push($documentPaths, $name);
-                $file->move(public_path('images/users/documents'), $name);
+            $files = $request->file('documents');
+            $documentNames = $request->input('document_names', []);
+            
+            // خواندن مدارک موجود (پشتیبانی از JSON و comma-separated)
+            $existingDocumentsRaw = auth()->user()->documents;
+            $existingDocuments = [];
+            if ($existingDocumentsRaw) {
+                $decoded = json_decode($existingDocumentsRaw, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $existingDocuments = $decoded;
+                } else {
+                    // تبدیل comma-separated به فرمت JSON
+                    $filesArray = explode(',', $existingDocumentsRaw);
+                    foreach ($filesArray as $file) {
+                        $file = trim($file);
+                        if (!empty($file)) {
+                            $extension = pathinfo($file, PATHINFO_EXTENSION);
+                            $existingDocuments[] = [
+                                'filename' => $file,
+                                'name' => 'مدرک',
+                                'type' => strtolower($extension)
+                            ];
+                        }
+                    }
+                }
             }
-            $documentPathsString = implode(',', $documentPaths);
-            $inputs['documents'] = $documentPathsString;                
+            
+            $totalDocuments = count($existingDocuments) + count($files);
+            
+            if ($totalDocuments > 5) {
+                return back()->with('error', 'شما می‌توانید حداکثر ۵ فایل داشته باشید. لطفاً ابتدا برخی از فایل‌های موجود را حذف کنید.')->withInput();
+            }
+            
+            // پردازش فایل‌های جدید
+            $allDocuments = $existingDocuments;
+            foreach($files as $index => $file){
+                $name = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('images/users/documents'), $name);
+                
+                $extension = strtolower($file->getClientOriginalExtension());
+                $docName = !empty($documentNames[$index]) ? trim($documentNames[$index]) : 'مدرک';
+                
+                $allDocuments[] = [
+                    'filename' => $name,
+                    'name' => $docName,
+                    'type' => $extension
+                ];
+            }
+            
+            $inputs['documents'] = json_encode($allDocuments, JSON_UNESCAPED_UNICODE);                
         }
 
         $user = User::find(auth()->user()->id);
@@ -806,39 +870,51 @@ foreach ($removedExperience as $id) {
         ));
     } 
 
-    public function showInfo(){
-        if(!isset($_GET['field'])){
-            return back();
-            exit;
-        }
-        $user = Auth::user();
+    public function showInfo(Request $request)
+    {
+        $field = $request->input('field', $request->query('field'));
 
-        $field = request('field');
-        if($field === 'name'){
-            $user->show_name == 0 ? $user->show_name = 1 : $user->show_name = 0;
-        }elseif($field === 'email'){
-            $user->show_email == 0 ? $user->show_email = 1 : $user->show_email = 0;
-        }elseif($field === 'phone'){
-            $user->show_phone == 0 ? $user->show_phone = 1 : $user->show_phone = 0;
-        }elseif($field === 'birthdate'){
-            $user->show_birthdate == 0 ? $user->show_birthdate = 1 : $user->show_birthdate = 0;
-        }elseif($field === 'gender'){
-            $user->show_gender == 0 ? $user->show_gender = 1 : $user->show_gender = 0;
-        }elseif($field === 'national_id'){
-            $user->show_national_id == 0 ? $user->show_national_id = 1 : $user->show_national_id = 0;
-        }elseif($field === 'biografie'){
-            $user->show_biografie == 0 ? $user->show_biografie = 1 : $user->show_biografie = 0;
-        }elseif($field === 'documents'){
-            $user->show_documents == 0 ? $user->show_documents = 1 : $user->show_documents = 0;
-        }elseif($field === 'groups'){
-            $user->show_groups == 0 ? $user->show_groups = 1 : $user->show_groups = 0;
-        }elseif($field === 'created_at'){
-            $user->show_created_at == 0 ? $user->show_created_at = 1 : $user->show_created_at = 0;
-        }elseif($field === 'social'){
-            $user->show_social_networks == 0 ? $user->show_social_networks = 1 : $user->show_social_networks = 0;
+        $map = [
+            'name'        => 'show_name',
+            'email'       => 'show_email',
+            'phone'       => 'show_phone',
+            'birthdate'   => 'show_birthdate',
+            'gender'      => 'show_gender',
+            'national_id' => 'show_national_id',
+            'biografie'   => 'show_biografie',
+            'documents'   => 'show_documents',
+            'groups'      => 'show_groups',
+            'created_at'  => 'show_created_at',
+            'social'      => 'show_social_networks',
+        ];
+
+        if (!$field || !array_key_exists($field, $map)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Invalid field',
+                ], 422);
+            }
+
+            return back();
         }
-        
+
+        $user = $request->user();
+        $column = $map[$field];
+
+        // toggle (treat null as false)
+        $user->{$column} = (int) !((bool) $user->{$column});
         $user->save();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'ok' => true,
+                'field' => $field,
+                'column' => $column,
+                'value' => (int) $user->{$column},
+            ]);
+        }
+
         return back()->with('success', 'پروفایل با موفقیت ویرایش شد');
     }
 
@@ -856,21 +932,55 @@ foreach ($removedExperience as $id) {
     }
     
     public function deleteDocument(Request $request, $index)
-{
-    $user = auth()->user();
-    $documents = explode(',',$user->documents) ?? [];
+    {
+        $user = auth()->user();
+        $documentsRaw = $user->documents;
+        
+        if (!$documentsRaw) {
+            return back()->with('error', 'مدرکی یافت نشد.');
+        }
+        
+        // خواندن مدارک (پشتیبانی از JSON و comma-separated)
+        $decoded = json_decode($documentsRaw, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            $documents = $decoded;
+        } else {
+            // تبدیل comma-separated به فرمت JSON
+            $filesArray = explode(',', $documentsRaw);
+            $documents = [];
+            foreach ($filesArray as $file) {
+                $file = trim($file);
+                if (!empty($file)) {
+                    $extension = pathinfo($file, PATHINFO_EXTENSION);
+                    $documents[] = [
+                        'filename' => $file,
+                        'name' => 'مدرک',
+                        'type' => strtolower($extension)
+                    ];
+                }
+            }
+        }
 
-    if (isset($documents[$index])) {
-        // حذف فایل از storage
-        Storage::delete('public/' . $documents[$index]);
+        if (isset($documents[$index])) {
+            $documentToDelete = $documents[$index];
+            $filename = is_array($documentToDelete) ? $documentToDelete['filename'] : $documentToDelete;
+            
+            // حذف فایل از public directory
+            $filePath = public_path('images/users/documents/' . $filename);
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
 
-        // حذف از آرایه
-        unset($documents[$index]);
-        $user->documents = array_values($documents); // بازآرایی ایندکس‌ها
-        $user->save();
+            // حذف از آرایه
+            unset($documents[$index]);
+            $documents = array_values($documents); // بازآرایی ایندکس‌ها
+            
+            // به‌روزرسانی documents در دیتابیس (به صورت JSON)
+            $user->documents = !empty($documents) ? json_encode($documents, JSON_UNESCAPED_UNICODE) : null;
+            $user->save();
+        }
+
+        return back()->with('success', 'مدرک با موفقیت حذف شد.');
     }
-
-    return back()->with('success', 'مدرک با موفقیت حذف شد.');
-}
 
 }

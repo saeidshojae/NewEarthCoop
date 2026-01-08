@@ -2,6 +2,89 @@
 
 @section('title', $article->title)
 
+@push('styles')
+<style>
+    /* KB Article content styling (Tailwind CDN doesn't include Typography plugin by default) */
+    .kb-content {
+        direction: rtl;
+        text-align: right;
+        line-height: 1.9;
+        font-size: 1rem;
+        color: #334155; /* slate-700 */
+        word-break: break-word;
+    }
+    body.dark-mode .kb-content { color: #e2e8f0; }
+
+    .kb-content p { margin: 0.75rem 0; }
+
+    .kb-content h2, .kb-content h3, .kb-content h4 {
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        font-weight: 800;
+        color: #0f172a; /* slate-900 */
+        line-height: 1.35;
+    }
+    body.dark-mode .kb-content h2,
+    body.dark-mode .kb-content h3,
+    body.dark-mode .kb-content h4 { color: #f8fafc; }
+
+    .kb-content h2 { font-size: 1.35rem; }
+    .kb-content h3 { font-size: 1.15rem; }
+    .kb-content h4 { font-size: 1.05rem; }
+
+    .kb-content ul, .kb-content ol {
+        margin: 0.75rem 0;
+        padding-right: 1.25rem;
+    }
+    .kb-content ul { list-style: disc; }
+    .kb-content ol { list-style: decimal; }
+    .kb-content li { margin: 0.35rem 0; }
+
+    .kb-content a {
+        color: #059669; /* emerald-600 */
+        text-decoration: underline;
+        text-underline-offset: 3px;
+    }
+    .kb-content a:hover { color: #047857; } /* emerald-700 */
+
+    .kb-content blockquote {
+        border-right: 4px solid rgba(16, 185, 129, 0.35);
+        padding: 0.75rem 1rem;
+        margin: 1rem 0;
+        background: rgba(16, 185, 129, 0.06);
+        border-radius: 0.75rem;
+    }
+    body.dark-mode .kb-content blockquote {
+        background: rgba(16, 185, 129, 0.12);
+    }
+
+    .kb-content code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 0.95em;
+        padding: 0.15rem 0.35rem;
+        border-radius: 0.4rem;
+        background: rgba(15, 23, 42, 0.06);
+    }
+    body.dark-mode .kb-content code { background: rgba(148, 163, 184, 0.18); }
+
+    .kb-content pre {
+        overflow: auto;
+        padding: 1rem;
+        border-radius: 1rem;
+        background: rgba(15, 23, 42, 0.06);
+        margin: 1rem 0;
+    }
+    body.dark-mode .kb-content pre { background: rgba(148, 163, 184, 0.18); }
+    .kb-content pre code { background: transparent; padding: 0; }
+
+    .kb-content hr {
+        border: 0;
+        border-top: 1px solid rgba(148, 163, 184, 0.35);
+        margin: 1.25rem 0;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="flex" dir="rtl">
     @include('partials.sidebar-unified')
@@ -27,8 +110,19 @@
                     <span><i class="far fa-eye ml-1"></i>{{ number_format($article->view_count) }} بازدید</span>
                 </div>
                 <p class="text-lg text-slate-600 dark:text-slate-300 leading-8">{{ $article->excerpt }}</p>
-                <div class="prose prose-slate max-w-none prose-headings:text-slate-900 prose-strong:text-slate-900 prose-a:text-[var(--color-teal)] dark:prose-invert">
-                    {!! nl2br(e($article->content)) !!}
+                @php
+                    // محتوا ممکن است از ادیتور با HTML ذخیره شده باشد.
+                    // اگر HTML به صورت entity ذخیره شده باشد (مثل &lt;h2&gt;)، ابتدا decode می‌کنیم.
+                    $contentRaw = $article->content ?? '';
+                    $content = html_entity_decode($contentRaw, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    $hasHtml = $content !== strip_tags($content);
+                @endphp
+                <div class="kb-content">
+                    @if($hasHtml)
+                        {!! $content !!}
+                    @else
+                        {!! nl2br(e($content)) !!}
+                    @endif
                 </div>
                 @if($article->tags->count())
                     <div class="flex flex-wrap gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">

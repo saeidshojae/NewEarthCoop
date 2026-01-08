@@ -44,6 +44,8 @@
           if (!in_array($level, ['continent', 'country', 'province', 'county', 'section', 'city'])) {
               $modelMap = [
                   'region' => \App\Models\Region::class,
+                  'village' => \App\Models\Village::class,
+                  'rural' => \App\Models\Rural::class,
                   'neighborhood' => \App\Models\Neighborhood::class,
                   'street' => \App\Models\Street::class,
                   'alley' => \App\Models\Alley::class,
@@ -67,7 +69,26 @@
 
     @if($pivot)
       @php
-        $memberRole = match($pivot->role) {
+        // نقش کاربر را بر اساس location_level تعیین می‌کنیم:
+        // - سطح محله و پایین‌تر (neighborhood, street, alley) → عضو فعال (role 1)
+        // - سطح منطقه و بالاتر (region, village, rural, city و ...) → ناظر (role 0)
+        // این منطق همیشه اعمال می‌شود، صرف نظر از مقدار pivot->role در دیتابیس
+        $locationLevel = strtolower(trim((string)($group->location_level ?? '')));
+        
+        // اگر location_level مشخص نیست، از pivot استفاده می‌کنیم (fallback)
+        if (empty($locationLevel)) {
+            $pivotRole = isset($pivot->role) ? (int) $pivot->role : 0;
+        } else {
+            // بر اساس location_level تعیین می‌شود
+            if (in_array($locationLevel, ['neighborhood', 'street', 'alley'], true)) {
+                $pivotRole = 1; // عضو فعال
+            } else {
+                // سطوح منطقه و بالاتر
+                $pivotRole = 0; // ناظر
+            }
+        }
+        
+        $memberRole = match($pivotRole) {
           0 => 'ناظر',
           1 => 'فعال',
           2 => 'بازرس',

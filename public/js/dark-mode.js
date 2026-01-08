@@ -37,8 +37,11 @@
         });
         window.dispatchEvent(event);
         
-        // Log for debugging
-        console.log('Theme changed to:', theme);
+        // فقط در حالت development لاگ کنسول را نمایش بده
+        // این لاگ را کامنت کردیم تا کنسول تمیزتر باشد
+        // if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        //     console.log('Theme changed to:', theme);
+        // }
     };
 
     // Function to update all toggle button states
@@ -95,7 +98,11 @@
             });
         });
         
-        console.log('Dark mode initialized. Current theme:', savedTheme);
+        // فقط در حالت development لاگ کنسول را نمایش بده
+        // این لاگ را کامنت کردیم تا کنسول تمیزتر باشد
+        // if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        //     console.log('Dark mode initialized. Current theme:', savedTheme);
+        // }
     }
 
     // Initialize when DOM is ready

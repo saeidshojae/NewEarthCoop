@@ -2,10 +2,74 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ get_direction() }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ __('langWelcome.site_title') }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="format-detection" content="telephone=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>{{ __('langWelcome.site_title') }}</title>
+    @if(config('app.env') === 'production')
+        {{-- در production باید Tailwind را به صورت محلی نصب و کامپایل کنید --}}
+        {{-- <link rel="stylesheet" href="{{ asset('css/tailwind.css') }}"> --}}
+        <script src="https://cdn.tailwindcss.com"></script>
+    @else
+        {{-- در development استفاده از CDN مجاز است --}}
+        <script src="https://cdn.tailwindcss.com"></script>
+    @endif
+    <script>
+        // Suppress warnings که از کد ما نیستند
+        (function() {
+            if (window.console && window.console.warn) {
+                var originalWarn = console.warn;
+                console.warn = function() {
+                    var message = arguments[0];
+                    
+                    // Suppress Tailwind CDN warning
+                    if (message && typeof message === 'string' && 
+                        message.includes('cdn.tailwindcss.com') && 
+                        message.includes('should not be used in production')) {
+                        return;
+                    }
+                    
+                    // Suppress Tracking Prevention warnings (از Edge)
+                    if (message && typeof message === 'string' && 
+                        message.includes('Tracking Prevention blocked')) {
+                        return;
+                    }
+                    
+                    // سایر warnings را نمایش بده
+                    originalWarn.apply(console, arguments);
+                };
+            }
+            
+            // Suppress errors از افزونه‌های مرورگر
+            if (window.console && window.console.error) {
+                var originalError = console.error;
+                console.error = function() {
+                    var message = arguments[0];
+                    var source = arguments[1] || '';
+                    
+                    // Suppress errors از content.js و content-all.js (افزونه‌های مرورگر)
+                    if (typeof source === 'string' && 
+                        (source.includes('content.js') || source.includes('content-all.js'))) {
+                        return;
+                    }
+                    
+                    // Suppress forEach errors از افزونه‌ها
+                    if (message && typeof message === 'string' && 
+                        message.includes('forEach is not a function') &&
+                        (source.includes('content') || source.includes('extension'))) {
+                        return;
+                    }
+                    
+                    // سایر errors را نمایش بده
+                    originalError.apply(console, arguments);
+                };
+            }
+        })();
+    </script>
+    <!-- Fonts with preconnect for better performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
@@ -13,7 +77,127 @@
     <link rel="stylesheet" href="{{ asset('Css/dark-mode.css') }}">
     <script src="{{ asset('js/dark-mode.js') }}"></script>
     
+    <!-- Edge Browser Compatibility -->
+    <link rel="stylesheet" href="{{ asset('css/edge-compatibility.css') }}">
+    
+    <!-- Polyfill for CSS Variables in older browsers (Edge Legacy) -->
+    <script>
+        // تشخیص Edge و اعمال فوری fallback
+        (function() {
+            var isEdge = /Edg/.test(navigator.userAgent) || /Edge/.test(navigator.userAgent);
+            var isIE = /Trident/.test(navigator.userAgent);
+            
+            // Simple CSS Variables polyfill for Edge Legacy
+            if (!window.CSS || !CSS.supports || !CSS.supports('color', 'var(--fake-var)')) {
+                var style = document.createElement('style');
+                var cssVariables = {
+                    '--color-earth-green': '#10b981',
+                    '--color-ocean-blue': '#3b82f6',
+                    '--color-digital-gold': '#f59e0b',
+                    '--color-pure-white': '#ffffff',
+                    '--color-light-gray': '#f8fafc',
+                    '--color-gentle-black': '#1e293b',
+                    '--color-dark-green': '#047857',
+                    '--color-dark-blue': '#1d4ed8',
+                    '--color-accent-peach': '#ff7e5f',
+                    '--color-accent-sky': '#6dd5ed',
+                    '--color-purple-700': '#6B46C1'
+                };
+                var css = '';
+                for (var prop in cssVariables) {
+                    css += prop.replace('--', '') + ': ' + cssVariables[prop] + '; ';
+                }
+                style.textContent = ':root { ' + css + ' }';
+                document.head.appendChild(style);
+            }
+            
+            // برای Edge فوراً base styles را اعمال کن
+            if (isEdge || isIE) {
+                var baseStyle = document.createElement('style');
+                baseStyle.id = 'edge-base-styles';
+                baseStyle.textContent = `
+                    * { box-sizing: border-box; }
+                    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+                    body { 
+                        margin: 0; 
+                        padding: 0; 
+                        font-size: 1rem; 
+                        line-height: 1.5;
+                        -webkit-font-smoothing: antialiased;
+                        -moz-osx-font-smoothing: grayscale;
+                    }
+                    .container { 
+                        width: 100%; 
+                        margin-left: auto; 
+                        margin-right: auto; 
+                        padding-left: 1rem; 
+                        padding-right: 1rem; 
+                    }
+                    @media (min-width: 640px) { .container { max-width: 640px; } }
+                    @media (min-width: 768px) { .container { max-width: 768px; } }
+                    @media (min-width: 1024px) { .container { max-width: 1024px; } }
+                    @media (min-width: 1280px) { .container { max-width: 1280px; } }
+                `;
+                document.head.insertBefore(baseStyle, document.head.firstChild);
+                document.documentElement.classList.add('edge-browser');
+            }
+            
+            // بررسی لود شدن Tailwind
+            var tailwindLoaded = false;
+            var checkCount = 0;
+            var maxChecks = 50; // 5 ثانیه
+            
+            var checkTailwind = setInterval(function() {
+                checkCount++;
+                
+                // بررسی وجود Tailwind
+                if (window.tailwind || (document.querySelector('style[data-tailwind]') !== null)) {
+                    tailwindLoaded = true;
+                    clearInterval(checkTailwind);
+                    return;
+                }
+                
+                // اگر Tailwind لود نشد و Edge است، فوراً fallback را فعال کن
+                if ((isEdge || isIE) && checkCount >= 10) {
+                    clearInterval(checkTailwind);
+                    document.documentElement.classList.add('tailwind-fallback');
+                    console.warn('Tailwind CDN not loaded, using fallback styles for Edge');
+                }
+                
+                // توقف بعد از maxChecks
+                if (checkCount >= maxChecks) {
+                    clearInterval(checkTailwind);
+                    if (!tailwindLoaded) {
+                        document.documentElement.classList.add('tailwind-fallback');
+                        // فقط در development لاگ کن
+                        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                            console.warn('Tailwind CDN timeout, using fallback styles');
+                        }
+                    }
+                }
+            }, 100);
+        })();
+    </script>
+    
     <style>
+        /* Browser Compatibility Fixes - اصلاحات سازگاری با مرورگرها */
+        /* پشتیبانی از CSS Variables در Edge قدیمی */
+        @supports not (--css: variables) {
+            /* Fallback برای مرورگرهای قدیمی */
+            .bg-earth-green { background-color: #10b981 !important; }
+            .text-earth-green { color: #10b981 !important; }
+            .bg-ocean-blue { background-color: #3b82f6 !important; }
+            .text-ocean-blue { color: #3b82f6 !important; }
+            .bg-digital-gold { background-color: #f59e0b !important; }
+            .text-digital-gold { color: #f59e0b !important; }
+            .bg-pure-white { background-color: #ffffff !important; }
+            .text-pure-white { color: #ffffff !important; }
+            .bg-light-gray { background-color: #f8fafc !important; }
+            .text-light-gray { color: #f8fafc !important; }
+            .bg-gentle-black { background-color: #1e293b !important; }
+            .text-gentle-black { color: #1e293b !important; }
+        }
+
         /* Custom Tailwind Configuration - پیکربندی رنگ‌ها و فونت‌ها */
         :root {
             --color-earth-green: #10b981;
@@ -50,9 +234,15 @@
         .text-accent-sky { color: var(--color-accent-sky); }
         .text-purple-700 { color: var(--color-purple-700); }
 
-        /* Font Families */
-        .font-vazirmatn { font-family: 'Vazirmatn', sans-serif; }
-        .font-poppins { font-family: 'Poppins', sans-serif; }
+        /* Font Families with fallback */
+        .font-vazirmatn { 
+            font-family: 'Vazirmatn', 'Tahoma', 'Arial', sans-serif; 
+            font-display: swap; /* بهبود لود فونت */
+        }
+        .font-poppins { 
+            font-family: 'Poppins', 'Arial', sans-serif; 
+            font-display: swap;
+        }
 
         /* Custom animations */
         @keyframes float {
@@ -281,12 +471,22 @@
         .globe {
             width: 150px;
             height: 150px;
-            background: url('https://images.unsplash.com/photo-1614730321146-b6fa89a875eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80') center/cover;
+            background: linear-gradient(135deg, #10b981 0%, #3b82f6 50%, #059669 100%);
             border-radius: 50%;
             box-shadow: 0 0 60px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.3);
             position: relative;
             animation: rotate 60s linear infinite;
             transform-style: preserve-3d;
+        }
+
+        /* Fallback for browsers that don't support preserve-3d */
+        @supports not (transform-style: preserve-3d) {
+            .globe {
+                transform-style: flat;
+            }
+            .globe-dots {
+                transform-style: flat;
+            }
         }
 
         .globe::before {
@@ -336,12 +536,20 @@
             text-align: right;
         }
 
+        [dir="ltr"] .stats-item {
+            padding-right: 0;
+            padding-left: 35px;
+            text-align: left;
+        }
+
         .stats-item::before {
             content: '';
             position: absolute;
             right: 0;
             top: 50%;
             transform: translateY(-50%);
+            -webkit-transform: translateY(-50%);
+            -ms-transform: translateY(-50%);
             width: 20px;
             height: 20px;
             border-radius: 50%;
@@ -349,10 +557,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Font Awesome 5 Free';
+            font-family: 'Font Awesome 5 Free', 'Font Awesome 6 Free';
             font-weight: 900;
             color: var(--color-pure-white);
             font-size: 0.8rem;
+        }
+
+        [dir="ltr"] .stats-item::before {
+            right: auto;
+            left: 0;
         }
 
         .stats-item:nth-child(1)::before { content: '\f007'; background-color: var(--color-earth-green); }
@@ -372,10 +585,19 @@
             align-items: center;
             transform: rotate(-6deg);
             transition: transform 0.5s;
+            -webkit-transform: rotate(-6deg);
+            -ms-transform: rotate(-6deg);
         }
 
         .hero-image-card-right:hover {
             transform: rotate(0deg);
+            -webkit-transform: rotate(0deg);
+            -ms-transform: rotate(0deg);
+        }
+
+        [dir="rtl"] .hero-image-card-right {
+            left: auto;
+            right: -8px;
         }
 
         .hero-image-card-left {
@@ -390,10 +612,19 @@
             align-items: center;
             transform: rotate(6deg);
             transition: transform 0.5s;
+            -webkit-transform: rotate(6deg);
+            -ms-transform: rotate(6deg);
         }
 
         .hero-image-card-left:hover {
             transform: rotate(0deg);
+            -webkit-transform: rotate(0deg);
+            -ms-transform: rotate(0deg);
+        }
+
+        [dir="rtl"] .hero-image-card-left {
+            right: auto;
+            left: -8px;
         }
 
         /* Custom styling for new sections */
@@ -419,6 +650,121 @@
 
         #modalContent {
             animation: modalFadeIn 0.3s ease-out;
+        }
+
+        /* Edge Browser Compatibility Fixes */
+        /* Ensure flexbox works in Edge */
+        .flex {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+        }
+
+        /* Ensure grid works in Edge */
+        .grid {
+            display: -ms-grid;
+            display: grid;
+        }
+
+        /* Fix for transform in Edge */
+        .transform {
+            -webkit-transform: translateZ(0);
+            -ms-transform: translateZ(0);
+            transform: translateZ(0);
+        }
+
+        /* Fix for transitions in Edge */
+        .transition {
+            -webkit-transition: all 0.3s ease;
+            -ms-transition: all 0.3s ease;
+            transition: all 0.3s ease;
+        }
+
+        /* Fix for rounded corners in Edge */
+        .rounded-full {
+            border-radius: 9999px;
+            -webkit-border-radius: 9999px;
+        }
+
+        /* Fix for opacity in Edge */
+        .opacity-15 {
+            opacity: 0.15;
+            filter: alpha(opacity=15); /* IE8 and earlier */
+        }
+
+        /* Fix for backdrop-filter fallback */
+        @supports not (backdrop-filter: blur(4px)) {
+            .backdrop-blur-sm {
+                background-color: rgba(255, 255, 255, 0.3) !important;
+            }
+        }
+
+        /* Ensure text rendering is smooth in Edge */
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+
+        /* فوری: تنظیم اندازه پایه برای Edge */
+        .edge-browser body,
+        .tailwind-fallback body {
+            font-size: 16px !important;
+            line-height: 1.5 !important;
+        }
+
+        .edge-browser .container,
+        .tailwind-fallback .container {
+            max-width: 1280px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+
+        /* تنظیم اندازه فونت‌ها برای Edge */
+        .edge-browser h1,
+        .tailwind-fallback h1 {
+            font-size: 2.25rem !important;
+            line-height: 1.2 !important;
+        }
+
+        @media (min-width: 768px) {
+            .edge-browser h1,
+            .tailwind-fallback h1 {
+                font-size: 3.75rem !important;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .edge-browser h1,
+            .tailwind-fallback h1 {
+                font-size: 4.5rem !important;
+            }
+        }
+
+        .edge-browser p,
+        .tailwind-fallback p {
+            font-size: 1rem !important;
+            line-height: 1.5 !important;
+        }
+
+        /* جلوگیری از بزرگنمایی در Edge */
+        .edge-browser img,
+        .tailwind-fallback img {
+            max-width: 100% !important;
+            height: auto !important;
+        }
+
+        /* Fix for RTL direction in Edge */
+        [dir="rtl"] {
+            direction: rtl;
+            unicode-bidi: embed;
+        }
+
+        [dir="ltr"] {
+            direction: ltr;
+            unicode-bidi: embed;
         }
     </style>
 </head>
@@ -607,7 +953,7 @@
 @include('partials.footer')
 
 <!-- Registration Modal - مودال ثبت‌نام -->
-<div id="registrationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+<div id="registrationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[100] flex items-center justify-center p-4" style="backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); background-color: rgba(0, 0, 0, 0.5);">
     <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
         <!-- Modal Header -->
         <div class="relative bg-gradient-to-br from-earth-green to-ocean-blue text-white p-6 rounded-t-3xl">
@@ -784,6 +1130,22 @@
     document.addEventListener('DOMContentLoaded', () => {
         const sections = document.querySelectorAll('.fade-in-section');
 
+        // بررسی وجود IntersectionObserver
+        if (!window.IntersectionObserver) {
+            // Fallback برای مرورگرهای قدیمی
+            sections.forEach(section => {
+                if (section) {
+                    section.classList.add('is-visible');
+                }
+            });
+            return;
+        }
+
+        // بررسی اینکه sections یک NodeList معتبر است
+        if (!sections || sections.length === 0) {
+            return;
+        }
+
         const observerOptions = {
             root: null,
             rootMargin: '0px',
@@ -791,16 +1153,29 @@
         };
 
         const observer = new IntersectionObserver((entries, observer) => {
+            // بررسی اینکه entries یک آرایه است
+            if (!entries || !Array.isArray(entries) && typeof entries.forEach !== 'function') {
+                return;
+            }
+            
             entries.forEach(entry => {
-                if (entry.isIntersecting) {
+                if (entry && entry.isIntersecting && entry.target) {
                     entry.target.classList.add('is-visible');
                     observer.unobserve(entry.target);
                 }
             });
         }, observerOptions);
 
+        // بررسی هر section قبل از observe
         sections.forEach(section => {
-            observer.observe(section);
+            if (section && section.nodeType === 1) {
+                try {
+                    observer.observe(section);
+                } catch (e) {
+                    // اگر observe خطا داد، فقط class را اضافه کن
+                    section.classList.add('is-visible');
+                }
+            }
         });
 
         // Mobile menu toggle
@@ -844,6 +1219,45 @@
         @if($errors->any())
             openModal();
         @endif
+
+        // بررسی و اصلاح اندازه‌ها برای Edge
+        (function() {
+            var isEdge = /Edg/.test(navigator.userAgent) || /Edge/.test(navigator.userAgent);
+            
+            if (isEdge) {
+                // بررسی اینکه آیا Tailwind به درستی کار می‌کند
+                setTimeout(function() {
+                    var testElement = document.createElement('div');
+                    testElement.className = 'hidden';
+                    testElement.style.display = 'none';
+                    document.body.appendChild(testElement);
+                    
+                    var computedStyle = window.getComputedStyle(testElement);
+                    var tailwindWorks = computedStyle.display === 'none';
+                    
+                    document.body.removeChild(testElement);
+                    
+                    if (!tailwindWorks || document.documentElement.classList.contains('tailwind-fallback')) {
+                        // اعمال فوری استایل‌های fallback
+                        var style = document.createElement('style');
+                        style.id = 'edge-emergency-styles';
+                        style.textContent = `
+                            body { font-size: 16px !important; }
+                            .container { max-width: 1280px !important; margin: 0 auto !important; padding: 0 1rem !important; }
+                            h1 { font-size: 2.25rem !important; }
+                            @media (min-width: 768px) { h1 { font-size: 3.75rem !important; } }
+                            @media (min-width: 1024px) { h1 { font-size: 4.5rem !important; } }
+                            img { max-width: 100% !important; height: auto !important; }
+                        `;
+                        document.head.appendChild(style);
+                        // فقط در development لاگ کن
+                        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                            console.log('Edge: Emergency styles applied');
+                        }
+                    }
+                }, 500);
+            }
+        })();
 
         // Form validation
         const registrationForm = document.getElementById('registrationForm');

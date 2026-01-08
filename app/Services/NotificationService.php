@@ -17,6 +17,13 @@ class NotificationService
     {
         $model = $user instanceof User ? $user : User::find($user);
         if (!$model) return;
+        
+        // Check user notification settings
+        $settings = \App\Models\NotificationSetting::forUser($model->id);
+        if (!$settings->isEnabled($type)) {
+            return; // User has disabled this notification type
+        }
+        
         $model->notify(new GenericNotification($title, $message, $url, $type, $context));
     }
 
@@ -28,7 +35,16 @@ class NotificationService
     {
         $collection = $this->normalizeUsers($users);
         if ($collection->isEmpty()) return;
-        NotificationFacade::send($collection, new GenericNotification($title, $message, $url, $type, $context));
+        
+        // Filter users based on their notification settings
+        $enabledUsers = $collection->filter(function($user) use ($type) {
+            $settings = \App\Models\NotificationSetting::forUser($user->id);
+            return $settings->isEnabled($type);
+        });
+        
+        if ($enabledUsers->isEmpty()) return;
+        
+        NotificationFacade::send($enabledUsers, new GenericNotification($title, $message, $url, $type, $context));
     }
 
     /**

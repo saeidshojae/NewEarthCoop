@@ -89,6 +89,12 @@ class WalletController extends Controller
         $wallet = $this->walletService->getOrCreateWallet($data['user_id']);
         $this->walletService->credit($wallet, $data['amount'], $data['description']);
         
+        // Dispatch event
+        $user = \App\Models\User::find($data['user_id']);
+        if ($user) {
+            event(new \App\Events\WalletSettled($wallet, $user, $data['amount'], null, $data['description'] ?? 'شارژ توسط ادمین'));
+        }
+        
         return back()->with('success', 'کیف‌پول با موفقیت شارژ شد');
     }
     
@@ -108,6 +114,12 @@ class WalletController extends Controller
         }
         
         $this->walletService->debit($wallet, $data['amount'], $data['description']);
+        
+        // Dispatch event
+        $user = $wallet->user;
+        if ($user) {
+            event(new \App\Events\WalletSettled($wallet, $user, $data['amount'], null, $data['description'] ?? 'کسر توسط ادمین'));
+        }
         
         return back()->with('success', 'مبلغ از کیف‌پول کسر شد');
     }

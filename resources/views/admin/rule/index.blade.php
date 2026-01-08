@@ -254,7 +254,14 @@
                 },
                 pageLength: 25,
                 responsive: true,
-                order: [[5, 'desc']] // مرتب‌سازی بر اساس تاریخ ایجاد
+                order: [[5, 'desc']], // مرتب‌سازی بر اساس تاریخ ایجاد
+                columnDefs: [
+                    { orderable: false, targets: [1, 2, 3, 4, 6] }, // ستون‌های غیرقابل مرتب‌سازی
+                ],
+                paging: true,
+                searching: false, // جستجو را غیرفعال می‌کنیم چون از فرم بالای صفحه استفاده می‌کنیم
+                info: true,
+                lengthChange: true
             });
         }
     });

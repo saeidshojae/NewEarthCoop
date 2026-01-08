@@ -265,11 +265,26 @@ class StockController extends Controller
         // مقادیر مالی در فرم و دیتابیس به صورت تومان هستند.
 
         $stock = Stock::first();
+        $oldPrice = $stock ? $stock->base_share_price : null;
+        $oldValuation = $stock ? $stock->startup_valuation : null;
+        
         if ($stock) {
             $stock->update($data);
         } else {
-            Stock::create($data);
+            $stock = Stock::create($data);
         }
+        
+        // Dispatch event if price changed
+        if ($oldPrice !== null && $oldPrice != $stock->base_share_price) {
+            event(new \App\Events\StockPriceChanged(
+                $stock,
+                $oldPrice,
+                $stock->base_share_price,
+                $oldValuation,
+                $stock->startup_valuation
+            ));
+        }
+        
         return redirect()->route('admin.stock.index')->with('success', 'اطلاعات سهام ذخیره شد');
     }
 
@@ -406,6 +421,12 @@ class StockController extends Controller
                         $data['description'] ?? "هدیه سهام توسط ادمین - " . auth()->user()->name,
                         null
                     );
+                    
+                    // Dispatch event
+                    $user = \App\Models\User::find($userId);
+                    if ($user) {
+                        event(new \App\Events\SharesGifted($holding, $user, $stock, $data['quantity'], $data['description'] ?? "هدیه سهام توسط ادمین"));
+                    }
                 }
                 
                 // کسر از سهام قابل عرضه

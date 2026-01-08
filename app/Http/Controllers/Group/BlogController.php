@@ -30,6 +30,10 @@ class BlogController extends Controller
         }
 
         $blog = Blog::create($inputs);
+        $blog->refresh(); // برای اطمینان از بارگذاری روابط
+
+        // Dispatch event for notifications
+        event(new \App\Events\BlogCreated($blog, $group, auth()->user()));
 
         // award points for creating a post (configurable rule)
         try {

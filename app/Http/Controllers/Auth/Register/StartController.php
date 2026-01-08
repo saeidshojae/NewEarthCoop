@@ -4,8 +4,14 @@ namespace App\Http\Controllers\Auth\Register;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\Group;
+use App\Models\Address;
+use App\Models\Blog;
+use App\Models\Category;
+use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use App\Models\InvitationCode;
 use App\Http\Controllers\Auth\EmailVerificationController;
 
@@ -18,7 +24,74 @@ class StartController extends Controller
             exit;
         }
 
-        return view('welcome');
+        // محاسبه آمار پویا
+        $membersCount = User::count();
+        
+        // تعداد پروژه‌ها: پست‌هایی که دسته‌بندی آن‌ها "پروژه" است
+        $projectCategory = Category::where('name', 'پروژه')->first();
+        $projectsCount = $projectCategory ? Blog::where('category_id', $projectCategory->id)->count() : 0;
+        
+        $countriesCount = DB::table('addresses')
+            ->whereNotNull('country_id')
+            ->distinct()
+            ->count('country_id');
+
+        $stats = [
+            'members_count' => $membersCount,
+            'projects_count' => $projectsCount,
+            'countries_count' => $countriesCount,
+            'members_formatted' => format_number($membersCount),
+            'projects_formatted' => format_number($projectsCount),
+            'countries_formatted' => format_number($countriesCount, 0),
+        ];
+
+        // دریافت نظرات واقعی برای بخش testimonials
+        $testimonials = Comment::whereNull('parent_id') // فقط نظرات اصلی (نه پاسخ‌ها)
+            ->whereRaw('CHAR_LENGTH(message) >= 80') // نظرات با طول مناسب
+            ->with(['user.occupationalFields', 'user.address.city', 'user.address.province', 'user.address.country'])
+            ->whereHas('user', function($q) {
+                $q->whereNotNull('first_name')
+                  ->whereNotNull('last_name');
+            })
+            ->orderByDesc('created_at')
+            ->limit(10) // بیشتر بگیریم تا بتوانیم بهترین‌ها را انتخاب کنیم
+            ->get()
+            ->map(function($comment) {
+                $user = $comment->user;
+                $occupationalField = $user->occupationalFields->first();
+                
+                // ساخت مکان از Address اگر موجود باشد
+                $locationText = '';
+                if ($user->address) {
+                    $address = $user->address;
+                    if ($address->city) {
+                        $locationText = $address->city->name;
+                        if ($address->province) {
+                            $locationText .= '، ' . $address->province->name;
+                        }
+                    } elseif ($address->province) {
+                        $locationText = $address->province->name;
+                    } elseif ($address->country) {
+                        $locationText = $address->country->name;
+                    }
+                }
+                
+                return [
+                    'quote' => $comment->message,
+                    'name' => $user->fullName(),
+                    'role' => $occupationalField ? $occupationalField->name : 'عضو EarthCoop',
+                    'location' => $locationText,
+                    'avatar' => $user->avatar ? asset('images/users/avatars/' . $user->avatar) : 'https://ui-avatars.com/api/?name=' . urlencode($user->fullName()) . '&background=10b981&color=fff&size=250',
+                ];
+            })
+            ->take(3); // فقط 3 تا اول را بگیریم
+
+        // اگر نظرات کافی نبود، از داده‌های تستی استفاده کنیم
+        if ($testimonials->count() < 3) {
+            // می‌توانیم نظرات تستی را هم اضافه کنیم یا فقط همان‌هایی که داریم را نمایش دهیم
+        }
+
+        return view('welcome', compact('stats', 'testimonials'));
     }
 
     public function processAgreement(Request $request)

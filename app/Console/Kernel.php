@@ -12,6 +12,8 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\CreateFaqPage::class,
         \App\Console\Commands\FundWalletsCommand::class,
         \App\Console\Commands\NajmBaharProcessScheduled::class,
+        \App\Console\Commands\SendElectionReminders::class,
+        \App\Console\Commands\SendAuctionReminders::class,
     ];
 
     /**
@@ -26,6 +28,12 @@ class Kernel extends ConsoleKernel
         
         // Close expired auctions every minute
         $schedule->command('auctions:close')->everyMinute();
+        
+        // Send election reminders every 12 hours
+        $schedule->command('elections:send-reminders')->everyTwelveHours();
+        
+        // Send auction reminders every hour
+        $schedule->command('auctions:send-reminders')->hourly();
     }
 
     /**

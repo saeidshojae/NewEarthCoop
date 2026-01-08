@@ -130,10 +130,15 @@ class GroupSettingController extends Controller
             ['group_id' => $group->id, 'user_id' => $user->id]
         );
 
+        // Toggle mute status
+        $newMutedStatus = !$settings->muted;
         $settings->update([
-            'muted' => !$settings->muted,
+            'muted' => $newMutedStatus,
             'muted_until' => null
         ]);
+
+        // Reload to get updated value
+        $settings->refresh();
 
         return response()->json([
             'status' => 'success',
@@ -158,9 +163,14 @@ class GroupSettingController extends Controller
             ['group_id' => $group->id, 'user_id' => $user->id]
         );
 
+        // Toggle archive status
+        $newArchivedStatus = !$settings->archived;
         $settings->update([
-            'archived' => !$settings->archived
+            'archived' => $newArchivedStatus
         ]);
+
+        // Reload to get updated value
+        $settings->refresh();
 
         return response()->json([
             'status' => 'success',

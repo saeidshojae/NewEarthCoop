@@ -36,6 +36,13 @@ class CommentController extends Controller
             'message' => $request->message,
             'parent_id' => $request->parent_id,
         ]);
+        $comment->refresh(); // برای اطمینان از بارگذاری روابط
+
+        // Dispatch event for notifications
+        $blog = $comment->blog;
+        if ($blog && $blog->group) {
+            event(new \App\Events\CommentCreated($comment, $blog, $blog->group, auth()->user()));
+        }
 
         // award points for creating a comment
         try {

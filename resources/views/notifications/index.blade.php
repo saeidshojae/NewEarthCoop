@@ -414,6 +414,10 @@
             </h1>
             
             <div class="header-actions">
+                <a href="{{ route('notifications.settings') }}" class="btn-header-action secondary">
+                    <i class="fas fa-cog"></i>
+                    <span>تنظیمات</span>
+                </a>
                 @php
                     $hasUnread = $notifications->filter(function($n) { return is_null($n->read_at); })->count() > 0;
                 @endphp
@@ -443,6 +447,45 @@
             </div>
         </div>
 
+        <!-- Filters -->
+        <div class="notifications-filters fade-in-section">
+            <form method="GET" action="{{ route('notifications.index') }}" class="filters-form">
+                <div class="filter-group">
+                    <label for="status" class="filter-label">وضعیت:</label>
+                    <select name="status" id="status" class="filter-select" onchange="this.form.submit()">
+                        <option value="all" {{ request('status') === 'all' || !request('status') ? 'selected' : '' }}>همه</option>
+                        <option value="unread" {{ request('status') === 'unread' ? 'selected' : '' }}>نخوانده</option>
+                        <option value="read" {{ request('status') === 'read' ? 'selected' : '' }}>خوانده شده</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="type" class="filter-label">دسته:</label>
+                    <select name="type" id="type" class="filter-select" onchange="this.form.submit()">
+                        <option value="all" {{ request('type') === 'all' || !request('type') ? 'selected' : '' }}>همه</option>
+                        <option value="group.post" {{ request('type') === 'group.post' ? 'selected' : '' }}>پست‌های گروه</option>
+                        <option value="group.poll" {{ request('type') === 'group.poll' ? 'selected' : '' }}>نظرسنجی‌ها</option>
+                        <option value="group.comment" {{ request('type') === 'group.comment' ? 'selected' : '' }}>کامنت‌ها</option>
+                        <option value="group.election" {{ request('type') === 'group.election' ? 'selected' : '' }}>انتخابات</option>
+                        <option value="group.manager" {{ request('type') === 'group.manager' ? 'selected' : '' }}>اعلان‌های مدیر/بازرس</option>
+                        <option value="chat" {{ request('type') === 'chat' ? 'selected' : '' }}>چت</option>
+                        <option value="auction" {{ request('type') === 'auction' ? 'selected' : '' }}>حراج</option>
+                        <option value="wallet" {{ request('type') === 'wallet' ? 'selected' : '' }}>کیف پول</option>
+                        <option value="shares" {{ request('type') === 'shares' ? 'selected' : '' }}>سهام</option>
+                        <option value="stock" {{ request('type') === 'stock' ? 'selected' : '' }}>اطلاعات سهام</option>
+                        <option value="najm-bahar" {{ request('type') === 'najm-bahar' ? 'selected' : '' }}>نجم بهار</option>
+                    </select>
+                </div>
+                
+                @if(request('status') || request('type'))
+                    <a href="{{ route('notifications.index') }}" class="btn-filter-clear">
+                        <i class="fas fa-times"></i>
+                        پاک کردن فیلترها
+                    </a>
+                @endif
+            </form>
+        </div>
+
         <!-- Notifications List -->
         @if($notifications->count() === 0)
             <div class="empty-state fade-in-section">
@@ -466,14 +509,50 @@
                                         'success' => 'fa-check-circle',
                                         'warning' => 'fa-exclamation-triangle',
                                         'danger' => 'fa-times-circle',
+                                        'najm-bahar.transaction' => 'fa-exchange-alt',
+                                        'najm-bahar.low-balance' => 'fa-wallet',
+                                        'najm-bahar.large-transaction' => 'fa-shield-alt',
+                                        'najm-bahar.scheduled-executed' => 'fa-calendar-check',
                                     ];
-                                    $icon = $icons[$type] ?? 'fa-bell';
+                                    $icon = $icons[$type] ?? ($type === 'info' || $type === 'success' || $type === 'warning' || $type === 'danger' ? $icons[$type] : 'fa-bell');
                                 @endphp
                                 <i class="fas {{ $icon }}"></i>
                             </div>
 
                             <!-- Content -->
                             <div class="notification-content">
+                                @php
+                                    $notifType = $notification->data['type'] ?? 'other';
+                                    $categoryMap = [
+                                        'group.post' => ['name' => 'گروه‌ها', 'class' => 'category-groups'],
+                                        'group.poll' => ['name' => 'گروه‌ها', 'class' => 'category-groups'],
+                                        'group.comment.new' => ['name' => 'گروه‌ها', 'class' => 'category-groups'],
+                                        'group.comment.reply' => ['name' => 'گروه‌ها', 'class' => 'category-groups'],
+                                        'group.invitation' => ['name' => 'گروه‌ها', 'class' => 'category-groups'],
+                                        'group.election.started' => ['name' => 'انتخابات', 'class' => 'category-elections'],
+                                        'group.election.finished' => ['name' => 'انتخابات', 'class' => 'category-elections'],
+                                        'group.election.elected' => ['name' => 'انتخابات', 'class' => 'category-elections'],
+                                        'group.election.accepted' => ['name' => 'انتخابات', 'class' => 'category-elections'],
+                                        'group.election.reminder' => ['name' => 'انتخابات', 'class' => 'category-elections'],
+                                        'chat.message' => ['name' => 'چت', 'class' => 'category-chat'],
+                                        'chat.reply' => ['name' => 'چت', 'class' => 'category-chat'],
+                                        'chat.mention' => ['name' => 'چت', 'class' => 'category-chat'],
+                                        'auction.started' => ['name' => 'حراج', 'class' => 'category-auction'],
+                                        'auction.ended' => ['name' => 'حراج', 'class' => 'category-auction'],
+                                        'auction.bid' => ['name' => 'حراج', 'class' => 'category-auction'],
+                                        'auction.won' => ['name' => 'حراج', 'class' => 'category-auction'],
+                                        'auction.outbid' => ['name' => 'حراج', 'class' => 'category-auction'],
+                                        'najm-bahar.transaction' => ['name' => 'نجم بهار', 'class' => 'category-najm'],
+                                        'najm-bahar.low-balance' => ['name' => 'نجم بهار', 'class' => 'category-najm'],
+                                        'najm-bahar.large-transaction' => ['name' => 'نجم بهار', 'class' => 'category-najm'],
+                                        'najm-bahar.scheduled-executed' => ['name' => 'نجم بهار', 'class' => 'category-najm'],
+                                        'group.report.message' => ['name' => 'گروه‌ها', 'class' => 'category-groups'],
+                                        'group.chat.request' => ['name' => 'گروه‌ها', 'class' => 'category-groups'],
+                                        'admin.message' => ['name' => 'سیستم', 'class' => 'category-system'],
+                                    ];
+                                    $category = $categoryMap[$notifType] ?? ['name' => 'سایر', 'class' => 'category-other'];
+                                @endphp
+                                <span class="notification-category {{ $category['class'] }}">{{ $category['name'] }}</span>
                                 <h3 class="notification-title">
                                     {{ $notification->data['title'] ?? 'اعلان' }}
                                 </h3>

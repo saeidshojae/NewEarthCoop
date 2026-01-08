@@ -3,7 +3,6 @@
 use App\Models\Country;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\LocationController; // کنترلر را اضافه کنید
 use App\Models\Abadi;
 use App\Models\Alley;
 use App\Models\City;
@@ -22,11 +21,10 @@ use App\Models\Street;
 use App\Models\Village;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 use App\Http\Controllers\Group\ChatController;
-
-Route::get('/locations', [LocationController::class, 'getLocations']);
 
 /*
 |--------------------------------------------------------------------------
@@ -119,15 +117,24 @@ Route::get('/locations', function (Request $request) {
                     ];
                 });
         
-            $rurals = \App\Models\Rural::where('district_id', $parentId)
-                ->get(['id', 'name'])
-                ->map(function ($item) {
-                    return [
-                        'id' => 'rural_' . $item->id,  // ✅ اینجا نوع rural اضافه میشه
-                        'name' => $item->name . ' (دهستان)',
-                        'type' => 'rural',
-                    ];
-                });
+            // بررسی وجود جدول rurals قبل از استفاده
+            $rurals = collect([]);
+            if (Schema::hasTable('rurals')) {
+                try {
+                    $rurals = \App\Models\Rural::where('district_id', $parentId)
+                        ->get(['id', 'name'])
+                        ->map(function ($item) {
+                            return [
+                                'id' => 'rural_' . $item->id,  // ✅ اینجا نوع rural اضافه میشه
+                                'name' => $item->name . ' (دهستان)',
+                                'type' => 'rural',
+                            ];
+                        });
+                } catch (\Exception $e) {
+                    // اگر خطا رخ داد، فقط cities را برگردان
+                    $rurals = collect([]);
+                }
+            }
         
             $data = $cities->merge($rurals)->values();
             break;
@@ -230,10 +237,10 @@ $request->validate([
                         ]);
                     } else {
                         // والد شهر است (city_* یا عدد خالص city_id)
-                        // ⬅ اگر Region ستون city_id دارد، از آن استفاده کن
+                        // ⬅ Region از parent_id استفاده می‌کند (city_id به parent_id تبدیل شده)
                         return Region::create([
                             'name'     => $name,
-                            'city_id'  => $pid,   // ⬅ اگر در اسکیمای تو 'parent_id' است، این خط را به 'parent_id' تغییر بده
+                            'parent_id' => $pid,
                             'status'   => 0,
                         ]);
                     }
