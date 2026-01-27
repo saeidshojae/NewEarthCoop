@@ -6,20 +6,21 @@
 
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-<link rel="manifest" href="{{ asset('manifest.json') }}">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+        <meta name="theme-color" content="#4c7caf">
+        <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
 
     <!-- عنوان صفحه -->
     <title>@yield('title', config('app.name', 'Laravel'))</title>
     
-    <!-- Fonts - یکسان با طراحی جدید -->
-    <link rel="stylesheet" href="{{ asset('Css/fonts.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Fonts - Vazir Local -->
+    <link rel="stylesheet" href="{{ asset('css/fonts-local.css') }}">
     
     <!-- استفاده از Vite برای فایل‌های CSS و JS -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
     
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Font Awesome - Local -->
+    <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}">
     
     <!-- Design System - سیستم طراحی یکپارچه -->
     <link rel="stylesheet" href="{{ asset('Css/design-system.css') }}">
@@ -28,8 +29,9 @@
     <link rel="stylesheet" href="{{ asset('Css/dark-mode.css') }}">
     <script src="{{ asset('js/dark-mode.js') }}"></script>
     
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- SweetAlert2 - Local -->
+    <script src="{{ asset('vendor/sweetalert/sweetalert2.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('vendor/sweetalert/sweetalert2.min.css') }}">
     
     @yield('head-tag')</script>
 
@@ -315,9 +317,11 @@
     </script>
 @endif
 
-<script type="text/javascript">
-    !function(){var i="yT1vfw",a=window,d=document;function g(){var g=d.createElement("script"),s="https://www.goftino.com/widget/"+i,l=localStorage.getItem("goftino_"+i);g.async=!0,g.src=l?s+"?o="+l:s;d.getElementsByTagName("head")[0].appendChild(g);}"complete"===d.readyState?g():a.attachEvent?a.attachEvent("onload",g):a.addEventListener("load",g,!1);}();
-  </script>
+<!-- Goftino Chat Widget - Disabled for offline mode -->
+<!-- Re-enable when internet is available by uncommenting below -->
+<!-- <script type="text/javascript">
+    !function(){var i="yT1vfw",a=window,d=document;function g(){var g=d.createElement("script"),s="https://www.goftino.com/widget/"+i,l=localStorage.getItem("goftino_"+i);g.async=!0,g.src=l?s+"?o="+l:s;d.getElementsByTagName("head")[0].appendChild(g);};"complete"===d.readyState?g():a.attachEvent?a.attachEvent("onload",g):a.addEventListener("load",g,!1);}();
+  </script> -->
 
     <script>
         if(window.innerWidth<769){
@@ -330,6 +334,10 @@
         }
 
         function showAlert(message, type = 'info') {
+            if(typeof Swal === 'undefined') {
+                alert(message);
+                return;
+            }
     Swal.fire({
         text: message,
         icon: type,

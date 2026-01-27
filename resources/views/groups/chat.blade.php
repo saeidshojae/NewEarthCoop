@@ -205,8 +205,31 @@ document.addEventListener("DOMContentLoaded", function () {
       window.yourRole = yourRole;
       const manageCount = {{ $groupSetting ? $groupSetting->manager_count : 0 }};  
       const inspectorCount = {{ $groupSetting ? $groupSetting->inspector_count : 0 }};
+      
+      // FORCE LOG - تست مستقیم
+      console.log('🔍🔍🔍 BLADE SCRIPT: window.groupId =', window.groupId);
+      console.log('🔍🔍🔍 BLADE SCRIPT: groupId =', groupId);
   </script>
-  <script src="{{ asset('js/group-chat.js') }}" defer></script>
+  <script src="{{ asset('js/group-chat.js') }}?v={{ time() }}" defer></script>
+  <script>
+      // تست بعد از لود script
+      window.addEventListener('load', function() {
+          console.log('🔍🔍🔍 PAGE LOADED - Testing polling');
+          console.log('window.groupId:', window.groupId);
+          console.log('typeof window.startPolling:', typeof window.startPolling);
+          
+          // تست دستی polling بعد از 5 ثانیه
+          setTimeout(function() {
+              console.log('🔍🔍🔍 MANUAL POLLING TEST AFTER 5 SECONDS');
+              if (typeof window.startPolling === 'function') {
+                  console.log('✅ window.startPolling exists, calling it...');
+                  window.startPolling();
+              } else {
+                  console.error('❌ window.startPolling NOT FOUND!');
+              }
+          }, 5000);
+      });
+  </script>
   <script src="{{ asset('js/chat-features.js') }}" defer></script>
   <script src="{{ asset('js/voice-recorder.js') }}" defer></script>
   

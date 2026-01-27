@@ -101,6 +101,26 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+// ========== FORCE LOG - همیشه نمایش بده ==========
+// استفاده از alert برای اطمینان از نمایش
+if (typeof window !== 'undefined') {
+    console.log('🔍🔍🔍 SCRIPT LOADED - VERSION 2024-12-19-v4 🔍🔍🔍');
+    console.log('🔍 window.groupId:', typeof window.groupId !== 'undefined' ? window.groupId : 'NOT DEFINED YET');
+    console.log('🔍 Current time:', new Date().toISOString());
+    
+    // تست: اگر بعد از 3 ثانیه console.log ها نمایش داده نشدند، alert نمایش بده
+    setTimeout(function() {
+        if (typeof window.groupId !== 'undefined') {
+            console.log('✅✅✅ POLLING TEST: window.groupId is defined:', window.groupId);
+        } else {
+            console.error('❌❌❌ POLLING TEST: window.groupId is NOT defined!');
+            // نمایش alert فقط برای debugging
+            // alert('Polling Debug: window.groupId is NOT defined! Check console.');
+        }
+    }, 3000);
+}
+// ========== END FORCE LOG ==========
+
 // Helper function to get CSRF token safely
 function getCsrfToken() {
     const metaTag = document.querySelector('meta[name="csrf-token"]');
@@ -606,8 +626,57 @@ function openPollBox(){
     // صبر کن تا scroll restore کامل شود قبل از شروع polling
     // این مهم است چون polling نباید موقعیت scroll را تغییر دهد قبل از اینکه restore شود
     let pollingStarted = false;
-    function startPolling() {
-        if (pollingStarted) return;
+    let lastMessageId = null; // آخرین پیام ID برای دریافت فقط پیام‌های جدید
+    let pollingInterval = null;
+    
+    // تابع برای دریافت آخرین message ID از صفحه
+    function getLastMessageId() {
+        const chatBox = document.getElementById('chat-box');
+        if (!chatBox) {
+            console.warn('⚠️ chat-box not found');
+            return null;
+        }
+        
+        // جستجو در message-row و message-bubble
+        const messages = chatBox.querySelectorAll('.message-row[data-message-id], .message-bubble[data-message-id], [data-message-id]');
+        if (messages.length === 0) {
+            console.warn('⚠️ No messages found in chat-box');
+            return null;
+        }
+        
+        let maxId = 0;
+        messages.forEach(msg => {
+            const msgId = parseInt(msg.getAttribute('data-message-id'));
+            if (msgId && !isNaN(msgId) && msgId > maxId) {
+                maxId = msgId;
+            }
+        });
+        
+        const result = maxId > 0 ? maxId : null;
+        console.log('📋 getLastMessageId result:', result, 'from', messages.length, 'messages');
+        return result;
+    }
+    
+    // تعریف startPolling در scope global برای دسترسی از DOMContentLoaded
+    window.startPolling = function startPolling() {
+        if (pollingStarted) {
+            console.log('⚠️ Polling already started');
+            return;
+        }
+        
+        // بررسی وجود groupId - فقط از window.groupId استفاده می‌کنیم
+        if (typeof window.groupId === 'undefined' || !window.groupId) {
+            console.error('❌ window.groupId not found! Cannot start polling. window.groupId:', window.groupId);
+            console.log('🔍 Available window properties:', Object.keys(window).filter(k => k.includes('group')));
+            return;
+        }
+        
+        const currentGroupId = window.groupId;
+        console.log('🚀 Starting polling for group:', currentGroupId);
+        
+        // دریافت آخرین message ID از صفحه فعلی
+        lastMessageId = getLastMessageId();
+        console.log('📋 Initial lastMessageId:', lastMessageId);
         
         // بررسی کن که آیا scroll restore شده است
         // اگر بعد از 5 ثانیه هنوز restore نشده، polling را شروع کن
@@ -618,16 +687,60 @@ function openPollBox(){
             if (window.scrollPositionRestored || attempts >= maxAttempts) {
                 clearInterval(checkInterval);
                 pollingStarted = true;
+                console.log('✅ Polling started after', attempts, 'attempts');
                 
-                // حالا polling را شروع کن
-                setInterval(function() {
+                // حالا polling را شروع کن - هر 1.5 ثانیه یکبار
+                pollingInterval = setInterval(function() {
+                    // دریافت groupId از window
+                    if (typeof window.groupId === 'undefined' || !window.groupId) {
+                        console.error('❌ window.groupId not found during polling!');
+                        return;
+                    }
+                    
+                    const currentGroupId = window.groupId;
+                    
+                    // دریافت آخرین message ID قبل از درخواست
+                    const currentLastId = getLastMessageId();
+                    const requestLastId = lastMessageId || currentLastId;
+                    
+                    console.log('🔄🔄🔄 POLLING REQUEST 🔄🔄🔄');
+                    console.log('Group ID:', currentGroupId);
+                    console.log('Last Message ID:', requestLastId);
+                    console.log('URL:', '/api/groups/' + currentGroupId + '/messages');
+                    console.log('Timestamp:', new Date().toISOString());
+                    
+                    // بررسی وجود jQuery
+                    if (typeof $ === 'undefined' || typeof $.ajax === 'undefined') {
+                        console.error('❌ jQuery not loaded! Cannot make AJAX request.');
+                        return;
+                    }
+                    
                     $.ajax({
-                        url: '/api/groups/' + groupId + '/messages',
+                        url: '/api/groups/' + currentGroupId + '/messages',
                         method: 'GET',
-                        success: function(data) {
+                        data: {
+                            last_message_id: requestLastId
+                        },
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': 'application/json'
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            // FORCE LOG - همیشه نمایش بده
+                            console.log('✅✅✅ POLLING RESPONSE RECEIVED ✅✅✅');
+                            console.log('Response:', response);
+                            console.log('Response type:', typeof response);
+                            console.log('Response.messages:', response?.messages);
+                            console.log('Response.messages length:', response?.messages?.length);
+                            
                             // Store the current scroll position
                             const chatBox = document.getElementById('chat-box');
-                            if (!chatBox) return;
+                            if (!chatBox) {
+                                console.error('❌ chat-box element not found!');
+                                return;
+                            }
                             
                             // بررسی دقیق‌تر "در پایین بودن" - فقط اگر کاربر واقعاً خودش به پایین رفته باشد
                             const scrollBottom = chatBox.scrollHeight - chatBox.scrollTop;
@@ -639,25 +752,66 @@ function openPollBox(){
                             const activeEditFormId = activeEditForm ? activeEditForm.id : null;
                             const activeEditContent = activeEditForm ? document.getElementById(`edit-message-${activeEditFormId.split('-')[2]}`).value : null;
                             
-                            // Parse the new messages
-                            const tempDiv = document.createElement('div');
-                            tempDiv.innerHTML = data;
-                            const newMessages = tempDiv.querySelectorAll('.message-wrapper');
-                            
-                            // Get existing message IDs
-                            const existingMessageIds = new Set();
-                            document.querySelectorAll('.message-wrapper').forEach(msg => {
-                                existingMessageIds.add(msg.getAttribute('data-message-id'));
-                            });
+                            // Parse JSON response
+                            let newMessages = [];
+                            if (response && response.messages && Array.isArray(response.messages)) {
+                                // فقط پیام‌های جدید را فیلتر کن
+                                const existingMessageIds = new Set();
+                                document.querySelectorAll('[data-message-id]').forEach(msg => {
+                                    const msgId = parseInt(msg.getAttribute('data-message-id'));
+                                    if (msgId) {
+                                        existingMessageIds.add(msgId);
+                                    }
+                                });
+                                
+                                newMessages = response.messages.filter(msg => {
+                                    return msg && msg.type === 'message' && msg.id && !existingMessageIds.has(msg.id);
+                                });
+                                
+                                console.log('📨 New messages found:', newMessages.length, 'out of', response.messages.length);
+                            } else {
+                                console.warn('⚠️ Invalid response format:', response);
+                            }
                             
                             // Append only new messages
                             const hadNewMessages = newMessages.length > 0;
-                            newMessages.forEach(msg => {
-                                const messageId = msg.getAttribute('data-message-id');
-                                if (!existingMessageIds.has(messageId)) {
-                                    chatBox.appendChild(msg);
+                            if (hadNewMessages) {
+                                console.log('➕ Adding', newMessages.length, 'new messages');
+                            }
+                            
+                            newMessages.forEach(function(messageData, index) {
+                                console.log(`📝 Processing message ${index + 1}/${newMessages.length}:`, messageData);
+                                
+                                // استفاده از تابع appendMessage که قبلاً تعریف شده
+                                if (typeof appendMessage === 'function') {
+                                    try {
+                                        console.log('🔄 Calling appendMessage for message ID:', messageData.id);
+                                        appendMessage(messageData);
+                                        console.log('✅✅✅ Message successfully added to DOM:', messageData.id);
+                                        
+                                        // به‌روزرسانی lastMessageId
+                                        if (messageData.id && (!lastMessageId || messageData.id > lastMessageId)) {
+                                            lastMessageId = messageData.id;
+                                            console.log('🔄 Updated lastMessageId to:', lastMessageId);
+                                        }
+                                    } catch (error) {
+                                        console.error('❌❌❌ CRITICAL ERROR adding message:', error);
+                                        console.error('Error stack:', error.stack);
+                                        console.error('Message data:', messageData);
+                                        // نمایش alert برای debugging
+                                        alert('خطا در افزودن پیام: ' + error.message);
+                                    }
+                                } else {
+                                    console.error('❌❌❌ appendMessage function NOT FOUND!');
+                                    console.error('Available functions:', Object.keys(window).filter(k => k.includes('append')));
+                                    alert('خطا: تابع appendMessage پیدا نشد!');
                                 }
                             });
+                            
+                            // به‌روزرسانی lastMessageId از response
+                            if (response.latest_message_id && (!lastMessageId || response.latest_message_id > lastMessageId)) {
+                                lastMessageId = response.latest_message_id;
+                            }
                             
                             reapplySkillListState();
                             startPollCountdowns();
@@ -680,17 +834,33 @@ function openPollBox(){
                             if (window.scrollPositionRestored && isScrolledToBottom && hadNewMessages) {
                                 chatBox.scrollTop = chatBox.scrollHeight;
                             }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('❌❌❌ POLLING ERROR ❌❌❌');
+                            console.error('Status:', xhr.status);
+                            console.error('Status Text:', xhr.statusText);
+                            console.error('Error:', error);
+                            console.error('Response Text:', xhr.responseText);
+                            console.error('Response Headers:', xhr.getAllResponseHeaders());
+                            
+                            // اگر response text وجود دارد، سعی کن parse کن
+                            if (xhr.responseText) {
+                                try {
+                                    const parsed = JSON.parse(xhr.responseText);
+                                    console.error('Parsed error response:', parsed);
+                                } catch (e) {
+                                    console.error('Could not parse error response as JSON');
+                                }
+                            }
+                            
+                            // در صورت خطا، polling را ادامه بده (ممکن است مشکل موقتی باشد)
                         }
                     });
-                }, 3000);
+                }, 1500); // هر 1.5 ثانیه یکبار (به جای 3 ثانیه)
             }
         }, 500); // هر 500ms چک کن
     }
     
-    // شروع polling بعد از کمی تأخیر برای اطمینان از لود کامل
-    setTimeout(startPolling, 1000);
-
-
 document.addEventListener('DOMContentLoaded', function() {
     const chatBox = document.getElementById('chat-box');
     const form = document.getElementById('chatForm');
@@ -851,6 +1021,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (responseData.status === 'success') {
                     appendMessage(responseData.message);
+                    // به‌روزرسانی lastMessageId بعد از ارسال پیام
+                    if (responseData.message && responseData.message.id) {
+                        if (!lastMessageId || responseData.message.id > lastMessageId) {
+                            lastMessageId = responseData.message.id;
+                        }
+                    }
                     form.reset();
                     
                     // Clear voice file input and preview
@@ -885,6 +1061,38 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // ========== POLLING MECHANISM ==========
+    // شروع polling برای دریافت پیام‌های جدید
+    console.log('🔍🔍🔍 INITIALIZING POLLING MECHANISM 🔍🔍🔍');
+    console.log('Current time:', new Date().toISOString());
+    
+    // بررسی وجود window.groupId
+    if (typeof window.groupId === 'undefined') {
+        console.error('❌❌❌ window.groupId is NOT DEFINED! ❌❌❌');
+        console.error('Available window properties:', Object.keys(window).filter(k => k.toLowerCase().includes('group')));
+        console.error('All window properties starting with "group":', Object.keys(window).filter(k => k.toLowerCase().includes('group')));
+    } else {
+        console.log('✅✅✅ window.groupId FOUND:', window.groupId);
+        console.log('Type:', typeof window.groupId);
+        console.log('Value:', window.groupId);
+        
+        // شروع polling بعد از 2 ثانیه برای اطمینان از لود کامل
+        setTimeout(function() {
+            console.log('🚀🚀🚀 ATTEMPTING TO START POLLING 🚀🚀🚀');
+            console.log('Group ID:', window.groupId);
+            console.log('startPolling function exists:', typeof window.startPolling === 'function');
+            
+            if (typeof window.startPolling === 'function') {
+                console.log('✅ Calling window.startPolling()...');
+                window.startPolling();
+            } else {
+                console.error('❌❌❌ window.startPolling function NOT FOUND! ❌❌❌');
+                console.error('Available functions:', Object.keys(window).filter(k => typeof window[k] === 'function' && k.toLowerCase().includes('poll')));
+            }
+        }, 2000);
+    }
+    // ========== END POLLING MECHANISM ==========
 });
 
 function appendMessage(message) {
