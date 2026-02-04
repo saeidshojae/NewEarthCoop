@@ -402,9 +402,9 @@ NewEarthCoop represents a modern approach to economic and social cooperation in 
 ---
 
 <p align="center">
-  <strong>Made with ❤️ by MoDarK-MK</strong>
+  <strong>Made with ❤️ by s.shojaei</strong>
 </p>
 
 <p align="center">
-  <a href="https://github.com/MoDarK-MK/NewEarthCoop">⭐ Star us on GitHub!</a>
+  <a href="https://github.com/saeidshojae/NewEarthCoop">⭐ Star us on GitHub!</a>
 </p>
