@@ -1,0 +1,8 @@
+[29-Jan-2026 00:56:12 Asia/Tehran] PHP Fatal error:  Uncaught Error: Call to undefined function passthru() in /home/ybwztpvr/new.earthcoop.info/artisan_run.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/ybwztpvr/new.earthcoop.info/artisan_run.php on line 8
+[29-Jan-2026 01:03:41 Asia/Tehran] PHP Fatal error:  Uncaught Error: Call to undefined function passthru() in /home/ybwztpvr/new.earthcoop.info/artisan_run.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/ybwztpvr/new.earthcoop.info/artisan_run.php on line 8
