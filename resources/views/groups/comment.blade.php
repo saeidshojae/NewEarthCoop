@@ -1302,7 +1302,6 @@
       hideOverlay();
     })
     .catch(e => {
-      console.error(e);
       alert('ویرایش انجام نشد.');
       hideOverlay();
     });
@@ -1341,7 +1340,6 @@
       hideOverlay();
     })
     .catch(e => {
-      console.error(e);
       alert('حذف انجام نشد.');
       hideOverlay();
     });
@@ -1381,7 +1379,6 @@
       hideOverlay();
     })
     .catch(error => {
-      console.error('Error:', error);
       alert('خطا در گزارش نظر.');
       hideOverlay();
     });
@@ -1471,13 +1468,11 @@
           $list.append($li);
         });
       } catch (err) {
-        console.error('Parse/render error:', err);
         $('#catLoading').hide();
         $('#catEmpty').show().text('خطا در پردازش داده‌ها.');
       }
     })
     .fail(function(xhr, status, err) {
-      console.error('AJAX fail:', status, err, xhr?.status, xhr?.responseText);
       $('#catLoading').hide();
       $('#catEmpty').show().text('خطا در دریافت لیست پست‌ها.');
     })
@@ -1557,7 +1552,6 @@
             }
             data = JSON.parse(text);
           } catch (parseError) {
-            console.error('Error parsing response:', parseError);
             throw new Error('خطا در پردازش پاسخ سرور');
           }
           
@@ -1592,7 +1586,6 @@
           }
         })
         .catch(error => {
-          console.error('Error submitting comment:', error);
           alert(error.message || 'خطا در ارسال نظر. لطفاً دوباره تلاش کنید.');
         })
         .finally(() => {
@@ -1634,7 +1627,7 @@
           allowedContent: true
         });
       } catch (error) {
-        console.error('Error initializing CKEditor:', error);
+        // Error initializing CKEditor
       }
     }
   });

@@ -268,7 +268,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
                 renderSuggestions(data);
             } catch (error) {
-                console.error('Failed to fetch KB suggestions', error);
             }
         }, 400);
     }

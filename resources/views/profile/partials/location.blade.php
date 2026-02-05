@@ -349,7 +349,6 @@
                 onComplete($select);
             }
         }).fail(function (error) {
-            console.error(`Failed to load ${key}:`, error);
         });
     }
 

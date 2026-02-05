@@ -5,7 +5,7 @@
         <i class="fas fa-robot"></i>
         <span class="najm-hoda-notification-badge" id="najm-hoda-badge" style="display: none;">0</span>
     </button>
-    
+
     {{-- کانتینر چت - به صورت پیش‌فرض بسته است --}}
     <div id="najm-hoda-chat-container" class="najm-hoda-chat-container" style="display: none !important;">
         {{-- هدر --}}
@@ -20,7 +20,7 @@
                 </div>
                 <button id="najm-hoda-close" class="btn-close btn-close-white" title="بستن"></button>
             </div>
-            
+
             {{-- انتخاب عامل --}}
             <div class="najm-hoda-agent-selector mt-2">
                 <select id="najm-hoda-agent" class="form-select form-select-sm">
@@ -32,7 +32,7 @@
                 </select>
             </div>
         </div>
-        
+
         {{-- بدنه پیام‌ها --}}
         <div id="najm-hoda-messages" class="najm-hoda-messages">
             {{-- پیام خوش‌آمدگویی --}}
@@ -52,7 +52,7 @@
                 </div>
             </div>
         </div>
-        
+
         {{-- اندیکاتور در حال تایپ --}}
         <div id="najm-hoda-typing" class="najm-hoda-typing d-none">
             <div class="najm-hoda-message assistant">
@@ -64,17 +64,12 @@
                 </div>
             </div>
         </div>
-        
+
         {{-- فوتر (ورودی) --}}
         <div class="najm-hoda-footer">
             <div class="input-group">
-                <input 
-                    type="text" 
-                    id="najm-hoda-input" 
-                    class="form-control" 
-                    placeholder="پیام خود را بنویسید..."
-                    autocomplete="off"
-                >
+                <input type="text" id="najm-hoda-input" class="form-control" placeholder="پیام خود را بنویسید..."
+                    autocomplete="off">
                 <button id="najm-hoda-send" class="btn btn-primary" type="button">
                     <i class="fas fa-paper-plane"></i>
                 </button>
@@ -87,30 +82,48 @@
 <style>
 /* استایل‌های نجم‌هدا */
 .najm-hoda-widget {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    z-index: 9999;
-    font-family: IRANSans, Tahoma, Arial;
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    z-index: 9999999 !important;
+    font-family: 'Vazirmatn', Tahoma, Arial;
+    direction: rtl;
 }
 
 .najm-hoda-toggle-btn {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #37c4b4 0%, #459f96 100%);
-    border: none;
+    width: 70px;
+    height: 70px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: 4px solid rgba(255, 255, 255, 0.2);
     color: white;
-    font-size: 28px;
-    box-shadow: 0 4px 12px rgba(55, 196, 180, 0.4);
+    font-size: 32px;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4), inset 0 0 15px rgba(255, 255, 255, 0.3);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.najm-hoda-toggle-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
 }
 
 .najm-hoda-toggle-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(55, 196, 180, 0.6);
+    transform: translateY(-5px) rotate(5deg);
+    box-shadow: 0 15px 35px rgba(16, 185, 129, 0.6);
+}
+
+.najm-hoda-toggle-btn:hover::after {
+    transform: translateX(100%);
 }
 
 .najm-hoda-notification-badge {
@@ -130,30 +143,56 @@
 }
 
 .najm-hoda-chat-container {
-    position: absolute;
-    bottom: 80px;
-    left: 0;
-    width: 380px;
+    position: fixed !important;
+    bottom: 110px !important;
+    left: 20px !important;
+    width: 400px;
     max-width: calc(100vw - 40px);
-    height: 600px;
-    max-height: calc(100vh - 120px);
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    display: none; /* به صورت پیش‌فرض بسته */
+    height: 650px;
+    max-height: calc(100vh - 140px);
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(25px);
+    border-radius: 30px;
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+    display: none;
     flex-direction: column;
     overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    z-index: 9999998 !important;
 }
 
 .najm-hoda-chat-container:not(.d-none) {
-    display: flex !important; /* وقتی باز است، flex نمایش بده */
+    display: flex !important;
 }
 
-.najm-hoda-header {
-    background: linear-gradient(135deg, #37c4b4 0%, #459f96 100%);
-    color: white;
-    padding: 15px;
-    border-radius: 16px 16px 0 0;
+background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+color: white;
+padding: 20px;
+border-radius: 30px 30px 0 0;
+position: relative;
+overflow: hidden;
+}
+
+.najm-hoda-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+    animation: rotate 10s linear infinite;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .najm-hoda-avatar {
@@ -186,6 +225,7 @@
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -267,10 +307,14 @@
 }
 
 @keyframes typing {
-    0%, 60%, 100% {
+
+    0%,
+    60%,
+    100% {
         transform: translateY(0);
         opacity: 0.7;
     }
+
     30% {
         transform: translateY(-10px);
         opacity: 1;
@@ -330,25 +374,25 @@
 // اسکریپت نجم‌هدا
 (function() {
     'use strict';
-    
+
     const NajmHoda = {
         conversationId: null,
         isTyping: false,
-        
+
         init() {
             this.showWidget();
             this.ensureChatClosed(); // اطمینان از بسته بودن چت در ابتدا
             this.bindEvents();
             this.loadWelcome();
         },
-        
+
         showWidget() {
             const widget = document.getElementById('najm-hoda-widget');
             if (widget) {
                 widget.style.display = 'block';
             }
         },
-        
+
         ensureChatClosed() {
             // اطمینان از بسته بودن چت در ابتدا
             const container = document.getElementById('najm-hoda-chat-container');
@@ -357,38 +401,38 @@
                 container.classList.add('d-none');
             }
         },
-        
+
         bindEvents() {
             const toggleBtn = document.getElementById('najm-hoda-toggle');
             const closeBtn = document.getElementById('najm-hoda-close');
             const sendBtn = document.getElementById('najm-hoda-send');
             const input = document.getElementById('najm-hoda-input');
-            
+
             if (toggleBtn) {
                 toggleBtn.addEventListener('click', () => this.toggleChat());
             }
-            
+
             if (closeBtn) {
                 closeBtn.addEventListener('click', () => this.closeChat());
             }
-            
+
             if (sendBtn) {
                 sendBtn.addEventListener('click', () => this.sendMessage());
             }
-            
+
             if (input) {
                 input.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') this.sendMessage();
                 });
             }
         },
-        
+
         toggleChat() {
             const container = document.getElementById('najm-hoda-chat-container');
             if (!container) return;
-            
+
             const isVisible = container.style.display !== 'none' && !container.classList.contains('d-none');
-            
+
             if (isVisible) {
                 // بستن چت
                 this.closeChat();
@@ -402,7 +446,7 @@
                 }
             }
         },
-        
+
         closeChat() {
             const container = document.getElementById('najm-hoda-chat-container');
             if (container) {
@@ -410,41 +454,37 @@
                 container.classList.add('d-none');
             }
         },
-        
+
         async loadWelcome() {
             try {
                 const response = await fetch('/api/najm-hoda/welcome');
                 const data = await response.json();
-                
-                if (data.stats) {
-                    console.log('نجم‌هدا آماده است:', data.stats);
-                }
-            } catch (error) {
-                console.error('خطا در بارگذاری نجم‌هدا:', error);
-            }
+
+            } catch (error) {}
         },
-        
+
         async sendMessage() {
             const input = document.getElementById('najm-hoda-input');
             const message = input.value.trim();
-            
+
             if (!message || this.isTyping) return;
-            
+
             // نمایش پیام کاربر
             this.addMessage(message, 'user', '👤');
             input.value = '';
-            
+
             // نمایش typing indicator
             this.showTyping();
-            
+
             try {
                 const agent = document.getElementById('najm-hoda-agent').value;
-                
+
                 const response = await fetch('/api/najm-hoda/chat', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                            ?.content || '',
                         'Authorization': 'Bearer ' + (localStorage.getItem('api_token') || '')
                     },
                     body: JSON.stringify({
@@ -453,15 +493,15 @@
                         conversation_id: this.conversationId,
                     })
                 });
-                
+
                 const data = await response.json();
-                
+
                 this.hideTyping();
-                
+
                 if (data.success) {
                     this.conversationId = data.conversation_id;
                     this.addMessage(data.message, 'assistant', data.agent_icon || '🤖');
-                    
+
                     // نمایش پیشنهادات
                     if (data.suggestions && data.suggestions.length > 0) {
                         this.showSuggestions(data.suggestions);
@@ -469,28 +509,27 @@
                 } else {
                     this.addMessage(data.message || 'خطایی رخ داد', 'assistant', '⚠️');
                 }
-                
+
             } catch (error) {
                 this.hideTyping();
                 this.addMessage('متأسفانه مشکلی پیش آمد. لطفاً دوباره تلاش کنید.', 'assistant', '❌');
-                console.error('خطا در ارسال پیام:', error);
             }
         },
-        
+
         addMessage(content, role, icon) {
             const messagesDiv = document.getElementById('najm-hoda-messages');
             const messageDiv = document.createElement('div');
             messageDiv.className = `najm-hoda-message ${role}`;
-            
+
             messageDiv.innerHTML = `
                 <div class="najm-hoda-message-avatar">${icon}</div>
                 <div class="najm-hoda-message-content">${this.formatMessage(content)}</div>
             `;
-            
+
             messagesDiv.appendChild(messageDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         },
-        
+
         formatMessage(content) {
             // تبدیل Markdown ساده به HTML
             return content
@@ -498,23 +537,23 @@
                 .replace(/\*([^*]+)\*/g, '<em>$1</em>')
                 .replace(/\n/g, '<br>');
         },
-        
+
         showTyping() {
             this.isTyping = true;
             document.getElementById('najm-hoda-typing').classList.remove('d-none');
             const messagesDiv = document.getElementById('najm-hoda-messages');
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         },
-        
+
         hideTyping() {
             this.isTyping = false;
             document.getElementById('najm-hoda-typing').classList.add('d-none');
         },
-        
+
         showSuggestions(suggestions) {
             const hintsDiv = document.getElementById('najm-hoda-hints');
             hintsDiv.innerHTML = '';
-            
+
             suggestions.slice(0, 3).forEach(suggestion => {
                 const hint = document.createElement('span');
                 hint.className = 'najm-hoda-hint';
@@ -527,14 +566,14 @@
             });
         }
     };
-    
+
     // شروع خودکار
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => NajmHoda.init());
     } else {
         NajmHoda.init();
     }
-    
+
     // در دسترس قرار دادن برای استفاده خارجی
     window.NajmHoda = NajmHoda;
 })();

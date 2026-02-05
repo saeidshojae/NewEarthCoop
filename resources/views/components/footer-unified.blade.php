@@ -79,13 +79,13 @@
                     {{ __('navigation.footer_social_media') }}
                 </h3>
                 <div class="flex space-x-4 rtl:space-x-reverse">
-                    <a href="#" class="text-gray-300 hover:text-earth-green transition duration-300 text-2xl">
+                    <a href="https://t.me/earthcoop" target="_blank" class="text-gray-300 hover:text-earth-green transition duration-300 text-2xl">
                         <i class="fab fa-telegram"></i>
                     </a>
-                    <a href="#" class="text-gray-300 hover:text-earth-green transition duration-300 text-2xl">
+                    <a href="https://instagram.com/earthcoop" target="_blank" class="text-gray-300 hover:text-earth-green transition duration-300 text-2xl">
                         <i class="fab fa-instagram"></i>
                     </a>
-                    <a href="#" class="text-gray-300 hover:text-earth-green transition duration-300 text-2xl">
+                    <a href="https://twitter.com/earthcoop" target="_blank" class="text-gray-300 hover:text-earth-green transition duration-300 text-2xl">
                         <i class="fab fa-twitter"></i>
                     </a>
                 </div>

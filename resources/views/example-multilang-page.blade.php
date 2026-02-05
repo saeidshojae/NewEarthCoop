@@ -300,10 +300,6 @@
     const direction = '{{ get_direction() }}';
     const isRTL = {{ is_rtl() ? 'true' : 'false' }};
 
-    console.log('Current Language:', currentLocale);
-    console.log('Direction:', direction);
-    console.log('Is RTL:', isRTL);
-
     // مثال: نمایش پیام با SweetAlert بر اساس زبان
     function showLocalizedAlert() {
         const messages = {

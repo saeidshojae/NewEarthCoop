@@ -1077,7 +1077,6 @@
         const statsContentEl = document.getElementById('stats-content');
         
         if (!loadingEl || !errorEl || !errorTextEl || !statsContentEl) {
-            console.error('Stats elements not found');
             return;
         }
 
@@ -1112,7 +1111,6 @@
             loadingEl.style.display = 'none';
             errorTextEl.textContent = 'خطا در ارتباط با سرور';
             errorEl.style.display = 'block';
-            console.error('Error loading stats:', error);
         });
     }
 

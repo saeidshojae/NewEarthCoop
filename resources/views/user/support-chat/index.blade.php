@@ -257,19 +257,15 @@
             
             // Listen for new messages
             window.pusherChannel.bind('message.sent', function(data) {
-                console.log('New message received via Pusher:', data);
                 if (typeof addMessageToChat === 'function') {
                     addMessageToChat(data);
                 }
             });
             
-            console.log('Pusher initialized successfully');
         } catch (error) {
-            console.error('Error initializing Pusher:', error);
             window.isPusherActive = false;
         }
     } else {
-        console.log('Pusher not configured, using manual refresh');
         window.isPusherActive = false;
     }
 </script>
@@ -414,7 +410,6 @@
             }
         } catch (error) {
             alert('خطا در ارسال پیام');
-            console.error(error);
         }
     }
 
@@ -452,7 +447,6 @@
                 });
             }
         } catch (error) {
-            console.error('Error loading messages:', error);
         }
     }
 
@@ -486,7 +480,6 @@
             }
         } catch (error) {
             alert('خطا در تبدیل چت به تیکت');
-            console.error(error);
         }
     }
 
@@ -514,7 +507,6 @@
             }
         } catch (error) {
             alert('خطا در بستن چت');
-            console.error(error);
         }
     }
 

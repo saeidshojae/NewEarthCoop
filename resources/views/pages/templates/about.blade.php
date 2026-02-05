@@ -363,7 +363,6 @@
             directionalLight.position.set(1, 1, 1).normalize();
             scene.add(directionalLight);
         } catch (e) {
-            console.error('Error initializing globe:', e);
         }
     }
 

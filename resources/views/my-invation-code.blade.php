@@ -633,9 +633,7 @@
                 text: message,
                 url: url,
             }).then(() => {
-                console.log('اشتراک‌گذاری موفق');
             }).catch((error) => {
-                console.error('خطا در اشتراک‌گذاری:', error);
                 copyToClipboard(url);
             });
         } else {
@@ -650,7 +648,6 @@
             navigator.clipboard.writeText(text).then(() => {
                 showCopyMessage();
             }).catch(err => {
-                console.error('خطا در کپی کردن:', err);
                 fallbackCopyToClipboard(text);
             });
         } else {
@@ -670,7 +667,6 @@
             document.execCommand('copy');
             showCopyMessage();
         } catch (err) {
-            console.error('خطا در کپی کردن:', err);
             alert('لینک: ' + text);
         }
         document.body.removeChild(textarea);

@@ -306,7 +306,6 @@
         navigator.clipboard.writeText(email).then(() => {
             alert('ایمیل کپی شد: ' + email);
         }).catch(err => {
-            console.error('Error copying email:', err);
         });
     }
 </script>

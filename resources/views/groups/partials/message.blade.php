@@ -96,7 +96,7 @@
                     @if(!$item->user)
                         <span class="message-sender message-sender--deleted">حساب حذف شده</span>
                     @elseif($sender)
-                        <a href="{{ route('profile.member.show', $item->user_id) }}" class="message-sender" onclick="console.log('Profile link clicked:', '{{ route('profile.member.show', $item->user_id) }}'); event.stopPropagation(); event.preventDefault(); window.location.href='{{ route('profile.member.show', $item->user_id) }}'; return false;">
+                        <a href="{{ route('profile.member.show', $item->user_id) }}" class="message-sender" onclick="event.stopPropagation(); event.preventDefault(); window.location.href='{{ route('profile.member.show', $item->user_id) }}'; return false;">
                             {{ $senderName }}
                         </a>
                     @endif

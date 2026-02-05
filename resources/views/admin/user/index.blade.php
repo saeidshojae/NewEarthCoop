@@ -1274,7 +1274,6 @@
     
     // Listen for theme changes from the header toggle button
     window.addEventListener('themeChanged', function(e) {
-        console.log('Theme changed event received:', e.detail);
         reloadCharts();
     });
     

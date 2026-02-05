@@ -805,19 +805,15 @@
         const tabContents = document.querySelectorAll('.desktop-tabs .tab-content');
 
         if (tabButtons.length === 0) {
-            console.warn('No tab buttons found');
         } else {
-            console.log('Found', tabButtons.length, 'tab buttons');
         }
 
         tabButtons.forEach(button => {
             button.addEventListener('click', function (event) {
                 event.preventDefault();
                 const targetId = this.dataset.target;
-                console.log('Tab clicked:', targetId);
                 
                 if (!targetId) {
-                    console.warn('Tab button has no data-target attribute');
                     return;
                 }
                 
@@ -828,7 +824,6 @@
                 const targetContent = document.getElementById(targetId);
                 if (targetContent) {
                     targetContent.classList.add('active');
-                    console.log('Tab content activated:', targetId);
                     
                     // When tab changes, initialize filters for open toggles inside this tab
                     setTimeout(() => {
@@ -845,7 +840,6 @@
                         });
                     }, 100);
                 } else {
-                    console.warn('Tab content not found for ID:', targetId);
                 }
             });
         });
@@ -898,13 +892,11 @@
             
             const targetId = container.dataset.target;
             if (!targetId) {
-                console.warn('Filter: No target ID found');
                 return;
             }
             
             const table = document.getElementById(targetId);
             if (!table) {
-                console.warn('Filter: Table not found with ID:', targetId);
                 return;
             }
             
@@ -912,11 +904,9 @@
             const buttons = container.querySelectorAll('.filter-button');
 
             if (rows.length === 0) {
-                console.warn('Filter: No rows with data-filter-value found in table:', targetId, 'Rows in table:', table.querySelectorAll('tbody tr').length);
                 return;
             }
             if (buttons.length === 0) {
-                console.warn('Filter: No filter buttons found for table:', targetId);
                 return;
             }
 
@@ -933,7 +923,6 @@
                     event.preventDefault();
                     event.stopPropagation();
                     const filter = this.dataset.filter;
-                    console.log('Filter button clicked:', filter, 'for table:', targetId);
                     
                     newButtons.forEach(btn => btn.classList.remove('active'));
                     this.classList.add('active');
@@ -941,7 +930,6 @@
                     // Re-query rows - always query, even if parent toggle-content might be closed
                     // The display style will be set regardless, and will take effect when toggle opens
                     const currentRows = table.querySelectorAll('tbody tr[data-filter-value]');
-                    console.log('Filtering', currentRows.length, 'rows with filter:', filter);
                     
                     let visibleCount = 0;
                     let hiddenCount = 0;
@@ -949,11 +937,6 @@
                     currentRows.forEach((row, index) => {
                         const value = (row.getAttribute('data-filter-value') || row.dataset.filterValue || 'all').trim();
                         const shouldShow = (filter === 'all' || value === filter);
-                        
-                        // Debug first few rows
-                        if (index < 5) {
-                            console.log(`Row ${index}: data-filter-value="${value}", shouldShow=${shouldShow}, filter="${filter}", match=${value === filter}`);
-                        }
                         
                         if (shouldShow) {
                             row.style.display = '';
@@ -970,7 +953,6 @@
                         }
                     });
                     
-                    console.log('Filter result - Visible:', visibleCount, 'Hidden:', hiddenCount, 'Total:', currentRows.length);
                     
                     // Also check the empty message row
                     const emptyRow = table.querySelector('tbody tr:not([data-filter-value])');
@@ -998,7 +980,6 @@
                 });
             }
             
-            console.log('Filters initialized for table:', targetId, 'with', rows.length, 'rows and', newButtons.length, 'buttons');
         }
 
         // Inner toggle sections

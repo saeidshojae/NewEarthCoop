@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Layout: unified | Tailwind via Vite (no CDN) -->
+<!-- Layout: unified | Tailwind Play CDN & Vite -->
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ get_direction() }}">
 <head>
     <meta charset="UTF-8">
@@ -13,6 +13,27 @@
     <meta http-equiv="Pragma" content="no-cache">
     @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <!-- Tailwind CSS CDN (Using Play CDN for immediate rendering of utility classes) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'earth-green': '#10b981',
+                        'ocean-blue': '#3b82f6',
+                        'digital-gold': '#f59e0b',
+                    },
+                    fontFamily: {
+                        'vazirmatn': ['Vazirmatn', 'sans-serif'],
+                        'poppins': ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
     
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -72,14 +93,12 @@
 
         /* Edge Browser Compatibility Fixes - همان اصلاحات صفحه welcome */
         /* فوری: تنظیم اندازه پایه برای Edge */
-        .edge-browser body,
-        .tailwind-fallback body {
+        .edge-browser body {
             font-size: 16px !important;
             line-height: 1.5 !important;
         }
 
-        .edge-browser .container,
-        .tailwind-fallback .container {
+        .edge-browser .container {
             max-width: 1280px !important;
             margin-left: auto !important;
             margin-right: auto !important;
@@ -88,35 +107,30 @@
         }
 
         /* تنظیم اندازه فونت‌ها برای Edge */
-        .edge-browser h1,
-        .tailwind-fallback h1 {
+        .edge-browser h1 {
             font-size: 2.25rem !important;
             line-height: 1.2 !important;
         }
 
         @media (min-width: 768px) {
-            .edge-browser h1,
-            .tailwind-fallback h1 {
+            .edge-browser h1 {
                 font-size: 3.75rem !important;
             }
         }
 
         @media (min-width: 1024px) {
-            .edge-browser h1,
-            .tailwind-fallback h1 {
+            .edge-browser h1 {
                 font-size: 4.5rem !important;
             }
         }
 
-        .edge-browser p,
-        .tailwind-fallback p {
+        .edge-browser p {
             font-size: 1rem !important;
             line-height: 1.5 !important;
         }
 
         /* جلوگیری از بزرگنمایی در Edge */
-        .edge-browser img,
-        .tailwind-fallback img {
+        .edge-browser img {
             max-width: 100% !important;
             height: auto !important;
         }
@@ -183,44 +197,11 @@
                 document.head.insertBefore(baseStyle, document.head.firstChild);
                 document.documentElement.classList.add('edge-browser');
             }
-            
-            // Tailwind loaded via Vite build
-            if ((isEdge || isIE)) {
-                document.documentElement.classList.add('tailwind-fallback');
-            }
-            
-            if (isEdge) {
-                setTimeout(function() {
-                    var testElement = document.createElement('div');
-                    testElement.className = 'hidden';
-                    testElement.style.display = 'none';
-                    document.body.appendChild(testElement);
-                    
-                    var computedStyle = window.getComputedStyle(testElement);
-                    var tailwindWorks = computedStyle.display === 'none';
-                    
-                    document.body.removeChild(testElement);
-                    
-                    if (!tailwindWorks || document.documentElement.classList.contains('tailwind-fallback')) {
-                        var style = document.createElement('style');
-                        style.id = 'edge-emergency-styles';
-                        style.textContent = `
-                            body { font-size: 16px !important; }
-                            .container { max-width: 1280px !important; margin: 0 auto !important; padding: 0 1rem !important; }
-                            h1 { font-size: 2.25rem !important; }
-                            @media (min-width: 768px) { h1 { font-size: 3.75rem !important; } }
-                            @media (min-width: 1024px) { h1 { font-size: 4.5rem !important; } }
-                            img { max-width: 100% !important; height: auto !important; }
-                        `;
-                        document.head.appendChild(style);
-                    }
-                }, 500);
-            }
         })();
     </script>
 </head>
 
-<body class="font-vazirmatn leading-relaxed min-h-screen flex flex-col" 
+<body id="app" class="font-vazirmatn leading-relaxed min-h-screen flex flex-col" 
       x-data="{ 
           mobileMenuOpen: false, 
           userDropdownOpen: false,
