@@ -46,6 +46,41 @@ return [
             'convertible' => true,
             'repeat_policy' => 'once_per_context',
         ],
+        'profile_photo_uploaded' => [
+            'dimension' => 'participation',
+            'convertible' => false,
+            'repeat_policy' => 'once_per_context',
+        ],
+        'social_links_added' => [
+            'dimension' => 'participation',
+            'convertible' => false,
+            'repeat_policy' => 'once_per_context',
+        ],
+        'documents_uploaded' => [
+            'dimension' => 'participation',
+            'convertible' => false,
+            'repeat_policy' => 'once_per_context',
+        ],
+        'bio_added' => [
+            'dimension' => 'participation',
+            'convertible' => false,
+            'repeat_policy' => 'once_per_context',
+        ],
+        'report_received' => [
+            'dimension' => 'reliability',
+            'convertible' => false,
+            'repeat_policy' => 'once_per_context',
+        ],
+        'bid_canceled' => [
+            'dimension' => 'reliability',
+            'convertible' => false,
+            'repeat_policy' => 'once_per_context',
+        ],
+        'fraud' => [
+            'dimension' => 'reliability',
+            'convertible' => false,
+            'repeat_policy' => 'once_per_context',
+        ],
         'post_liked' => [
             'dimension' => 'participation',
             'convertible' => true,
