@@ -62,7 +62,7 @@ class ReputationLaunchAdminCleanupContractTest extends TestCase
         $this->assertStringContainsString('{--dry-run', $command);
         $this->assertStringContainsString('{--user=', $command);
         $this->assertStringContainsString('membership_fee_paid:user:', $command);
-        $this->assertStringContainsString("->where('type', 'membership_fee')", $command);
+        $this->assertStringContainsString("->where('metadata->type', 'membership_fee')", $command);
         $this->assertStringContainsString("->where('status', 'completed')", $command);
     }
 
