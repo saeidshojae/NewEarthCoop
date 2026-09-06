@@ -48,8 +48,8 @@ class ReputationLaunchAdminCleanupContractTest extends TestCase
     {
         $service = file_get_contents(app_path('Services/ReputationService.php'));
 
-        $this->assertStringContainsString("config(\"reputation.policy_defaults.{$actionKey}.dimension\"", $service);
-        $this->assertStringContainsString("config(\"reputation.policy_defaults.{$actionKey}.convertible\"", $service);
+        $this->assertStringContainsString('config("reputation.policy_defaults.{$actionKey}.dimension"', $service);
+        $this->assertStringContainsString('config("reputation.policy_defaults.{$actionKey}.convertible"', $service);
     }
 
     public function test_membership_fee_reconciliation_command_exists_and_is_safe_by_default(): void
@@ -61,7 +61,7 @@ class ReputationLaunchAdminCleanupContractTest extends TestCase
         $this->assertStringContainsString('reputation:reconcile-membership-fees', $command);
         $this->assertStringContainsString('{--dry-run', $command);
         $this->assertStringContainsString('{--user=', $command);
-        $this->assertStringContainsString("membership_fee_paid:user:", $command);
+        $this->assertStringContainsString('membership_fee_paid:user:', $command);
         $this->assertStringContainsString("->where('type', 'membership_fee')", $command);
         $this->assertStringContainsString("->where('status', 'completed')", $command);
     }
@@ -77,5 +77,24 @@ class ReputationLaunchAdminCleanupContractTest extends TestCase
         $this->assertStringContainsString("'comment_created' => 20", $command);
         $this->assertStringContainsString('whereNull', $command);
         $this->assertStringContainsString('{--dry-run', $command);
+    }
+
+    public function test_repeat_policy_is_not_exposed_as_a_fake_admin_control(): void
+    {
+        $controller = file_get_contents(app_path('Http/Controllers/Admin/ReputationController.php'));
+        $view = file_get_contents(resource_path('views/admin/system-settings/reputation/index.blade.php'));
+
+        $this->assertStringNotContainsString("'repeat_policy' => 'sometimes|array'", $controller);
+        $this->assertStringNotContainsString('name="repeat_policy[', $view);
+        $this->assertStringContainsString('هویت رویداد', $view);
+    }
+
+    public function test_admin_view_uses_complete_deprecated_catalogue_and_archive_explanation(): void
+    {
+        $view = file_get_contents(resource_path('views/admin/system-settings/reputation/index.blade.php'));
+
+        $this->assertStringContainsString('$deprecatedRuleKeys', $view);
+        $this->assertStringContainsString('برای سابقه و ممیزی نگهداری می‌شوند', $view);
+        $this->assertStringContainsString('قابل فعال‌سازی یا تبدیل نیستند', $view);
     }
 }
