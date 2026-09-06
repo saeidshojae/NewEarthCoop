@@ -16,8 +16,7 @@ class SelfReactionConvertibilityBehaviorTest extends TestCase
     public function test_event_level_override_can_keep_reputation_but_force_it_non_convertible(): void
     {
         $user = User::factory()->create();
-        ReputationRule::create([
-            'key' => 'post_liked',
+        ReputationRule::updateOrCreate(['key' => 'post_liked'], [
             'label' => 'post liked',
             'weight' => 1,
             'active' => true,
