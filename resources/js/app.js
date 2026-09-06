@@ -49,6 +49,11 @@ const loadPrivateMessagingRuntime = () => {
     importFeature(() => import("./private-messaging-reaction-picker.js"), "private messaging reaction picker");
 };
 
+const loadMyParticipationRuntime = () => {
+    if (!document.querySelector('#tab-posts, #tab-comments, #tab-replies, #tab-reactions, #tab-polls, #tab-votes')) return;
+    importFeature(() => import("./my-participation-mobile.js"), "My Participation mobile UX");
+};
+
 const loadSwiperRuntime = () => {
     if (!document.querySelector('swiper-container')) return;
     importFeature(async () => { const { register } = await import("swiper/element/bundle"); register(); }, "Swiper");
@@ -58,6 +63,7 @@ const loadPageScopedRuntime = () => {
     loadNajmHodaRuntime();
     loadNajmBaharRuntime();
     loadPrivateMessagingRuntime();
+    loadMyParticipationRuntime();
     loadSwiperRuntime();
 };
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', loadPageScopedRuntime, { once: true }); else loadPageScopedRuntime();
