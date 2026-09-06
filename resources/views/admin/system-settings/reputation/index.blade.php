@@ -14,6 +14,13 @@
     @if(session('success'))
         <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-4 py-3 rounded-lg mb-6">{{ session('success') }}</div>
     @endif
+    @if($errors->any())
+        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg mb-6">
+            <ul class="list-disc pr-5 space-y-1">
+                @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+            </ul>
+        </div>
+    @endif
 
     <form method="POST" action="{{ route('admin.reputation.update') }}">
         @csrf
@@ -65,7 +72,7 @@
                                                 @endforeach
                                             </select>
                                         </td>
-                                        <td class="py-3"><input type="checkbox" name="convertible[{{ $rule->key }}]" value="1" {{ $rule->convertible ? 'checked' : '' }} {{ $isDeprecated ? 'disabled' : '' }}></td>
+                                        <td class="py-3"><input type="checkbox" name="convertible[{{ $rule->key }}]" value="1" {{ $rule->convertible ? 'checked' : '' }} {{ $isDeprecated || $rule->weight < 0 ? 'disabled' : '' }}></td>
                                         <td class="py-3">
                                             <select name="repeat_policy[{{ $rule->key }}]" class="px-3 py-2 border rounded-md" {{ $isDeprecated ? 'disabled' : '' }}>
                                                 <option value="" {{ empty($rule->repeat_policy) ? 'selected' : '' }}>بدون سیاست</option>
@@ -88,6 +95,32 @@
             <div class="p-6 border-t border-slate-100 dark:border-slate-700 text-left"><button type="submit" class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">ذخیره تغییرات</button></div>
         </div>
     </form>
+
+    <section class="mt-6 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="p-6 border-b border-slate-200 dark:border-slate-700">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">ثبت تقلب تأییدشده</h2>
+            <p class="text-sm text-slate-500 mt-1">این ابزار فقط برای تصمیم نهایی و مستند ادمین است. صرف ثبت گزارش یا اتهام، امتیاز «تقلب» را اعمال نمی‌کند. وزن و بُعد این اثر از قاعده <span class="font-mono" dir="ltr">fraud</span> در همین صفحه خوانده می‌شود.</p>
+        </div>
+        <form method="POST" action="{{ route('admin.reputation.update') }}" class="p-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            @csrf
+            <input type="hidden" name="operation" value="apply_confirmed_fraud">
+            <label class="block">
+                <span class="text-sm text-slate-600 dark:text-slate-300">شناسه کاربر</span>
+                <input type="number" min="1" name="user_id" value="{{ old('user_id') }}" required class="mt-1 w-full px-3 py-2 border rounded-md" placeholder="مثلاً 42">
+            </label>
+            <label class="block">
+                <span class="text-sm text-slate-600 dark:text-slate-300">شناسه پرونده / مرجع تصمیم</span>
+                <input type="text" name="case_reference" value="{{ old('case_reference') }}" required maxlength="120" class="mt-1 w-full px-3 py-2 border rounded-md" placeholder="مثلاً FRAUD-1405-001">
+            </label>
+            <label class="block">
+                <span class="text-sm text-slate-600 dark:text-slate-300">توضیح تصمیم</span>
+                <input type="text" name="rationale" value="{{ old('rationale') }}" maxlength="1000" class="mt-1 w-full px-3 py-2 border rounded-md" placeholder="اختیاری، برای ممیزی">
+            </label>
+            <div class="md:col-span-3 flex justify-end">
+                <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800">اعمال اثر امتیازی تقلب تأییدشده</button>
+            </div>
+        </form>
+    </section>
 
     <section class="mt-8 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
