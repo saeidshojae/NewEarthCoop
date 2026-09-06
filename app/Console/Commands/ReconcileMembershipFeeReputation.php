@@ -27,7 +27,7 @@ class ReconcileMembershipFeeReputation extends Command
         $invalid = 0;
 
         NajmTransaction::query()
-            ->where('type', 'membership_fee')
+            ->where('metadata->type', 'membership_fee')
             ->where('status', 'completed')
             ->orderBy('id')
             ->chunkById(200, function ($transactions) use (
