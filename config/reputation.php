@@ -1,7 +1,7 @@
 <?php
 
 return [
-    // Default weights for events
+    // Default weights for events that have a verified runtime award path.
     'weights' => [
         'email_verified' => 50,
         'profile_completed' => 30,
@@ -16,16 +16,6 @@ return [
         'bid_placed' => 1,
         'bid_won' => 20,
         'successful_settlement' => 30,
-        'report_received' => -10,
-        'bid_canceled' => -15,
-        'fraud' => -100,
-        // Profile-related optional fields
-        'profile_photo_uploaded' => 10,
-        'social_links_added' => 5,
-        'documents_uploaded' => 20,
-        'bio_added' => 5,
-
-        // Group polls, elections & verified governance outcomes
         'poll_created' => 5,
         'poll_participated' => 2,
         'elected_inspector' => 50,
@@ -33,8 +23,8 @@ return [
         'professional_referral_completed' => 10,
     ],
 
-    // Policy defaults are used only when a rule is first bootstrapped into the database.
-    // Existing database rules remain authoritative and are never overwritten by config.
+    // Policy defaults are used only when a rule is first bootstrapped into the database
+    // or when no DB rule exists yet. Existing DB rules remain authoritative.
     'policy_defaults' => [
         'invite_member' => [
             'dimension' => 'participation',
@@ -93,7 +83,6 @@ return [
         ],
     ],
 
-    // Tier thresholds
     'tiers' => [
         'Bronze' => 0,
         'Silver' => 200,
@@ -101,8 +90,7 @@ return [
         'Platinum' => 5000,
     ],
 
-    // Daily caps are expressed in awarded points over a rolling day, not event counts.
-    // Bootstrap creation/participation defaults bound farming while remaining admin-manageable after seeding.
+    // Caps are awarded points in the rolling previous 24 hours, not event counts.
     'daily_caps' => [
         'post_created' => 50,
         'comment_created' => 20,
@@ -116,7 +104,6 @@ return [
         'professional_referral_completed' => 50,
     ],
 
-    // Decay settings (monthly percentage to remove)
     'decay' => [
         'enabled' => false,
         'monthly_percent' => 5,
