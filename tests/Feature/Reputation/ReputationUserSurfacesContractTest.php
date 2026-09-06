@@ -19,7 +19,7 @@ class ReputationUserSurfacesContractTest extends TestCase
         $this->assertStringContainsString('publicReputationSummary', $view);
         $this->assertStringContainsString("@extends('profile.profile-member-base')", $view);
 
-        $this->assertStringContainsString('امتیاز اعتبار و مشارکت', $view);
+        $this->assertStringContainsString('اعتبار و مشارکت', $view);
         $this->assertStringContainsString('مشارکت', $view);
         $this->assertStringContainsString('اعتمادپذیری', $view);
         $this->assertStringContainsString('تخصص', $view);
@@ -43,11 +43,12 @@ class ReputationUserSurfacesContractTest extends TestCase
         $this->assertStringContainsString('reputationBreakdown', $controller);
         $this->assertStringContainsString("@extends('history.index-base')", $view);
 
-        $this->assertStringContainsString('امتیاز اعتبار و مشارکت', $view);
-        $this->assertStringContainsString('مشارکت قابل تبدیل کسب‌شده', $view);
-        $this->assertStringContainsString('مصرف‌شده در تبدیل', $view);
-        $this->assertStringContainsString('مشارکت قابل تبدیل باقی‌مانده', $view);
-        $this->assertStringContainsString('تبدیل امتیاز مشارکت به بهار', $view);
+        $this->assertStringContainsString('اعتبار و مشارکت', $view);
+        $this->assertStringContainsString('امتیاز مشارکت قابل تبدیل', $view);
+        $this->assertStringContainsString('کسب‌شده قابل تبدیل', $view);
+        $this->assertStringContainsString('تبدیل‌شده', $view);
+        $this->assertStringContainsString('امتیاز قابل استفاده', $view);
+        $this->assertStringContainsString('تبدیل به بهار', $view);
         $this->assertStringContainsString("route('reputation.conversion.convert')", $view);
 
         $this->assertStringNotContainsString('participation_reversal_points', $view);
