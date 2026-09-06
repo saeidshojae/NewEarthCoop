@@ -46,6 +46,13 @@ class ReputationService
 
     public function applyAction(User $user, string $actionKey, array $meta = [], $referenceId = null, $source = null, ?string $eventKey = null, ?bool $convertibleOverride = null)
     {
+        // Membership-fee callers predate the canonical event-key argument. Keep the
+        // newest payment controller intact while still making the business event
+        // race-safe and idempotent across retries for the same member/year.
+        if ($eventKey === null && $actionKey === 'membership_fee_paid' && $referenceId !== null) {
+            $eventKey = 'membership_fee_paid:user:' . $user->id . ':year:' . $referenceId;
+        }
+
         if ($eventKey !== null && UserPointTransaction::where('event_key', $eventKey)->exists()) {
             return null;
         }
