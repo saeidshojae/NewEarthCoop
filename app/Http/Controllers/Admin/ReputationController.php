@@ -10,11 +10,20 @@ use Illuminate\Http\Request;
 
 class ReputationController extends Controller
 {
-    private const DEPRECATED_RULE_KEYS = ['election_candidate', 'election_participated'];
+    private const DEPRECATED_RULE_KEYS = [
+        'election_candidate',
+        'election_participated',
+        'profile_photo_uploaded',
+        'social_links_added',
+        'documents_uploaded',
+        'bio_added',
+        'report_received',
+        'bid_canceled',
+        'fraud',
+    ];
 
     public function index()
     {
-        // Ensure config-defined rules exist without overwriting admin-authored DB values.
         $this->seedFromConfig();
 
         $rules = ReputationRule::orderBy('module')->orderBy('key')->get();
@@ -22,30 +31,30 @@ class ReputationController extends Controller
         $faLabels = [
             'email_verified' => 'تأیید ایمیل',
             'profile_completed' => 'تکمیل پروفایل',
-            'profile_photo_uploaded' => 'آپلود تصویر پروفایل',
-            'social_links_added' => 'افزودن لینک شبکه‌های اجتماعی',
-            'documents_uploaded' => 'آپلود مدارک',
-            'bio_added' => 'افزودن بیوگرافی',
+            'profile_photo_uploaded' => 'منسوخ — آپلود تصویر پروفایل',
+            'social_links_added' => 'منسوخ — افزودن لینک شبکه‌های اجتماعی',
+            'documents_uploaded' => 'منسوخ — آپلود مدارک',
+            'bio_added' => 'منسوخ — افزودن بیوگرافی',
             'invite_member' => 'دعوت موفق عضو جدید',
             'membership_fee_paid' => 'پرداخت حق عضویت سالانه',
             'post_created' => 'ایجاد پست',
-            'post_liked' => 'پسند پست',
-            'post_upvoted' => 'پسندیدن پست',
+            'post_liked' => 'پسندیدن پست دیگران',
+            'post_upvoted' => 'دریافت پسند برای پست',
             'comment_created' => 'ایجاد دیدگاه',
-            'comment_liked' => 'پسند دیدگاه',
-            'comment_upvoted' => 'پسندیدن دیدگاه',
+            'comment_liked' => 'پسندیدن دیدگاه دیگران',
+            'comment_upvoted' => 'دریافت پسند برای دیدگاه',
             'bid_placed' => 'ثبت پیشنهاد',
-            'bid_won' => 'برنده در مناقصه',
+            'bid_won' => 'برنده حراج',
             'successful_settlement' => 'تسویه موفق',
-            'report_received' => 'گزارش دریافت‌شده',
-            'bid_canceled' => 'لغو پیشنهاد',
-            'fraud' => 'تقلب',
+            'report_received' => 'منسوخ — گزارش دریافت‌شده',
+            'bid_canceled' => 'منسوخ — لغو پیشنهاد',
+            'fraud' => 'منسوخ — تقلب',
             'poll_created' => 'ایجاد نظرسنجی',
             'poll_participated' => 'شرکت در نظرسنجی',
             'election_participated' => 'منسوخ — مشارکت عمومی انتخابات قدیمی',
             'election_candidate' => 'منسوخ — نامزدی در مدل قدیمی انتخابات',
-            'elected_inspector' => 'انتخاب‌شده به عنوان بازرس',
-            'elected_manager' => 'انتخاب‌شده به عنوان مدیر',
+            'elected_inspector' => 'انتخاب‌شدن به عنوان بازرس',
+            'elected_manager' => 'انتخاب‌شدن به عنوان مدیر',
             'professional_referral_completed' => 'تکمیل ارجاع تخصصی تأییدشده',
         ];
 
@@ -66,12 +75,12 @@ class ReputationController extends Controller
 
         $groupDefinitions = [
             'membership' => ['label' => 'عضویت و دعوت', 'prefixes' => ['invite_member', 'membership_fee_paid']],
-            'stock' => ['label' => 'سهام و حراج', 'prefixes' => ['bid_', 'successful_settlement', 'bid_won', 'bid_canceled']],
-            'profile' => ['label' => 'ثبت‌نام و پروفایل', 'prefixes' => ['profile_', 'email_verified', 'profile_photo', 'social_links', 'documents_', 'bio_']],
+            'stock' => ['label' => 'سهام و حراج', 'prefixes' => ['bid_', 'successful_settlement', 'bid_won']],
+            'profile' => ['label' => 'ثبت‌نام و پروفایل', 'prefixes' => ['profile_completed', 'email_verified']],
             'groups' => ['label' => 'گروه‌ها و نظرسنجی‌ها', 'prefixes' => ['poll_']],
-            'governance' => ['label' => 'حاکمیت و انتخابات', 'prefixes' => ['election_', 'elected_', 'professional_referral_']],
-            'content' => ['label' => 'محتوا و بازخورد', 'prefixes' => ['post_', 'comment_', 'post', 'comment']],
-            'moderation' => ['label' => 'نظارتی و گزارش‌ها', 'prefixes' => ['report_', 'fraud']],
+            'governance' => ['label' => 'حاکمیت و انتخابات', 'prefixes' => ['elected_', 'professional_referral_']],
+            'content' => ['label' => 'محتوا و بازخورد', 'prefixes' => ['post_', 'comment_']],
+            'archived' => ['label' => 'آرشیو / منسوخ', 'prefixes' => []],
         ];
 
         $grouped = [];
@@ -81,10 +90,18 @@ class ReputationController extends Controller
         $grouped['other'] = ['label' => 'سایر', 'rules' => []];
 
         foreach ($rules as $rule) {
+            if (in_array($rule->key, self::DEPRECATED_RULE_KEYS, true)) {
+                $grouped['archived']['rules'][] = $rule;
+                continue;
+            }
+
             $placed = false;
             foreach ($groupDefinitions as $gk => $def) {
-                foreach ($def['prefixes'] as $p) {
-                    if (str_starts_with($rule->key, $p) || $rule->key === $p) {
+                if ($gk === 'archived') {
+                    continue;
+                }
+                foreach ($def['prefixes'] as $prefix) {
+                    if (str_starts_with($rule->key, $prefix) || $rule->key === $prefix) {
                         $grouped[$gk]['rules'][] = $rule;
                         $placed = true;
                         break 2;
@@ -96,8 +113,6 @@ class ReputationController extends Controller
             }
         }
 
-        // Read-only audit models. Historical rows are intentionally exposed for
-        // verification but are never edited from the policy form.
         $recentPointEvents = UserPointTransaction::query()
             ->with('user:id,first_name,last_name,email')
             ->withSum('consumptions as consumed_points_total', 'points_consumed')
@@ -111,6 +126,8 @@ class ReputationController extends Controller
             ->limit(30)
             ->get();
 
+        $deprecatedRuleKeys = self::DEPRECATED_RULE_KEYS;
+
         return view('admin.system-settings.reputation.index', compact(
             'rules',
             'faLabels',
@@ -118,7 +135,8 @@ class ReputationController extends Controller
             'conversionStatusLabels',
             'grouped',
             'recentPointEvents',
-            'recentConversions'
+            'recentConversions',
+            'deprecatedRuleKeys'
         ));
     }
 
@@ -130,12 +148,10 @@ class ReputationController extends Controller
             'active' => 'sometimes|array',
             'description' => 'sometimes|array',
             'daily_cap' => 'sometimes|array',
-            'daily_cap.*' => 'nullable|integer',
+            'daily_cap.*' => 'nullable|integer|min:0',
             'dimension' => 'sometimes|array',
             'dimension.*' => 'in:participation,reliability,expertise,civic_trust',
             'convertible' => 'sometimes|array',
-            'repeat_policy' => 'sometimes|array',
-            'repeat_policy.*' => 'nullable|in:once,once_per_context,daily,repeatable',
         ]);
 
         foreach ($data['weights'] as $key => $weight) {
@@ -145,8 +161,6 @@ class ReputationController extends Controller
             }
 
             if (in_array($key, self::DEPRECATED_RULE_KEYS, true)) {
-                // Historical election rules are kept for audit only. They must
-                // never regain runtime or economic effect through admin edits.
                 $rule->active = false;
                 $rule->convertible = false;
                 $rule->save();
@@ -166,9 +180,6 @@ class ReputationController extends Controller
             if (isset($data['dimension'][$key])) {
                 $rule->dimension = $data['dimension'][$key];
             }
-            if (array_key_exists($key, $data['repeat_policy'] ?? [])) {
-                $rule->repeat_policy = $data['repeat_policy'][$key] ?: null;
-            }
 
             $rule->save();
         }
@@ -182,14 +193,14 @@ class ReputationController extends Controller
         $dailyCaps = config('reputation.daily_caps', []);
         $policyDefaults = config('reputation.policy_defaults', []);
 
-        foreach ($weights as $key => $w) {
+        foreach ($weights as $key => $weight) {
             $policy = $policyDefaults[$key] ?? [];
 
             ReputationRule::firstOrCreate(
                 ['key' => $key],
                 [
                     'label' => str_replace('_', ' ', ucfirst($key)),
-                    'weight' => (int) $w,
+                    'weight' => (int) $weight,
                     'description' => null,
                     'module' => null,
                     'active' => true,
