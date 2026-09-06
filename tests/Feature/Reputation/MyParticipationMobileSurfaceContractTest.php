@@ -8,32 +8,35 @@ class MyParticipationMobileSurfaceContractTest extends TestCase
 {
     public function test_six_legacy_participation_tabs_have_mobile_native_card_adapters(): void
     {
-        $view = file_get_contents(resource_path('views/history/index.blade.php'));
+        $runtime = file_get_contents(resource_path('js/my-participation-mobile.js'));
+        $app = file_get_contents(resource_path('js/app.js'));
 
-        $this->assertStringContainsString('contributionMobileSchemas', $view);
-        $this->assertStringContainsString("'tab-posts'", $view);
-        $this->assertStringContainsString("'tab-comments'", $view);
-        $this->assertStringContainsString("'tab-replies'", $view);
-        $this->assertStringContainsString("'tab-reactions'", $view);
-        $this->assertStringContainsString("'tab-polls'", $view);
-        $this->assertStringContainsString("'tab-votes'", $view);
-        $this->assertStringContainsString('contribution-mobile-cards', $view);
-        $this->assertStringContainsString('contribution-mobile-card', $view);
-        $this->assertStringContainsString('role="list"', $view);
-        $this->assertStringContainsString('role="listitem"', $view);
+        $this->assertStringContainsString('my-participation-mobile.js', $app);
+        $this->assertStringContainsString('contributionMobileSchemas', $runtime);
+        $this->assertStringContainsString("'tab-posts'", $runtime);
+        $this->assertStringContainsString("'tab-comments'", $runtime);
+        $this->assertStringContainsString("'tab-replies'", $runtime);
+        $this->assertStringContainsString("'tab-reactions'", $runtime);
+        $this->assertStringContainsString("'tab-polls'", $runtime);
+        $this->assertStringContainsString("'tab-votes'", $runtime);
+        $this->assertStringContainsString('contribution-mobile-cards', $runtime);
+        $this->assertStringContainsString('contribution-mobile-card', $runtime);
+        $this->assertStringContainsString("setAttribute('role', 'list')", $runtime);
+        $this->assertStringContainsString("setAttribute('role', 'listitem')", $runtime);
     }
 
     public function test_mobile_breakpoint_hides_legacy_tables_and_keeps_navigation_touch_friendly_without_horizontal_scroll(): void
     {
-        $view = file_get_contents(resource_path('views/history/index.blade.php'));
+        $css = file_get_contents(resource_path('css/my-participation-mobile.css'));
 
-        $this->assertStringContainsString('@media (max-width: 640px)', $view);
-        $this->assertStringContainsString('.mobile-adapted-participation .data-table-wrapper', $view);
-        $this->assertStringContainsString('display: none;', $view);
-        $this->assertStringContainsString('.contribution-mobile-cards', $view);
-        $this->assertStringContainsString('.tabs-navigation', $view);
-        $this->assertStringContainsString('grid-template-columns: repeat(2, minmax(0, 1fr));', $view);
-        $this->assertStringContainsString('min-height: 44px;', $view);
-        $this->assertStringContainsString('min-width: 0;', $view);
+        $this->assertStringContainsString('@media (max-width: 640px)', $css);
+        $this->assertStringContainsString('.mobile-adapted-participation .data-table-wrapper', $css);
+        $this->assertStringContainsString('display: none !important;', $css);
+        $this->assertStringContainsString('.contribution-mobile-cards', $css);
+        $this->assertStringContainsString('.contributions-section .tabs-navigation', $css);
+        $this->assertStringContainsString('grid-template-columns: repeat(2, minmax(0, 1fr));', $css);
+        $this->assertStringContainsString('min-height: 44px;', $css);
+        $this->assertStringContainsString('min-width: 0;', $css);
+        $this->assertStringContainsString('overflow: visible;', $css);
     }
 }
