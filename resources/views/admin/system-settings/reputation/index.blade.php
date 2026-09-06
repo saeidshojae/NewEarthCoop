@@ -8,6 +8,7 @@
         <div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">مدیریت قواعد امتیازدهی</h1>
             <p class="text-slate-600 dark:text-slate-400 mt-1">سیاست امتیازدهی، ابعاد اعتبار و قابلیت تبدیل را مدیریت کنید؛ داده‌های ممیزی پایین صفحه فقط‌خواندنی هستند.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">کنترل جلوگیری از تکرار امتیاز بر پایه هویت رویداد پایدار در خود سامانه اعمال می‌شود و از این صفحه قابل تغییر نیست.</p>
         </div>
     </div>
 
@@ -32,20 +33,26 @@
 
                 @foreach($grouped as $gKey => $g)
                     <div class="tab-panel mb-6" data-panel="{{ $gKey }}" style="display: none;">
+                        @if($gKey === 'archived')
+                            <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                                قواعد این بخش فقط برای سابقه و ممیزی نگهداری می‌شوند و قابل فعال‌سازی یا تبدیل نیستند. حذف فیزیکی آن‌ها می‌تواند رهگیری سوابق تاریخی را ناقص کند.
+                            </div>
+                        @endif
+
                         @if(count($g['rules']) === 0)
                             <div class="text-slate-500">موردی برای نمایش وجود ندارد.</div>
                         @else
                         <div class="overflow-x-auto">
-                            <table class="w-full text-right min-w-[1050px]">
+                            <table class="w-full text-right min-w-[980px]">
                                 <thead>
                                     <tr class="text-sm text-slate-600 dark:text-slate-300">
-                                        <th class="py-2">#</th><th class="py-2">کلید فنی</th><th class="py-2">عنوان فارسی</th><th class="py-2">وزن (امتیاز)</th><th class="py-2">سقف روزانه</th><th class="py-2">بُعد</th><th class="py-2">قابل تبدیل</th><th class="py-2">سیاست تکرار</th><th class="py-2">فعال</th><th class="py-2">توضیحات</th>
+                                        <th class="py-2">#</th><th class="py-2">کلید فنی</th><th class="py-2">عنوان فارسی</th><th class="py-2">وزن (امتیاز)</th><th class="py-2">سقف روزانه</th><th class="py-2">بُعد</th><th class="py-2">قابل تبدیل</th><th class="py-2">فعال</th><th class="py-2">توضیحات</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($g['rules'] as $i => $rule)
                                     @php
-                                        $isDeprecated = in_array($rule->key, ['election_candidate', 'election_participated'], true);
+                                        $isDeprecated = in_array($rule->key, $deprecatedRuleKeys ?? [], true);
                                     @endphp
                                     <tr class="border-t border-slate-100 dark:border-slate-700 {{ ! $rule->active || $isDeprecated ? 'opacity-70' : '' }}">
                                         <td class="py-3">{{ $i + 1 }}</td>
@@ -66,14 +73,6 @@
                                             </select>
                                         </td>
                                         <td class="py-3"><input type="checkbox" name="convertible[{{ $rule->key }}]" value="1" {{ $rule->convertible ? 'checked' : '' }} {{ $isDeprecated ? 'disabled' : '' }}></td>
-                                        <td class="py-3">
-                                            <select name="repeat_policy[{{ $rule->key }}]" class="px-3 py-2 border rounded-md" {{ $isDeprecated ? 'disabled' : '' }}>
-                                                <option value="" {{ empty($rule->repeat_policy) ? 'selected' : '' }}>بدون سیاست</option>
-                                                @foreach(['once' => 'یک‌بار','once_per_context' => 'یک‌بار در هر زمینه','daily' => 'روزانه','repeatable' => 'تکرارپذیر'] as $repeatPolicy => $label)
-                                                    <option value="{{ $repeatPolicy }}" {{ $rule->repeat_policy === $repeatPolicy ? 'selected' : '' }}>{{ $label }}</option>
-                                                @endforeach
-                                            </select>
-                                        </td>
                                         <td class="py-3"><input type="checkbox" name="active[{{ $rule->key }}]" value="1" {{ $rule->active ? 'checked' : '' }} {{ $isDeprecated ? 'disabled' : '' }}></td>
                                         <td class="py-3"><input type="text" name="description[{{ $rule->key }}]" value="{{ $rule->description }}" class="px-3 py-2 border rounded-md w-full min-w-64" {{ $isDeprecated ? 'readonly' : '' }}></td>
                                     </tr>
