@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ReputationRule;
+use App\Models\User;
 use App\Models\UserPointConversion;
 use App\Models\UserPointTransaction;
+use App\Services\ReputationService;
 use Illuminate\Http\Request;
 
 class ReputationController extends Controller
@@ -37,9 +39,9 @@ class ReputationController extends Controller
             'bid_placed' => 'ثبت پیشنهاد',
             'bid_won' => 'برنده در مناقصه',
             'successful_settlement' => 'تسویه موفق',
-            'report_received' => 'گزارش دریافت‌شده',
+            'report_received' => 'گزارش تخلف تأییدشده',
             'bid_canceled' => 'لغو پیشنهاد',
-            'fraud' => 'تقلب',
+            'fraud' => 'تقلب تأییدشده',
             'poll_created' => 'ایجاد نظرسنجی',
             'poll_participated' => 'شرکت در نظرسنجی',
             'election_participated' => 'منسوخ — مشارکت عمومی انتخابات قدیمی',
@@ -96,8 +98,6 @@ class ReputationController extends Controller
             }
         }
 
-        // Read-only audit models. Historical rows are intentionally exposed for
-        // verification but are never edited from the policy form.
         $recentPointEvents = UserPointTransaction::query()
             ->with('user:id,first_name,last_name,email')
             ->withSum('consumptions as consumed_points_total', 'points_consumed')
@@ -124,6 +124,10 @@ class ReputationController extends Controller
 
     public function update(Request $request)
     {
+        if ($request->input('operation') === 'apply_confirmed_fraud') {
+            return $this->applyConfirmedFraud($request);
+        }
+
         $data = $request->validate([
             'weights' => 'required|array',
             'weights.*' => 'integer',
@@ -145,8 +149,6 @@ class ReputationController extends Controller
             }
 
             if (in_array($key, self::DEPRECATED_RULE_KEYS, true)) {
-                // Historical election rules are kept for audit only. They must
-                // never regain runtime or economic effect through admin edits.
                 $rule->active = false;
                 $rule->convertible = false;
                 $rule->save();
@@ -155,7 +157,8 @@ class ReputationController extends Controller
 
             $rule->weight = (int) $weight;
             $rule->active = isset($data['active'][$key]);
-            $rule->convertible = isset($data['convertible'][$key]);
+            // Negative events are reputation penalties and can never create conversion capacity.
+            $rule->convertible = (int) $weight > 0 && isset($data['convertible'][$key]);
 
             if (isset($data['description'][$key])) {
                 $rule->description = $data['description'][$key];
@@ -174,6 +177,47 @@ class ReputationController extends Controller
         }
 
         return back()->with('success', 'قواعد امتیازدهی با موفقیت ذخیره شد');
+    }
+
+    private function applyConfirmedFraud(Request $request)
+    {
+        $data = $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+            'case_reference' => 'required|string|max:120',
+            'rationale' => 'nullable|string|max:1000',
+        ], [
+            'user_id.required' => 'شناسه کاربر الزامی است.',
+            'user_id.exists' => 'کاربر انتخاب‌شده یافت نشد.',
+            'case_reference.required' => 'شناسه پرونده یا مرجع تصمیم الزامی است.',
+        ]);
+
+        $rule = ReputationRule::where('key', 'fraud')->first();
+        if (! $rule || ! $rule->active) {
+            return back()->withErrors(['fraud' => 'قاعده «تقلب تأییدشده» غیرفعال است. ابتدا آن را در قواعد امتیازدهی فعال کنید.']);
+        }
+
+        $user = User::findOrFail($data['user_id']);
+        $caseReference = trim($data['case_reference']);
+        $eventKey = 'fraud:admin-case:' . hash('sha256', $caseReference) . ':user:' . $user->id;
+
+        if (UserPointTransaction::where('event_key', $eventKey)->exists()) {
+            return back()->withErrors(['fraud' => 'این پرونده برای این کاربر قبلاً در دفتر امتیازات ثبت شده است.']);
+        }
+
+        app(ReputationService::class)->applyAction(
+            $user,
+            'fraud',
+            [
+                'case_reference' => $caseReference,
+                'rationale' => $data['rationale'] ?? null,
+                'adjudicated_by' => auth()->id(),
+            ],
+            $user->id,
+            'moderation.confirmed_fraud',
+            $eventKey
+        );
+
+        return back()->with('success', 'اثر امتیازی تقلب تأییدشده بر اساس قاعده فعلی ثبت شد.');
     }
 
     protected function seedFromConfig()
